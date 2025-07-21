@@ -1,0 +1,149 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  Student
+  Professor
+}
+
+// User model
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  birthdate    String
+  city         String
+  occupation   String
+  role         Role     @default(Student)
+  
+  resetToken           String?    @unique
+  resetTokenExpiration DateTime?
+
+  studentStats StudentStats?
+  teacherStats TeacherStats?
+
+  classroomsCreated Classroom[]        @relation("UserClassrooms")
+  enrollments       Enrollment[]
+  submissions       Submission[]
+  leaderboard       Leaderboard[]
+  LanguageMarathon  LanguageMarathon[]
+}
+
+// Student-specific stats
+model StudentStats {
+  id                     String @id @default(uuid())
+  user                   User   @relation(fields: [id], references: [id])
+  total_points           Int
+  marathons_participated Int
+  podiums                Int
+  first_places           Int
+}
+
+// Teacher-specific stats
+model TeacherStats {
+  id                     String @id @default(uuid())
+  user                   User   @relation(fields: [id], references: [id])
+  total_classes          Int
+  total_marathons        Int
+  total_students_reached Int
+}
+
+// Classroom
+model Classroom {
+  id                String    @id @default(uuid())
+  name              String
+  code              String
+  invite_expiration DateTime?
+  created_at        DateTime  @default(now())
+
+  created_by String
+  creator    User   @relation("UserClassrooms", fields: [created_by], references: [id])
+
+  marathons LanguageMarathon[]
+}
+
+// Language Marathon
+model LanguageMarathon {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  context     String
+  difficulty  String
+  timeLimit   Int
+  start_date  DateTime
+  end_date    DateTime
+
+  classroom_id String
+  created_by   String
+
+  classroom Classroom @relation(fields: [classroom_id], references: [id])
+  creator   User      @relation(fields: [created_by], references: [id])
+
+  questions   Question[]
+  enrollments Enrollment[]
+  leaderboard Leaderboard[]
+}
+
+// Question
+model Question {
+  id          String @id @default(uuid())
+  marathon_id String
+  title       String
+  prompt_text String
+  order       Int
+
+  marathon    LanguageMarathon @relation(fields: [marathon_id], references: [id])
+  submissions Submission[]
+}
+
+// Submission
+model Submission {
+  id              String   @id @default(uuid())
+  question_id     String
+  user_id         String
+  answer          String
+  submitted_at    DateTime @default(now())
+  ai_feedback     String?
+  score           Float?
+  corrected_by_ai Boolean  @default(true)
+
+  question Question @relation(fields: [question_id], references: [id])
+  user     User     @relation(fields: [user_id], references: [id])
+}
+
+// Enrollment
+model Enrollment {
+  id          String @id @default(uuid())
+  user_id     String
+  marathon_id String
+
+  user     User             @relation(fields: [user_id], references: [id])
+  marathon LanguageMarathon @relation(fields: [marathon_id], references: [id])
+}
+
+// Leaderboard
+model Leaderboard {
+  id          String @id @default(uuid())
+  marathon_id String
+  user_id     String
+  score       Float
+  position    Int
+
+  marathon LanguageMarathon @relation(fields: [marathon_id], references: [id])
+  user     User             @relation(fields: [user_id], references: [id])
+
+  @@unique([marathon_id, user_id])
+}
