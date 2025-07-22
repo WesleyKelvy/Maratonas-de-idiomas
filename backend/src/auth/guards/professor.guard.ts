@@ -5,19 +5,19 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { IS_FREE_KEY } from '../decorators/is-free.decorator';
+import { IS_PROFESSOR } from '../decorators/is-professor.decorator';
 
 @Injectable()
 export class SubscriptionGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const isFree = this.reflector.getAllAndOverride<boolean>(IS_FREE_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const isProfessor = this.reflector.getAllAndOverride<boolean>(
+      IS_PROFESSOR,
+      [context.getHandler(), context.getClass()],
+    );
 
-    if (isFree) {
+    if (isProfessor) {
       return true;
     }
 
@@ -25,9 +25,9 @@ export class SubscriptionGuard implements CanActivate {
     const user = request.user;
 
     // Check if user has a valid subscription
-    if (!user.hasSubscription) {
+    if (user.role === 'Student') {
       // console.log(user);
-      throw new UnauthorizedException('A valid subscription is required.');
+      throw new UnauthorizedException('Access blocked');
     }
 
     return true;
