@@ -8,7 +8,7 @@ import { Reflector } from '@nestjs/core';
 import { IS_PROFESSOR } from '../decorators/is-professor.decorator';
 
 @Injectable()
-export class SubscriptionGuard implements CanActivate {
+export class ProfessorGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
@@ -25,8 +25,7 @@ export class SubscriptionGuard implements CanActivate {
     const user = request.user;
 
     // Check if user has a valid subscription
-    if (user.role === 'Student') {
-      // console.log(user);
+    if (user.role !== 'Professor') {
       throw new UnauthorizedException('Access blocked');
     }
 

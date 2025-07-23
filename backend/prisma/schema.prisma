@@ -63,13 +63,11 @@ model ProfessorStats {
 
 // Classroom
 model Classroom {
-  id                String    @id @default(uuid())
   name              String
-  code              String
+  code              String    @id
   invite_expiration DateTime?
   created_at        DateTime  @default(now())
-
-  created_by String
+  created_by        String
   creator    User   @relation("UserClassrooms", fields: [created_by], references: [id])
 
   marathons LanguageMarathon[]
@@ -89,7 +87,7 @@ model LanguageMarathon {
   classroom_id String
   created_by   String
 
-  classroom Classroom @relation(fields: [classroom_id], references: [id])
+  classroom Classroom @relation(fields: [classroom_id], references: [code])
   creator   User      @relation(fields: [created_by], references: [id])
 
   questions   Question[]

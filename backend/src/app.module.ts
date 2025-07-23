@@ -8,9 +8,17 @@ import { MailerModule } from './mailer/mailer.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { UserModule } from './user/user.module';
 import { StatsModule } from './stats/stats.module';
+import { ClassroomModule } from 'src/classroom/classroom.module';
 
 @Module({
-  imports: [AuthModule, PrismaModule, UserModule, MailerModule, StatsModule],
+  imports: [
+    AuthModule,
+    PrismaModule,
+    UserModule,
+    MailerModule,
+    StatsModule,
+    ClassroomModule,
+  ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: JwtAuthGuard }],
 })

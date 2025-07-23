@@ -4,7 +4,7 @@ import { PassportModule } from '@nestjs/passport';
 import { UserModule } from 'src/user/user.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { SubscriptionGuard } from './guards/professor.guard';
+import { ProfessorGuard } from './guards/professor.guard';
 import { LoginValidationMiddleware } from './middlewares/login-validation.middleware';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
@@ -19,7 +19,7 @@ import { LocalStrategy } from './strategies/local.strategy';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, LocalStrategy, JwtStrategy, SubscriptionGuard],
+  providers: [AuthService, LocalStrategy, JwtStrategy, ProfessorGuard],
 })
 export class AuthModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
