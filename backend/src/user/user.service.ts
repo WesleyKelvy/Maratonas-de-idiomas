@@ -10,19 +10,32 @@ import {
 import { Prisma, User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
-import { AbstractUserRepository } from 'src/repositories/abstract/user.repository';
+import {
+  AbstractUserRepository,
+  USER_REPOSITORY_TOKEN,
+} from 'src/repositories/abstract/user.repository';
+import {
+  AbstractProfessorStatsService,
+  PROFESSOR_STATS_SERVICE_TOKEN,
+} from 'src/stats/abstract-services/abstract-professor-stats.service';
+import {
+  AbstractStudentStatsService,
+  STUDENT_STATS_SERVICE_TOKEN,
+} from 'src/stats/abstract-services/abstract-student-stats.service';
+import { sanitazeUser, SanitedUser } from 'utils/sanitazeUser';
 import { EmailService } from '../mailer/emailService.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ERROR_MESSAGES } from './error/user-service.error';
-import { sanitazeUser, SanitedUser } from 'utils/sanitazeUser';
-
-export const USER_REPOSITORY_TOKEN = 'AbstractUserRepository';
 
 @Injectable()
 export class UserService {
   constructor(
     @Inject(USER_REPOSITORY_TOKEN)
     private readonly AbstractUserRepository: AbstractUserRepository,
+    @Inject(PROFESSOR_STATS_SERVICE_TOKEN)
+    private readonly professorStatsService: AbstractProfessorStatsService,
+    @Inject(STUDENT_STATS_SERVICE_TOKEN)
+    private readonly studentStatsService: AbstractStudentStatsService,
     private readonly emailService: EmailService,
   ) {}
 
@@ -39,6 +52,12 @@ export class UserService {
       ...createUserDto,
       passwordHash: await bcrypt.hash(createUserDto.passwordHash, 10),
     });
+
+    if (createUserDto.role === 'Professor') {
+      await this.professorStatsService.create(data.id);
+    } else {
+      await this.studentStatsService.create(data.id);
+    }
 
     // await this.emailService.sendAccountCreatedEmail({
     //   email: createdUser.email,

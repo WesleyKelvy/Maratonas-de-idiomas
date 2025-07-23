@@ -17,3 +17,5 @@ export abstract class AbstractUserRepository {
   ): Promise<User>;
   abstract resetPassword(token: string, newPassword: string): Promise<void>;
 }
+
+export const USER_REPOSITORY_TOKEN = 'AbstractUserRepository';

@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { ProfessorStats as PrismaProfessorStats } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AbstractProfessorStatsRepository } from 'src/repositories/abstract/professor-stats.repository';
-import { CreateProfessorStatsDto } from 'src/stats/dto/professor.create-stats.dto';
 import { UpdateStudentStatsDto } from 'src/stats/dto/student.update-stats.dto copy';
 
 @Injectable()
@@ -11,13 +10,11 @@ export class PrismaProfessorStatsRepository
 {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(
-    createStatDto: CreateProfessorStatsDto,
-  ): Promise<PrismaProfessorStats> {
+  async create(id: string): Promise<PrismaProfessorStats> {
     return await this.prisma.professorStats.create({
       data: {
         user: {
-          connect: { id: createStatDto.userId },
+          connect: { id },
         },
       },
     });

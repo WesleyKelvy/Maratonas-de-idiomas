@@ -3,10 +3,12 @@ import { PrismaAbstractUserRepository } from 'src/repositories/prisma/prisma-use
 import { MailerModule } from '../mailer/mailer.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { UserController } from './user.controller';
-import { USER_REPOSITORY_TOKEN, UserService } from './user.service';
+import { UserService } from './user.service';
+import { USER_REPOSITORY_TOKEN } from 'src/repositories/abstract/user.repository';
+import { StatsModule } from 'src/stats/stats.module';
 
 @Module({
-  imports: [PrismaModule, MailerModule],
+  imports: [PrismaModule, MailerModule, StatsModule],
   controllers: [UserController],
   providers: [
     UserService,

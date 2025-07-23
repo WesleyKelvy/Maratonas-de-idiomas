@@ -19,23 +19,23 @@ CREATE TABLE "User" (
 
 -- CreateTable
 CREATE TABLE "StudentStats" (
-    "id" TEXT NOT NULL,
-    "total_points" INTEGER NOT NULL,
-    "marathons_participated" INTEGER NOT NULL,
-    "podiums" INTEGER NOT NULL,
-    "first_places" INTEGER NOT NULL,
+    "userId" TEXT NOT NULL,
+    "total_points" INTEGER NOT NULL DEFAULT 0,
+    "marathons_participated" INTEGER NOT NULL DEFAULT 0,
+    "podiums" INTEGER NOT NULL DEFAULT 0,
+    "first_places" INTEGER NOT NULL DEFAULT 0,
 
-    CONSTRAINT "StudentStats_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "StudentStats_pkey" PRIMARY KEY ("userId")
 );
 
 -- CreateTable
-CREATE TABLE "TeacherStats" (
-    "id" TEXT NOT NULL,
-    "total_classes" INTEGER NOT NULL,
-    "total_marathons" INTEGER NOT NULL,
-    "total_students_reached" INTEGER NOT NULL,
+CREATE TABLE "ProfessorStats" (
+    "userId" TEXT NOT NULL,
+    "total_classes" INTEGER NOT NULL DEFAULT 0,
+    "total_marathons" INTEGER NOT NULL DEFAULT 0,
+    "total_students_reached" INTEGER NOT NULL DEFAULT 0,
 
-    CONSTRAINT "TeacherStats_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "ProfessorStats_pkey" PRIMARY KEY ("userId")
 );
 
 -- CreateTable
@@ -121,10 +121,10 @@ CREATE UNIQUE INDEX "User_resetToken_key" ON "User"("resetToken");
 CREATE UNIQUE INDEX "Leaderboard_marathon_id_user_id_key" ON "Leaderboard"("marathon_id", "user_id");
 
 -- AddForeignKey
-ALTER TABLE "StudentStats" ADD CONSTRAINT "StudentStats_id_fkey" FOREIGN KEY ("id") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "StudentStats" ADD CONSTRAINT "StudentStats_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "TeacherStats" ADD CONSTRAINT "TeacherStats_id_fkey" FOREIGN KEY ("id") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "ProfessorStats" ADD CONSTRAINT "ProfessorStats_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Classroom" ADD CONSTRAINT "Classroom_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -10,7 +10,6 @@ import {
   PROFESSOR_STATS_REPOSITORY_TOKEN,
 } from 'src/repositories/abstract/professor-stats.repository';
 import { AbstractProfessorStatsService } from 'src/stats/abstract-services/abstract-professor-stats.service';
-import { CreateProfessorStatsDto } from 'src/stats/dto/professor.create-stats.dto';
 import { UpdateProfessorStatsDto } from 'src/stats/dto/professor.update-stats.dto';
 
 @Injectable()
@@ -20,29 +19,16 @@ export class ProfessorStatsService implements AbstractProfessorStatsService {
     private readonly professorStatsRepository: AbstractProfessorStatsRepository,
   ) {}
 
-  async create(
-    createStatsDto: CreateProfessorStatsDto,
-  ): Promise<ProfessorStats> {
+  async create(id: string): Promise<ProfessorStats> {
     // Example business logic: Prevent creating multiple stats for the same user
-    const existingStat = await this.professorStatsRepository.findByUserId(
-      createStatsDto.userId,
-    );
+    const existingStat = await this.professorStatsRepository.findByUserId(id);
     if (existingStat) {
       throw new ConflictException(
-        `Professor stats for user ID ${createStatsDto.userId} already exist.`,
+        `Professor stats for user ID ${id} already exist.`,
       );
     }
 
-    const createdPrismaStat =
-      await this.professorStatsRepository.create(createStatsDto);
-    // Map Prisma's generated type back to your custom entity if necessary
-    const professorStat: ProfessorStats = {
-      userId: createdPrismaStat.userId,
-      total_classes: createdPrismaStat.total_classes,
-      total_marathons: createdPrismaStat.total_marathons,
-      total_students_reached: createdPrismaStat.total_students_reached,
-    };
-    return professorStat;
+    return await this.professorStatsRepository.create(id);
   }
 
   async findOne(id: string): Promise<ProfessorStats> {

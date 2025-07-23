@@ -1,8 +1,22 @@
-import { Controller, Inject } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Inject,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+} from '@nestjs/common';
+import { StudentStats } from '@prisma/client';
 import {
   AbstractStudentStatsService,
   STUDENT_STATS_SERVICE_TOKEN,
 } from 'src/stats/abstract-services/abstract-student-stats.service';
+import { UpdateStudentStatsDto } from 'src/stats/dto/student.update-stats.dto copy';
 
 @Controller('student-stats')
 export class StudentStatsController {
@@ -10,4 +24,29 @@ export class StudentStatsController {
     @Inject(STUDENT_STATS_SERVICE_TOKEN)
     private readonly studentStatsService: AbstractStudentStatsService,
   ) {}
+
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  create(@Body() id: string): Promise<StudentStats> {
+    return this.studentStatsService.create(id);
+  }
+
+  @Get(':id')
+  findOne(@Param('id', ParseUUIDPipe) id: string): Promise<StudentStats> {
+    return this.studentStatsService.findOne(id);
+  }
+
+  @Patch(':id')
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateStatDto: UpdateStudentStatsDto,
+  ): Promise<StudentStats> {
+    return this.studentStatsService.update(id, updateStatDto);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
+    return this.studentStatsService.remove(id);
+  }
 }
