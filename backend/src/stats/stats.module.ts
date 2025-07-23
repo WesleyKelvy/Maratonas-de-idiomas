@@ -7,6 +7,8 @@ import { PROFESSOR_STATS_SERVICE_TOKEN } from 'src/stats/abstract-services/abstr
 import { STUDENT_STATS_SERVICE_TOKEN } from 'src/stats/abstract-services/abstract-student-stats.service';
 import { ProfessorStatsService } from 'src/stats/professor.stats.service';
 import { StudentStatsService } from 'src/stats/student.stats.service';
+import { StudentStatsController } from 'src/stats/student.stats.controller';
+import { ProfessorStatsController } from 'src/stats/professor.stats.controller';
 
 @Module({
   controllers: [StudentStatsController, ProfessorStatsController],
@@ -30,4 +32,4 @@ import { StudentStatsService } from 'src/stats/student.stats.service';
   ],
   exports: [STUDENT_STATS_SERVICE_TOKEN, PROFESSOR_STATS_REPOSITORY_TOKEN],
 })
-export class StudentStatsModule {}
+export class StatsModule {}
