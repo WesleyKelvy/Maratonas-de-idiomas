@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { StudentStats as PrismaStudentStats } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { AbstractStudentStatsRepository } from 'src/repositories/student-stats.repository';
+import { AbstractStudentStatsRepository } from 'src/repositories/abstract/student-stats.repository';
 import { CreateStudentStatsDto } from 'src/stats/dto/student.create-stats.dto copy';
 import { UpdateStudentStatsDto } from 'src/stats/dto/student.update-stats.dto copy';
 

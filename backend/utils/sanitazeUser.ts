@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import { User } from 'src/user/entities/user.entity';
 
 export type SanitedUser = {
   name: string;
@@ -9,7 +9,7 @@ export type SanitedUser = {
   role: string;
 };
 
-export const sanitazeUser = (user: Prisma.UserCreateInput): SanitedUser => {
+export const sanitazeUser = (user: User): SanitedUser => {
   return {
     name: user.name,
     email: user.email,

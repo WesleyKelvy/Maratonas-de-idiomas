@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { PrismaProfessorStatsRepository } from 'src/repositories/prisma/prisma-professor-stats.repository';
 import { PrismaStudentStatsRepository } from 'src/repositories/prisma/prisma-student-stats.repository';
-import { PROFESSOR_STATS_REPOSITORY_TOKEN } from 'src/repositories/professor-stats.repository';
-import { STUDENT_STATS_REPOSITORY_TOKEN } from 'src/repositories/student-stats.repository';
+import { PROFESSOR_STATS_REPOSITORY_TOKEN } from 'src/repositories/abstract/professor-stats.repository';
+import { STUDENT_STATS_REPOSITORY_TOKEN } from 'src/repositories/abstract/student-stats.repository';
 import { PROFESSOR_STATS_SERVICE_TOKEN } from 'src/stats/abstract-services/abstract-professor-stats.service';
 import { STUDENT_STATS_SERVICE_TOKEN } from 'src/stats/abstract-services/abstract-student-stats.service';
 import { ProfessorStatsService } from 'src/stats/professor.stats.service';

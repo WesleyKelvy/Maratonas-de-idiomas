@@ -1,7 +1,7 @@
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { UserRepository } from 'src/repositories/user.repository';
+import { AbstractUserRepository } from 'src/repositories/abstract/user.repository';
 import { USER_REPOSITORY_TOKEN } from 'src/user/user.service';
 import { sanitazeUser, SanitedUser } from 'utils/sanitazeUser';
 import { User } from '../user/entities/user.entity';
@@ -13,7 +13,7 @@ export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     @Inject(USER_REPOSITORY_TOKEN)
-    private readonly userRepository: UserRepository,
+    private readonly AbstractUserRepository: AbstractUserRepository,
   ) {}
 
   login(user: User): UserToken {
@@ -33,7 +33,7 @@ export class AuthService {
   }
 
   async refreshToken(id: string) {
-    const user: User = await this.userRepository.findOne(id);
+    const user: User = await this.AbstractUserRepository.findOne(id);
 
     const payload: UserPayload = {
       email: user.email,
@@ -50,7 +50,7 @@ export class AuthService {
   }
 
   async validateUser(email: string, password: string): Promise<SanitedUser> {
-    const user: User = await this.userRepository.findByEmail(email);
+    const user: User = await this.AbstractUserRepository.findByEmail(email);
 
     if (user) {
       //Check if password hash matches its own hash in BD

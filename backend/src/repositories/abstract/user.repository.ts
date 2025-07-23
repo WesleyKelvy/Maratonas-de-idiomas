@@ -1,6 +1,6 @@
 import { Prisma, User } from '@prisma/client';
 
-export abstract class UserRepository {
+export abstract class AbstractUserRepository {
   abstract create(createUserDto: Prisma.UserCreateInput): Promise<User>;
   abstract findAll(): Promise<User[]>;
   abstract findOne(id: string): Promise<User>;

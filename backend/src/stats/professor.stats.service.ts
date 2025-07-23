@@ -8,7 +8,7 @@ import { ProfessorStats } from '@prisma/client';
 import {
   AbstractProfessorStatsRepository,
   PROFESSOR_STATS_REPOSITORY_TOKEN,
-} from 'src/repositories/professor-stats.repository';
+} from 'src/repositories/abstract/professor-stats.repository';
 import { AbstractProfessorStatsService } from 'src/stats/abstract-services/abstract-professor-stats.service';
 import { CreateProfessorStatsDto } from 'src/stats/dto/professor.create-stats.dto';
 import { UpdateProfessorStatsDto } from 'src/stats/dto/professor.update-stats.dto';

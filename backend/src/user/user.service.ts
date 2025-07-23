@@ -10,30 +10,32 @@ import {
 import { Prisma, User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
-import { UserRepository } from 'src/repositories/user.repository';
+import { AbstractUserRepository } from 'src/repositories/abstract/user.repository';
 import { EmailService } from '../mailer/emailService.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ERROR_MESSAGES } from './error/user-service.error';
 import { sanitazeUser, SanitedUser } from 'utils/sanitazeUser';
 
-export const USER_REPOSITORY_TOKEN = 'UserRepository';
+export const USER_REPOSITORY_TOKEN = 'AbstractUserRepository';
 
 @Injectable()
 export class UserService {
   constructor(
     @Inject(USER_REPOSITORY_TOKEN)
-    private readonly userRepository: UserRepository,
+    private readonly AbstractUserRepository: AbstractUserRepository,
     private readonly emailService: EmailService,
   ) {}
 
   async create(createUserDto: Prisma.UserCreateInput): Promise<SanitedUser> {
-    const rawUser = await this.userRepository.findByEmail(createUserDto.email);
+    const rawUser = await this.AbstractUserRepository.findByEmail(
+      createUserDto.email,
+    );
 
     if (rawUser) {
       throw new ConflictException('Email already in use.');
     }
 
-    const data = await this.userRepository.create({
+    const data = await this.AbstractUserRepository.create({
       ...createUserDto,
       passwordHash: await bcrypt.hash(createUserDto.passwordHash, 10),
     });
@@ -47,8 +49,7 @@ export class UserService {
   }
 
   async findByEmail(email: string): Promise<SanitedUser> {
-    const existingUser: Prisma.UserCreateInput =
-      await this.userRepository.findByEmail(email);
+    const existingUser = await this.AbstractUserRepository.findByEmail(email);
 
     if (!existingUser) {
       throw new HttpException(
@@ -61,7 +62,7 @@ export class UserService {
   }
 
   async findById(id: string): Promise<SanitedUser> {
-    const existingUser = await this.userRepository.findOne(id);
+    const existingUser = await this.AbstractUserRepository.findOne(id);
 
     if (!existingUser) {
       throw new HttpException(
@@ -86,7 +87,7 @@ export class UserService {
       );
     }
 
-    const updatedUser = await this.userRepository.updateByEmail(email, {
+    const updatedUser = await this.AbstractUserRepository.updateByEmail(email, {
       ...updateUserDto,
     });
 
@@ -111,7 +112,7 @@ export class UserService {
       }
 
       // Delete user
-      await this.userRepository.remove(id);
+      await this.AbstractUserRepository.remove(id);
 
       return;
     } catch (error) {
@@ -121,7 +122,7 @@ export class UserService {
   }
 
   async sendResetPasswordEmail(email: string): Promise<void> {
-    const rawUser = await this.userRepository.findByEmail(email);
+    const rawUser = await this.AbstractUserRepository.findByEmail(email);
 
     if (!rawUser) throw new NotFoundException(ERROR_MESSAGES.USER_NOT_FOUND);
 
@@ -131,14 +132,14 @@ export class UserService {
 
     do {
       resetToken = randomBytes(32).toString('hex');
-      tokenExists = await this.userRepository.findbyToken(resetToken);
+      tokenExists = await this.AbstractUserRepository.findbyToken(resetToken);
     } while (tokenExists);
 
     // Token is valid for 1 hour
     const tokenExpiration = new Date(Date.now() + 1000 * 60 * 60);
 
     // Save the reset token and expiration in the database
-    await this.userRepository.updateByEmail(email, {
+    await this.AbstractUserRepository.updateByEmail(email, {
       resetToken,
       resetTokenExpiration: tokenExpiration,
     });
@@ -154,14 +155,14 @@ export class UserService {
   }
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
-    const rawUser = await this.userRepository.findbyToken(token);
+    const rawUser = await this.AbstractUserRepository.findbyToken(token);
 
     if (!rawUser) throw new BadRequestException(ERROR_MESSAGES.INVALID_TOKEN);
 
     if (rawUser.resetTokenExpiration < new Date())
       throw new BadRequestException('Token expired');
 
-    await this.userRepository.update(rawUser.id, {
+    await this.AbstractUserRepository.update(rawUser.id, {
       passwordHash: await bcrypt.hash(newPassword, 10),
       resetToken: null,
       resetTokenExpiration: null,
