@@ -1,6 +1,5 @@
-// src/users/repositories/prisma-user.repository.ts
 import { Injectable } from '@nestjs/common';
-import { User, Prisma } from '@prisma/client'; // Import User and Prisma namespace from @prisma/client
+import { User, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UserRepository } from 'src/repositories/user.repository';
 
@@ -64,15 +63,14 @@ export class PrismaUserRepository implements UserRepository {
   }
 
   async resetPassword(token: string, newPasswordHash: string): Promise<void> {
-    // This assumes your User model has a 'resetToken' field and you are updating 'passwordHash'
     await this.prisma.user.update({
       where: {
         resetToken: token,
       },
       data: {
-        passwordHash: newPasswordHash, // Update 'password' or 'passwordHash'
-        resetToken: null, // Clear the token after use
-        resetTokenExpiration: null, // Clear token expiry if you have one
+        passwordHash: newPasswordHash,
+        resetToken: null,
+        resetTokenExpiration: null,
       },
     });
   }

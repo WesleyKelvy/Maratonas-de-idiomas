@@ -33,7 +33,7 @@ model User {
   resetTokenExpiration DateTime?
 
   studentStats StudentStats?
-  teacherStats TeacherStats?
+  ProfessorStats ProfessorStats?
 
   classroomsCreated Classroom[]        @relation("UserClassrooms")
   enrollments       Enrollment[]
@@ -44,21 +44,21 @@ model User {
 
 // Student-specific stats
 model StudentStats {
-  id                     String @id @default(uuid())
-  user                   User   @relation(fields: [id], references: [id])
-  total_points           Int
-  marathons_participated Int
-  podiums                Int
-  first_places           Int
+  userId                 String @id 
+  user                   User   @relation(fields: [userId], references: [id])
+  total_points           Int    @default(0)
+  marathons_participated Int    @default(0)
+  podiums                Int    @default(0)
+  first_places           Int    @default(0)
 }
 
-// Teacher-specific stats
-model TeacherStats {
-  id                     String @id @default(uuid())
-  user                   User   @relation(fields: [id], references: [id])
-  total_classes          Int
-  total_marathons        Int
-  total_students_reached Int
+// Professor-specific stats
+model ProfessorStats {
+  userId                 String @id 
+  user                   User   @relation(fields: [userId], references: [id])
+  total_classes          Int    @default(0)
+  total_marathons        Int    @default(0)
+  total_students_reached Int    @default(0)
 }
 
 // Classroom

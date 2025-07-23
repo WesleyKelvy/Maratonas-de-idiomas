@@ -1,7 +1,11 @@
-import { Role } from '@prisma/client';
+import {
+  Role,
+  StudentStats as PrismaStudentStats,
+  ProfessorStats as PrismaTeacherStats,
+} from '@prisma/client';
 
 export class User {
-  id: string;
+  id: string; // Changed to string to match uuid()
   name: string;
   email: string;
   passwordHash: string;
@@ -9,6 +13,17 @@ export class User {
   city: string;
   occupation: string;
   role: Role;
-  resetToken: string | null;
-  resetTokenExpiration: Date | null;
+
+  resetToken?: string;
+  resetTokenExpiration?: Date;
+
+  studentStats?: PrismaStudentStats; // Include the relation
+  teacherStats?: PrismaTeacherStats; // Include the relation
+
+  // Add other relations if you have custom entities for them
+  // classroomsCreated?: Classroom[];
+  // enrollments?: Enrollment[];
+  // submissions?: Submission[];
+  // leaderboard?: Leaderboard[];
+  // LanguageMarathon?: LanguageMarathon[];
 }
