@@ -10,11 +10,12 @@ import {
 } from '@nestjs/common';
 import { Enrollment } from '@prisma/client';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import { StudentGuard } from 'src/auth/guards/student.guard';
 import { UserFromJwt } from 'src/auth/models/UserFromJwt';
 import { ENROLLEMENT_SERVICE_TOKEN } from 'src/Enrollment/abstract-services/abstract-enrollment.service';
 import { AbstractEnrollmentRepository } from 'src/repositories/abstract/enrollment.repository';
 
-@UseGuards()
+@UseGuards(StudentGuard)
 @Controller('/student/enrollment/:marathonId')
 export class EnrollmentController {
   constructor(
