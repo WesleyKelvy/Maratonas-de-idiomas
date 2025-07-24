@@ -1,4 +1,9 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Enrollment } from '@prisma/client';
 import { AbstractEnrollmentService } from 'src/Enrollment/abstract-services/abstract-enrollment.service';
 import {
@@ -24,7 +29,16 @@ export class EnrollmentService implements AbstractEnrollmentService {
     return enrollment;
   }
 
-  async create(id: string, userId: string): Promise<Enrollment> {
-    return await this.enrollmentRepository.create(id, userId);
+  async findOne(marathon_id: string, userId: string): Promise<Enrollment> {
+    return await this.enrollmentRepository.findOne(marathon_id, userId);
+  }
+
+  async create(userId: string, marathon_id: string): Promise<Enrollment> {
+    const data = await this.findOne(marathon_id, userId);
+
+    if (data) {
+      throw new ConflictException('Enrollemt already done!');
+    }
+    return await this.enrollmentRepository.create(userId, marathon_id);
   }
 }

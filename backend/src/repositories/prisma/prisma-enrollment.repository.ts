@@ -8,6 +8,14 @@ export class PrismaEnrollmentRepository
   implements AbstractEnrollmentRepository
 {
   constructor(private readonly prisma: PrismaService) {}
+  async findOne(
+    userId: string,
+    marathonId: string,
+  ): Promise<Enrollment | null> {
+    return await this.prisma.enrollment.findFirst({
+      where: { user_id: userId, marathon_id: marathonId },
+    });
+  }
 
   async findAllByUserId(userId: string): Promise<Enrollment[]> {
     return await this.prisma.enrollment.findMany({
