@@ -9,6 +9,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { UserModule } from './user/user.module';
 import { StatsModule } from './stats/stats.module';
 import { ClassroomModule } from 'src/classroom/classroom.module';
+import { LanguageMarathonModule } from 'src/LanguageMarathon/language-marathon.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { ClassroomModule } from 'src/classroom/classroom.module';
     MailerModule,
     StatsModule,
     ClassroomModule,
+    LanguageMarathonModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: JwtAuthGuard }],

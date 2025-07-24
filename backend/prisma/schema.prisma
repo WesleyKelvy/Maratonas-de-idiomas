@@ -39,7 +39,6 @@ model User {
   enrollments       Enrollment[]
   submissions       Submission[]
   leaderboard       Leaderboard[]
-  LanguageMarathon  LanguageMarathon[]
 }
 
 // Student-specific stats
@@ -63,8 +62,8 @@ model ProfessorStats {
 
 // Classroom
 model Classroom {
-  name              String
   code              String    @id
+  name              String
   invite_expiration DateTime?
   created_at        DateTime  @default(now())
   created_by        String
@@ -75,20 +74,18 @@ model Classroom {
 
 // Language Marathon
 model LanguageMarathon {
-  id          String   @id @default(uuid())
+  id          String   @id @default(cuid())
   title       String
-  description String
+  description String?
   context     String
-  difficulty  String
+  difficulty  String?
   timeLimit   Int
-  start_date  DateTime
-  end_date    DateTime
+  start_date  DateTime @default(now())
+  end_date    DateTime?
 
-  classroom_id String
-  created_by   String
+  classroom_code String 
 
-  classroom Classroom @relation(fields: [classroom_id], references: [code])
-  creator   User      @relation(fields: [created_by], references: [id])
+  classroom Classroom @relation(fields: [classroom_code], references: [code])
 
   questions   Question[]
   enrollments Enrollment[]
