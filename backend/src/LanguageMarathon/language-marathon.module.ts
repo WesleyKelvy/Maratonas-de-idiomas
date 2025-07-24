@@ -3,7 +3,7 @@ import { ProfessorGuard } from 'src/auth/guards/professor.guard';
 import { LANGUAGE_MARATHON_SERVICE_TOKEN } from 'src/LanguageMarathon/abstract-services/abstract-language-marathon.service';
 import { LanguageMarathonController } from 'src/LanguageMarathon/language-marathon.controller';
 import { LanguageMarathonService } from 'src/LanguageMarathon/language-marathon.service';
-import { LANGUAGE_MARATHON_REPOSITORY_TOKEN } from 'src/repositories/abstract/languageMarathon.repository copy';
+import { LANGUAGE_MARATHON_REPOSITORY_TOKEN } from 'src/repositories/abstract/languageMarathon.repository';
 import { PrismaLanguageMarathonRepository } from 'src/repositories/prisma/prisma-language-marathon.repository';
 
 @Module({

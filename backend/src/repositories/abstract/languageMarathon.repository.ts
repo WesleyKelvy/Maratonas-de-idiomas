@@ -11,9 +11,9 @@ export abstract class AbstractLanguageMarathonRepository {
   abstract findAllByClassroomCode(code: string): Promise<LanguageMarathon[]>;
   abstract update(
     code: string,
-    dto: UpdateLanguageMarathonDto,
+    updateStatDto: UpdateLanguageMarathonDto,
   ): Promise<LanguageMarathon>;
-  abstract remove(id: string): Promise<void>;
+  abstract remove(code: string): Promise<void>;
 }
 
 export const LANGUAGE_MARATHON_REPOSITORY_TOKEN =

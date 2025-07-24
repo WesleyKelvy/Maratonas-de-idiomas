@@ -6,7 +6,7 @@ import { UpdateLanguageMarathonDto } from 'src/LanguageMarathon/dto/language-mar
 import {
   AbstractLanguageMarathonRepository,
   LANGUAGE_MARATHON_REPOSITORY_TOKEN,
-} from 'src/repositories/abstract/languageMarathon.repository copy';
+} from 'src/repositories/abstract/languageMarathon.repository';
 
 @Injectable()
 export class LanguageMarathonService

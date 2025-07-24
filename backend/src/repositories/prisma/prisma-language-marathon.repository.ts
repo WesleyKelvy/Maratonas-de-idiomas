@@ -3,7 +3,7 @@ import { LanguageMarathon } from '@prisma/client';
 import { CreateLanguageMarathonDto } from 'src/LanguageMarathon/dto/language-marathon.create.dto';
 import { UpdateLanguageMarathonDto } from 'src/LanguageMarathon/dto/language-marathon.update.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { AbstractLanguageMarathonRepository } from 'src/repositories/abstract/languageMarathon.repository copy';
+import { AbstractLanguageMarathonRepository } from 'src/repositories/abstract/languageMarathon.repository';
 
 @Injectable()
 export class PrismaLanguageMarathonRepository

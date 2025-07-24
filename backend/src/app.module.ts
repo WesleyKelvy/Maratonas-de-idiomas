@@ -1,15 +1,16 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
+import { ClassroomModule } from 'src/classroom/classroom.module';
+import { EnrollmentModule } from 'src/Enrollment/enrollment.module';
+import { LanguageMarathonModule } from 'src/LanguageMarathon/language-marathon.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { MailerModule } from './mailer/mailer.module';
 import { PrismaModule } from './prisma/prisma.module';
-import { UserModule } from './user/user.module';
 import { StatsModule } from './stats/stats.module';
-import { ClassroomModule } from 'src/classroom/classroom.module';
-import { LanguageMarathonModule } from 'src/LanguageMarathon/language-marathon.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { LanguageMarathonModule } from 'src/LanguageMarathon/language-marathon.m
     StatsModule,
     ClassroomModule,
     LanguageMarathonModule,
+    EnrollmentModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: JwtAuthGuard }],
