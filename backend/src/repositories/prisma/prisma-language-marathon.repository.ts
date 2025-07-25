@@ -36,6 +36,7 @@ export class PrismaLanguageMarathonRepository
         timeLimit: dto.timeLimit,
         start_date: dto.startDate,
         end_date: dto.endDate,
+        number_of_questions: dto.number_of_questions,
         classroom: { connect: { code } },
       },
     });

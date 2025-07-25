@@ -43,13 +43,13 @@ export class QuestionController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<Question> {
+  findOne(@Param('id') id: number): Promise<Question> {
     return this.questionService.findOne(id);
   }
 
   @Patch(':id')
   update(
-    @Param('id') id: string,
+    @Param('id') id: number,
     @Body() updateDto: UpdateQuestionDto,
   ): Promise<Question> {
     return this.questionService.update(id, updateDto);
@@ -57,7 +57,7 @@ export class QuestionController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id') id: string): Promise<void> {
+  remove(@Param('id') id: number): Promise<void> {
     return this.questionService.remove(id);
   }
 }

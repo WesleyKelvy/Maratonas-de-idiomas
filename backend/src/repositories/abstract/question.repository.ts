@@ -4,16 +4,13 @@ import { UpdateQuestionDto } from 'src/Question/dto/question.update.dto';
 
 export abstract class AbstractQuestionRepository {
   abstract create(
-    marathonId: string,
     dto: CreateQuestionDto,
-  ): Promise<Question>;
-  abstract findOne(userId: string): Promise<Question | null>;
-  abstract findAllByMarathonId(userId: string): Promise<Question[]>;
-  abstract update(
     marathonId: string,
-    dto: UpdateQuestionDto,
   ): Promise<Question>;
-  abstract remove(code: string): Promise<void>;
+  abstract findOne(id: number): Promise<Question | null>;
+  abstract findAllByMarathonId(marathonId: string): Promise<Question[]>;
+  abstract update(id: number, dto: UpdateQuestionDto): Promise<Question>;
+  abstract remove(id: number): Promise<void>;
 }
 
 export const QUESTION_REPOSITORY_TOKEN = 'QUESTION_REPOSITORY_TOKEN';

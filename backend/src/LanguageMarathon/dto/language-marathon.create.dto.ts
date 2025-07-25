@@ -1,7 +1,10 @@
+import { Difficulty } from '@prisma/client';
 import {
   IsDate,
+  IsEnum,
   IsInt,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
 } from 'class-validator';
@@ -19,9 +22,9 @@ export class CreateLanguageMarathonDto {
   @IsNotEmpty()
   context: string;
 
-  @IsString()
+  @IsEnum(Difficulty)
   @IsOptional()
-  difficulty: string;
+  difficulty: Difficulty;
 
   @IsInt()
   timeLimit: number;
@@ -33,4 +36,8 @@ export class CreateLanguageMarathonDto {
   @IsDate()
   @IsOptional()
   endDate: Date;
+
+  @IsNumber()
+  @IsNotEmpty()
+  number_of_questions: number;
 }

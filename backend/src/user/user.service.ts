@@ -187,8 +187,4 @@ export class UserService {
       resetTokenExpiration: null,
     });
   }
-
-  async joinMarathon(id): Promise<void> {
-    return;
-  }
 }

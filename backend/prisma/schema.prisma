@@ -18,6 +18,12 @@ enum Role {
   Professor
 }
 
+enum Difficulty {
+  Beginner
+  Intermediate
+  Advanced
+}
+
 // User model
 model User {
   id           String   @id @default(uuid())
@@ -78,10 +84,11 @@ model LanguageMarathon {
   title       String
   description String?
   context     String
-  difficulty  String?
+  difficulty  Difficulty
   timeLimit   Int
   start_date  DateTime @default(now())
   end_date    DateTime?
+  number_of_questions Int
 
   classroom_code String 
 
@@ -94,7 +101,7 @@ model LanguageMarathon {
 
 // Question
 model Question {
-  id          String @id
+  id          Int @id @default(autoincrement())
   marathon_id String
   title       String?
   prompt_text String
@@ -106,7 +113,7 @@ model Question {
 // Submission
 model Submission {
   id              String   @id @default(uuid())
-  question_id     String
+  question_id     Int
   user_id         String
   answer          String
   submitted_at    DateTime @default(now())
