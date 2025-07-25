@@ -54,8 +54,7 @@ async function main() {
   const marathon = await prisma.languageMarathon.create({
     data: {
       title: 'Maratona de Verbos',
-      description: 'Conjugue e pratique verbos regulares e irregulares.',
-      context: 'Foco em tempos verbais no passado.',
+      context: 'Team work at school',
       difficulty: Difficulty.Beginner,
       timeLimit: 30, // minutos
       start_date: new Date(), // agora

@@ -32,7 +32,14 @@ export class LanguageMarathonService
     dto: CreateLanguageMarathonDto,
     code: string,
   ): Promise<LanguageMarathon> {
-    return await this.marathonRepository.create({ ...dto }, code);
+    const startDate = new Date();
+    const endDate = new Date(startDate);
+    endDate.setMinutes(startDate.getMinutes() + dto.timeLimit);
+
+    return await this.marathonRepository.create(
+      { ...dto, endDate: endDate, startDate },
+      code,
+    );
   }
 
   async findOne(id: string): Promise<LanguageMarathon> {
