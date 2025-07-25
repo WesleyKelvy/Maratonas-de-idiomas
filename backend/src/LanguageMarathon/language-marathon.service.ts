@@ -44,7 +44,6 @@ export class LanguageMarathonService
 
   async findOne(id: string): Promise<LanguageMarathon> {
     const marathon = await this.marathonRepository.findOne(id);
-    console.log(marathon);
     if (!marathon) {
       throw new NotFoundException(`Marathon with ID ${id} not found.`);
     }

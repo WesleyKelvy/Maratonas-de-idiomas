@@ -9,8 +9,10 @@ import {
 import { Question } from '@prisma/client';
 import { UpdateLanguageMarathonDto } from 'src/LanguageMarathon/dto/language-marathon.update.dto';
 import { AbstractQuestionService } from 'src/Question/abstract-services/abstract-question.service';
-import { CreateQuestionDto } from 'src/Question/dto/question.create.dto';
-import { GeminiResponse } from 'src/Question/interfaces/geminiResponse';
+import {
+  GeminiResponse,
+  QuestionArray,
+} from 'src/Question/interfaces/geminiResponse';
 import { GenerateQuestionsDto } from 'src/Question/interfaces/generateQuestionsDto';
 import { createQuestionPromptTemplate } from 'src/Question/prompts/create-questions';
 import {
@@ -33,8 +35,7 @@ export class QuestionService implements AbstractQuestionService {
 
   async generateQuestionsWithGemini(
     dto: GenerateQuestionsDto,
-    marathonId: string,
-  ): Promise<Question[]> {
+  ): Promise<QuestionArray> {
     const promptTemplate = createQuestionPromptTemplate(dto);
 
     try {
@@ -42,8 +43,6 @@ export class QuestionService implements AbstractQuestionService {
         model: 'gemini-2.5-flash',
         contents: promptTemplate,
       });
-
-      console.log(output.text);
 
       const response = output.text;
 
@@ -54,24 +53,13 @@ export class QuestionService implements AbstractQuestionService {
         .replace(/```/g, '')
         .trim();
 
-      console.log('cleanedText: ', cleanedText);
       // parse into the wrapper
       const genResp: GeminiResponse = JSON.parse(cleanedText);
 
-      console.log('genResp: ', genResp);
+      // pull out the array
+      const questionsArray = genResp.questions;
 
-      const creations = genResp.questions.map((q) =>
-        this.create(
-          {
-            prompt_text: q.question_text,
-          },
-          marathonId,
-        ),
-      );
-
-      const createdQuestions: Question[] = await Promise.all(creations);
-
-      return createdQuestions;
+      return questionsArray;
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -88,8 +76,21 @@ export class QuestionService implements AbstractQuestionService {
     return question;
   }
 
-  async create(dto: CreateQuestionDto, marathonId: string): Promise<Question> {
-    return await this.questionRepository.create(dto, marathonId);
+  async create(
+    questionsArray: QuestionArray,
+    marathonId: string,
+  ): Promise<Question[]> {
+    const questions = questionsArray.map(
+      async (q) =>
+        await this.questionRepository.create(
+          {
+            prompt_text: q.question_text,
+          },
+          marathonId,
+        ),
+    );
+
+    return await Promise.all(questions);
   }
 
   async findOne(id: number): Promise<Question> {

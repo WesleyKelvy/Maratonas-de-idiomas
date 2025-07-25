@@ -3,3 +3,7 @@ export interface GeminiResponse {
     question_text: string;
   }[];
 }
+
+export type QuestionArray = {
+  question_text: string;
+}[];

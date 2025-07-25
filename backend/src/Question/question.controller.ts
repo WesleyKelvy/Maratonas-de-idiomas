@@ -14,27 +14,49 @@ import {
 import { Question } from '@prisma/client';
 import { ProfessorGuard } from 'src/auth/guards/professor.guard';
 import {
+  AbstractLanguageMarathonService,
+  LANGUAGE_MARATHON_SERVICE_TOKEN,
+} from 'src/LanguageMarathon/abstract-services/abstract-language-marathon.service';
+import {
   AbstractQuestionService,
   QUESTION_SERVICE_TOKEN,
 } from 'src/Question/abstract-services/abstract-question.service';
-import { CreateQuestionDto } from 'src/Question/dto/question.create.dto';
 import { UpdateQuestionDto } from 'src/Question/dto/question.update.dto';
+import { QuestionArray } from 'src/Question/interfaces/geminiResponse';
+import { GenerateQuestionsDto } from 'src/Question/interfaces/generateQuestionsDto';
 
 @UseGuards(ProfessorGuard)
-@Controller('/classrooms/:code/:marathonId/question')
+@Controller('/classrooms/:code/marathon/:marathonId/')
 export class QuestionController {
   constructor(
     @Inject(QUESTION_SERVICE_TOKEN)
     private readonly questionService: AbstractQuestionService,
+    @Inject(LANGUAGE_MARATHON_SERVICE_TOKEN)
+    private readonly marathonService: AbstractLanguageMarathonService,
   ) {}
+
+  @Post('/get-questions')
+  @HttpCode(HttpStatus.CREATED)
+  async getGeminiQuestions(
+    @Param('marathonId') marathonId: string,
+  ): Promise<QuestionArray> {
+    const data = await this.marathonService.findOne(marathonId);
+    return this.questionService.generateQuestionsWithGemini(data);
+  }
+
+  @Post('save-questions')
+  @HttpCode(HttpStatus.CREATED)
+  async sabeQuestions(
+    @Param('marathonId') marathonId: string,
+    @Body() questions: QuestionArray,
+  ): Promise<Question[]> {
+    return this.questionService.create(questions, marathonId);
+  }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  create(
-    @Body() dto: CreateQuestionDto,
-    @Param('marathonId') id: string,
-  ): Promise<Question> {
-    return this.questionService.create(dto, id);
+  generateQuestions(@Body() dto: GenerateQuestionsDto): Promise<QuestionArray> {
+    return this.questionService.generateQuestionsWithGemini(dto);
   }
 
   @Get()

@@ -1,6 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 import { Module } from '@nestjs/common';
 import { ProfessorGuard } from 'src/auth/guards/professor.guard';
+import { LanguageMarathonModule } from 'src/LanguageMarathon/language-marathon.module';
 import { QUESTION_SERVICE_TOKEN } from 'src/Question/abstract-services/abstract-question.service';
 import { QuestionController } from 'src/Question/question.controller';
 import { QuestionService } from 'src/Question/question.service';
@@ -8,6 +9,7 @@ import { QUESTION_REPOSITORY_TOKEN } from 'src/repositories/abstract/question.re
 import { PrismaQuestionRepository } from 'src/repositories/prisma/prisma-question.repository';
 
 @Module({
+  imports: [LanguageMarathonModule],
   controllers: [QuestionController],
   providers: [
     {
