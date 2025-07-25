@@ -94,11 +94,10 @@ model LanguageMarathon {
 
 // Question
 model Question {
-  id          String @id @default(uuid())
+  id          String @id
   marathon_id String
-  title       String
+  title       String?
   prompt_text String
-  order       Int
 
   marathon    LanguageMarathon @relation(fields: [marathon_id], references: [id])
   submissions Submission[]
