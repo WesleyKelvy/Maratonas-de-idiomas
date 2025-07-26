@@ -53,17 +53,69 @@ async function main() {
   // 4) Create one LanguageMarathon in that classroom
   const marathon = await prisma.languageMarathon.create({
     data: {
-      title: 'Maratona de Verbos',
-      context: 'Team work at school',
+      title: 'Team Work at school',
+      context: 'Team work',
       difficulty: Difficulty.Beginner,
-      timeLimit: 30, // minutos
+      timeLimit: 60, // minutos
       start_date: new Date(), // agora
       end_date: new Date(Date.now() + 1000 * 60 * 60), // +1h
-      number_of_questions: 5,
+      number_of_questions: 1,
       classroom: { connect: { code: classroom.code } },
     },
   });
   console.log('Created marathon:', marathon.id);
+
+  // 5) Create 9 beginner-level questions for the marathon
+  const questionsData = [
+    {
+      prompt_text: 'What do you like about working in a team at school?',
+    },
+    {
+      prompt_text: 'Who do you usually work with in school projects?',
+    },
+    {
+      prompt_text:
+        'Describe a good experience you had while working in a group.',
+    },
+    {
+      prompt_text:
+        'What are some things you need to do to be a good team member?',
+    },
+    {
+      prompt_text:
+        'How do you and your friends help each other during group tasks?',
+    },
+    {
+      prompt_text: 'Why is it important to listen to others in a team?',
+    },
+    {
+      prompt_text:
+        'What is one problem that can happen in group work, and how can you fix it?',
+    },
+    {
+      prompt_text: 'What jobs do people usually have in a school team project?',
+    },
+    {
+      prompt_text:
+        'How do you feel when your team wins or finishes a project well?',
+    },
+  ];
+
+  for (const q of questionsData) {
+    await prisma.question.create({
+      data: {
+        prompt_text: q.prompt_text,
+        marathon: {
+          connect: { id: marathon.id },
+        },
+      },
+    });
+  }
+
+  console.log(
+    `Created ${questionsData.length} questions for marathon:`,
+    marathon.id,
+  );
 
   console.log(
     '\n✅ Seed complete — ready to test createQuestion() against marathon:',

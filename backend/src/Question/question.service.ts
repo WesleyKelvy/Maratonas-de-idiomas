@@ -14,7 +14,7 @@ import {
   QuestionArray,
 } from 'src/Question/interfaces/geminiResponse';
 import { GenerateQuestionsDto } from 'src/Question/interfaces/generateQuestionsDto';
-import { createQuestionPromptTemplate } from 'src/Question/prompts/(old)create-questions';
+import { createOptimizedPrompt } from 'src/Question/prompts/create-questions';
 import {
   AbstractQuestionRepository,
   QUESTION_REPOSITORY_TOKEN,
@@ -36,7 +36,7 @@ export class QuestionService implements AbstractQuestionService {
   async generateQuestionsWithGemini(
     dto: GenerateQuestionsDto,
   ): Promise<QuestionArray> {
-    const promptTemplate = createQuestionPromptTemplate(dto);
+    const promptTemplate = createOptimizedPrompt(dto);
 
     try {
       const output = await this.gemini.models.generateContent({
@@ -82,8 +82,7 @@ export class QuestionService implements AbstractQuestionService {
   ): Promise<Question[]> {
     const batchSize = 7;
     const allQuestions: Question[] = [];
-
-    for (let i = 0; i < questionsArray.length - 1; i += batchSize) {
+    for (let i = 0; i < questionsArray.length; i += batchSize) {
       const batch: QuestionArray = questionsArray.slice(i, i + batchSize);
 
       const createdChunk = await Promise.all(

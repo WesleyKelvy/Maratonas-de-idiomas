@@ -22,11 +22,14 @@ import {
   QUESTION_SERVICE_TOKEN,
 } from 'src/Question/abstract-services/abstract-question.service';
 import { UpdateQuestionDto } from 'src/Question/dto/question.update.dto';
-import { QuestionArray } from 'src/Question/interfaces/geminiResponse';
+import {
+  QuestionArray,
+  QuestionArrayDto,
+} from 'src/Question/interfaces/geminiResponse';
 import { GenerateQuestionsDto } from 'src/Question/interfaces/generateQuestionsDto';
 
 @UseGuards(ProfessorGuard)
-@Controller('/classrooms/:code/marathon/:marathonId/')
+@Controller('/classrooms/:code/marathon/:marathonId')
 export class QuestionController {
   constructor(
     @Inject(QUESTION_SERVICE_TOKEN)
@@ -48,20 +51,22 @@ export class QuestionController {
   @HttpCode(HttpStatus.CREATED)
   async sabeQuestions(
     @Param('marathonId') marathonId: string,
-    @Body() questions: QuestionArray,
+    @Body() dto: QuestionArrayDto,
   ): Promise<Question[]> {
-    return this.questionService.create(questions, marathonId);
+    return this.questionService.create(dto.questions, marathonId);
   }
 
-  @Post()
+  @Post() // Gemini
   @HttpCode(HttpStatus.CREATED)
   generateQuestions(@Body() dto: GenerateQuestionsDto): Promise<QuestionArray> {
     return this.questionService.generateQuestionsWithGemini(dto);
   }
 
-  @Get()
-  findAllByMarathonId(@Param('marathonId') id: string): Promise<Question[]> {
-    return this.questionService.findAllByMarathonId(id);
+  @Get('questions')
+  findAllByMarathonId(
+    @Param('marathonId') marathonId: string,
+  ): Promise<Question[]> {
+    return this.questionService.findAllByMarathonId(marathonId);
   }
 
   @Get(':id')
