@@ -80,17 +80,26 @@ export class QuestionService implements AbstractQuestionService {
     questionsArray: QuestionArray,
     marathonId: string,
   ): Promise<Question[]> {
-    const questions = questionsArray.map(
-      async (q) =>
-        await this.questionRepository.create(
-          {
-            prompt_text: q.question_text,
-          },
-          marathonId,
-        ),
-    );
+    const batchSize = 7;
+    const allQuestions: Question[] = [];
 
-    return await Promise.all(questions);
+    for (let i = 0; i < questionsArray.length - 1; i += batchSize) {
+      const batch: QuestionArray = questionsArray.slice(i, i + batchSize);
+
+      const createdChunk = await Promise.all(
+        batch.map((q) =>
+          this.questionRepository.create(
+            {
+              prompt_text: q.question_text,
+            },
+            marathonId,
+          ),
+        ),
+      );
+
+      allQuestions.push(...createdChunk);
+    }
+    return allQuestions;
   }
 
   async findOne(id: number): Promise<Question> {
