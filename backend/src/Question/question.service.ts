@@ -14,7 +14,7 @@ import {
   QuestionArray,
 } from 'src/Question/interfaces/geminiResponse';
 import { GenerateQuestionsDto } from 'src/Question/interfaces/generateQuestionsDto';
-import { createQuestionPromptTemplate } from 'src/Question/prompts/create-questions';
+import { createQuestionPromptTemplate } from 'src/Question/prompts/(old)create-questions';
 import {
   AbstractQuestionRepository,
   QUESTION_REPOSITORY_TOKEN,
