@@ -112,17 +112,28 @@ model Question {
 
 // Submission
 model Submission {
-  id              String   @id @default(uuid())
+  id              String   @id @default(cuid())
   question_id     Int
   user_id         String
   answer          String
   submitted_at    DateTime @default(now())
   corrected_by_ai Boolean  @default(false)
-  ai_feedback     String?
+  corrected_answer String?
   score           Float?
 
   question Question @relation(fields: [question_id], references: [id])
   user     User     @relation(fields: [user_id], references: [id])
+
+  AiFeedbacks AiFeedbacks[]
+}
+
+model AiFeedbacks {
+  id            Int     @id @default(autoincrement())
+  submissionId  String
+  explanation   String
+  points_deducted Int       
+
+  submission    Submission @relation(fields: [submissionId], references: [id])
 }
 
 // Enrollment
