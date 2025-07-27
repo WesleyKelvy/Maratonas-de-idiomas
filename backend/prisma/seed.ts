@@ -65,7 +65,7 @@ async function main() {
   });
   console.log('Created marathon:', marathon.id);
 
-  // 5) Create 9 beginner-level questions for the marathon
+  // 5) Create beginner-level questions for the marathon
   const questionsData = [
     {
       prompt_text: 'What do you like about working in a team at school?',
@@ -76,28 +76,6 @@ async function main() {
     {
       prompt_text:
         'Describe a good experience you had while working in a group.',
-    },
-    {
-      prompt_text:
-        'What are some things you need to do to be a good team member?',
-    },
-    {
-      prompt_text:
-        'How do you and your friends help each other during group tasks?',
-    },
-    {
-      prompt_text: 'Why is it important to listen to others in a team?',
-    },
-    {
-      prompt_text:
-        'What is one problem that can happen in group work, and how can you fix it?',
-    },
-    {
-      prompt_text: 'What jobs do people usually have in a school team project?',
-    },
-    {
-      prompt_text:
-        'How do you feel when your team wins or finishes a project well?',
     },
   ];
 
@@ -114,11 +92,6 @@ async function main() {
 
   console.log(
     `Created ${questionsData.length} questions for marathon:`,
-    marathon.id,
-  );
-
-  console.log(
-    '\n✅ Seed complete — ready to test createQuestion() against marathon:',
     marathon.id,
   );
 }

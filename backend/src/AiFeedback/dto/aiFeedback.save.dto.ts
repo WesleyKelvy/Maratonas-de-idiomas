@@ -4,6 +4,7 @@ import {
   IsNotEmpty,
   IsNumber,
   IsString,
+  Min,
   ValidateNested,
 } from 'class-validator';
 
@@ -13,6 +14,7 @@ export class SaveAiFeedbackDto {
   explanation: string;
 
   @IsNumber()
+  @Min(0)
   @IsNotEmpty()
   pointsDeducted: number;
 }

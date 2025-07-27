@@ -1,4 +1,4 @@
-export class AiFeedBack {
+export class AiFeedback {
   id: string;
   correctedAnswer: string;
   explanation: string;

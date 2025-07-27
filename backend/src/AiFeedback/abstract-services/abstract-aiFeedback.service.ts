@@ -1,6 +1,6 @@
+import { AiFeedbacks } from '@prisma/client';
 import { GenerateAiFeedbackDto } from 'src/AiFeedback/dto/aiFeedback.generate.dto';
 import { SaveAiFeedbackDto } from 'src/AiFeedback/dto/aiFeedback.save.dto';
-import { AiFeedBack } from 'src/AiFeedback/entities/aiFeedback.entity';
 import { CorrectionReport } from 'src/AiFeedback/interfaces/correctionResponse';
 
 export abstract class AbstractAiFeedbackService {
@@ -8,7 +8,7 @@ export abstract class AbstractAiFeedbackService {
     dto: SaveAiFeedbackDto[],
     questionId: string,
   ): Promise<void>;
-  abstract findAllBySubmissionId(id: string): Promise<AiFeedBack[]>;
+  abstract findAllBySubmissionId(id: string): Promise<AiFeedbacks[]>;
   abstract generateFeedback(
     dto: GenerateAiFeedbackDto,
   ): Promise<CorrectionReport>;

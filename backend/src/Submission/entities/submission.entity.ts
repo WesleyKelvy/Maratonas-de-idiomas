@@ -1,4 +1,4 @@
-import { AiFeedback } from '@prisma/client';
+import { AiFeedbacks } from '@prisma/client';
 
 export class Submission {
   id: string;
@@ -8,5 +8,5 @@ export class Submission {
   correctedByAI?: boolean;
   score: number;
 
-  AiFeedbacks?: AiFeedback;
+  AiFeedbacks?: AiFeedbacks;
 }

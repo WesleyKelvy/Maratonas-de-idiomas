@@ -31,7 +31,7 @@ export class SubmissionController {
   @HttpCode(HttpStatus.CREATED)
   create(
     @Body() dto: CreateSubmissionDto,
-    @Param('question') questionId: string,
+    @Param('questionId') questionId: string,
     @CurrentUser()
     user: UserFromJwt,
   ): Promise<void> {

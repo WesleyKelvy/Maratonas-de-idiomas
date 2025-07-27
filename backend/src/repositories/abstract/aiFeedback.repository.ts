@@ -1,14 +1,13 @@
-import { Submission } from '@prisma/client';
+import { AiFeedbacks } from '@prisma/client';
 import { SaveAiFeedbackDto } from 'src/AiFeedback/dto/aiFeedback.save.dto';
-import { AiFeedBack } from 'src/AiFeedback/entities/aiFeedback.entity';
 
 export abstract class AbstractAiFeedbackRepository {
   abstract saveFeedbacks(
     dto: SaveAiFeedbackDto[],
     submissionId: string,
   ): Promise<void>;
-  abstract findOne(id: string): Promise<Submission | null>;
-  abstract findAllBySubmissionId(userId: string): Promise<AiFeedBack[]>;
+  abstract findOne(id: number): Promise<AiFeedbacks | null>;
+  abstract findAllBySubmissionId(submissionId: string): Promise<AiFeedbacks[]>;
 }
 
 export const AI_FEEDBACK_REPOSITORY_TOKEN = 'AI_FEEDBACK_REPOSITORY_TOKEN';

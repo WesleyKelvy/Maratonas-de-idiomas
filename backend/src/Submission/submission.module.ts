@@ -1,26 +1,27 @@
 import { Module } from '@nestjs/common';
-import { AiFeedBackModule } from 'src/AiFeedback/aiFeedback.module';
+import { AiFeedbackModule } from 'src/AiFeedback/aiFeedback.module';
 import { ProfessorGuard } from 'src/auth/guards/professor.guard';
-import { QUESTION_SERVICE_TOKEN } from 'src/Question/abstract-services/abstract-question.service';
-import { QuestionController } from 'src/Question/question.controller';
-import { QuestionService } from 'src/Question/question.service';
-import { QUESTION_REPOSITORY_TOKEN } from 'src/repositories/abstract/question.repository';
-import { PrismaQuestionRepository } from 'src/repositories/prisma/prisma-question.repository';
+import { QuestionModule } from 'src/Question/question.module';
+import { SUBMISSION_REPOSITORY_TOKEN } from 'src/repositories/abstract/submission.repository';
+import { PrismaSubmissionRepository } from 'src/repositories/prisma/prisma-submission.repository';
+import { SUBMISSION_SERVICE_TOKEN } from 'src/Submission/abstract-services/abstract-submission.service';
+import { SubmissionController } from 'src/Submission/submission.controller';
+import { SubmissionService } from 'src/Submission/submission.service';
 
 @Module({
-  imports: [QuestionModule, AiFeedBackModule],
-  controllers: [QuestionController],
+  imports: [QuestionModule, AiFeedbackModule],
+  controllers: [SubmissionController],
   providers: [
     {
-      provide: QUESTION_SERVICE_TOKEN,
-      useClass: QuestionService,
+      provide: SUBMISSION_SERVICE_TOKEN,
+      useClass: SubmissionService,
     },
     {
-      provide: QUESTION_REPOSITORY_TOKEN,
-      useClass: PrismaQuestionRepository,
+      provide: SUBMISSION_REPOSITORY_TOKEN,
+      useClass: PrismaSubmissionRepository,
     },
     ProfessorGuard,
   ],
-  exports: [QUESTION_SERVICE_TOKEN],
+  exports: [SUBMISSION_SERVICE_TOKEN],
 })
-export class QuestionModule {}
+export class SubmissionModule {}
