@@ -117,9 +117,9 @@ model Submission {
   user_id         String
   answer          String
   submitted_at    DateTime @default(now())
+  corrected_by_ai Boolean  @default(false)
   ai_feedback     String?
   score           Float?
-  corrected_by_ai Boolean  @default(true)
 
   question Question @relation(fields: [question_id], references: [id])
   user     User     @relation(fields: [user_id], references: [id])
