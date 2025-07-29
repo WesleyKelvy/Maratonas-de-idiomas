@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { AiFeedbackModule } from 'src/AiFeedback/aiFeedback.module';
 import { ProfessorGuard } from 'src/auth/guards/professor.guard';
 import { QuestionModule } from 'src/Question/question.module';
@@ -9,7 +9,7 @@ import { SubmissionController } from 'src/Submission/submission.controller';
 import { SubmissionService } from 'src/Submission/submission.service';
 
 @Module({
-  imports: [QuestionModule, AiFeedbackModule],
+  imports: [QuestionModule, forwardRef(() => AiFeedbackModule)],
   controllers: [SubmissionController],
   providers: [
     {

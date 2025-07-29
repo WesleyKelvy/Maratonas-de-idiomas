@@ -1,9 +1,11 @@
+import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { AiFeedbackModule } from 'src/AiFeedback/aiFeedback.module';
 import { ClassroomModule } from 'src/classroom/classroom.module';
 import { EnrollmentModule } from 'src/Enrollment/enrollment.module';
 import { LanguageMarathonModule } from 'src/LanguageMarathon/language-marathon.module';
+import { LeaderboardModule } from 'src/Leaderboard/leaderboard.module';
 import { QuestionModule } from 'src/Question/question.module';
 import { SubmissionModule } from 'src/Submission/submission.module';
 import { AppController } from './app.controller';
@@ -17,6 +19,12 @@ import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
+    BullModule.forRoot({
+      redis: {
+        host: 'localhost',
+        port: 6379,
+      },
+    }),
     AuthModule,
     PrismaModule,
     UserModule,
@@ -28,6 +36,7 @@ import { UserModule } from './user/user.module';
     QuestionModule,
     SubmissionModule,
     AiFeedbackModule,
+    LeaderboardModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: JwtAuthGuard }],

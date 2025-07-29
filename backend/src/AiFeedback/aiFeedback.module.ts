@@ -1,14 +1,15 @@
 import { GoogleGenAI } from '@google/genai';
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { AI_FEEDBACK_SERVICE_TOKEN } from 'src/AiFeedback/abstract-services/abstract-aiFeedback.service';
 import { AiFeedbackController } from 'src/AiFeedback/aiFeedback.controller';
 import { AiFeedbackService } from 'src/AiFeedback/aiFeedback.service';
 import { ProfessorGuard } from 'src/auth/guards/professor.guard';
 import { AI_FEEDBACK_REPOSITORY_TOKEN } from 'src/repositories/abstract/aiFeedback.repository';
 import { PrismaAiFeedbackRepository } from 'src/repositories/prisma/prisma-ai-feedback.repository';
+import { SubmissionModule } from 'src/Submission/submission.module';
 
 @Module({
-  // imports: [SubmissionModule],
+  imports: [forwardRef(() => SubmissionModule)],
   controllers: [AiFeedbackController],
   providers: [
     {

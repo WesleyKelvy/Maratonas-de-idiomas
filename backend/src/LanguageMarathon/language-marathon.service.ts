@@ -4,6 +4,10 @@ import { AbstractLanguageMarathonService } from 'src/LanguageMarathon/abstract-s
 import { CreateLanguageMarathonDto } from 'src/LanguageMarathon/dto/language-marathon.create.dto';
 import { UpdateLanguageMarathonDto } from 'src/LanguageMarathon/dto/language-marathon.update.dto';
 import {
+  AbstractLeaderboardService,
+  LEADERBOARD_SERVICE_TOKEN,
+} from 'src/Leaderboard/abstract-services/abstract-leaderboard.service';
+import {
   AbstractLanguageMarathonRepository,
   LANGUAGE_MARATHON_REPOSITORY_TOKEN,
 } from 'src/repositories/abstract/languageMarathon.repository';
@@ -15,6 +19,8 @@ export class LanguageMarathonService
   constructor(
     @Inject(LANGUAGE_MARATHON_REPOSITORY_TOKEN)
     private readonly marathonRepository: AbstractLanguageMarathonRepository,
+    @Inject(LEADERBOARD_SERVICE_TOKEN)
+    private readonly leaderboardService: AbstractLeaderboardService,
   ) {}
 
   async findAllByClassroomCode(code: string): Promise<LanguageMarathon[]> {
@@ -36,10 +42,23 @@ export class LanguageMarathonService
     const endDate = new Date(startDate);
     endDate.setMinutes(startDate.getMinutes() + dto.timeLimit);
 
-    return await this.marathonRepository.create(
+    const newMarathon = await this.marathonRepository.create(
       { ...dto, endDate: endDate, startDate },
       code,
     );
+
+    if (newMarathon.end_date) {
+      // Cast leaderboardService to the concrete class to access the new method
+      const concreteLeaderboardService = this.leaderboardService as any;
+      if (concreteLeaderboardService.scheduleLeaderboardGeneration) {
+        await concreteLeaderboardService.scheduleLeaderboardGeneration(
+          newMarathon.id,
+          newMarathon.end_date,
+        );
+      }
+    }
+
+    return newMarathon;
   }
 
   async findOne(id: string): Promise<LanguageMarathon> {
@@ -60,7 +79,24 @@ export class LanguageMarathonService
       throw new NotFoundException(`Marathon with ID ${id} not found.`);
     }
 
-    return await this.marathonRepository.update(marathon.id, dto);
+    const updatedMarathon = await this.marathonRepository.update(
+      marathon.id,
+      dto,
+    );
+
+    if (updatedMarathon.end_date) {
+      // The `jobId` we set earlier ensures that the old job for this marathon
+      // is replaced with this new one, preventing duplicates.
+      const concreteLeaderboardService = this.leaderboardService as any;
+      if (concreteLeaderboardService.scheduleLeaderboardGeneration) {
+        await concreteLeaderboardService.scheduleLeaderboardGeneration(
+          updatedMarathon.id,
+          updatedMarathon.end_date,
+        );
+      }
+    }
+
+    return updatedMarathon;
   }
 
   async remove(id: string): Promise<void> {

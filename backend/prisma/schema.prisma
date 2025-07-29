@@ -79,6 +79,7 @@ model Classroom {
 }
 
 // Language Marathon
+
 model LanguageMarathon {
   id          String   @id @default(cuid())
   title       String
@@ -89,8 +90,10 @@ model LanguageMarathon {
   start_date  DateTime @default(now())
   end_date    DateTime?
   number_of_questions Int
+  // Add this line
+  leaderboard_generated Boolean @default(false)
 
-  classroom_code String 
+  classroom_code String
 
   classroom Classroom @relation(fields: [classroom_code], references: [code])
 
