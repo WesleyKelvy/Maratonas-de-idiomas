@@ -6,7 +6,7 @@ import {
   USER_REPOSITORY_TOKEN,
 } from 'src/repositories/abstract/user.repository';
 import { SanitedUser } from 'utils/sanitazeUser';
-import { User } from '../user/entities/user.entity';
+import { User } from '../User/entities/user.entity';
 import { UserPayload } from './models/UserPayload';
 import { UserToken } from './models/UserToken';
 

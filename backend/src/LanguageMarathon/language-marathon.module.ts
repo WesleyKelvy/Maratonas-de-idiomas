@@ -6,9 +6,10 @@ import { LanguageMarathonService } from 'src/LanguageMarathon/language-marathon.
 import { LeaderboardModule } from 'src/Leaderboard/leaderboard.module';
 import { LANGUAGE_MARATHON_REPOSITORY_TOKEN } from 'src/repositories/abstract/languageMarathon.repository';
 import { PrismaLanguageMarathonRepository } from 'src/repositories/prisma/prisma-language-marathon.repository';
+import { StatsModule } from 'src/Stats/stats.module';
 
 @Module({
-  imports: [LeaderboardModule],
+  imports: [LeaderboardModule, StatsModule],
   controllers: [LanguageMarathonController],
   providers: [
     {

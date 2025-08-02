@@ -11,12 +11,18 @@ import {
   AbstractLanguageMarathonRepository,
   LANGUAGE_MARATHON_REPOSITORY_TOKEN,
 } from 'src/repositories/abstract/languageMarathon.repository';
+import {
+  AbstractProfessorStatsService,
+  PROFESSOR_STATS_SERVICE_TOKEN,
+} from 'src/Stats/abstract-services/abstract-professor-stats.service';
 
 @Injectable()
 export class LanguageMarathonService
   implements AbstractLanguageMarathonService
 {
   constructor(
+    @Inject(PROFESSOR_STATS_SERVICE_TOKEN)
+    private readonly professorStatsService: AbstractProfessorStatsService,
     @Inject(LANGUAGE_MARATHON_REPOSITORY_TOKEN)
     private readonly marathonRepository: AbstractLanguageMarathonRepository,
     @Inject(LEADERBOARD_SERVICE_TOKEN)
@@ -37,7 +43,10 @@ export class LanguageMarathonService
   async create(
     dto: CreateLanguageMarathonDto,
     code: string,
+    id: string,
   ): Promise<LanguageMarathon> {
+    await this.professorStatsService.incrementMarathonsProfessorStats(id);
+
     const startDate = new Date();
     const endDate = new Date(startDate);
     endDate.setMinutes(startDate.getMinutes() + dto.timeLimit);

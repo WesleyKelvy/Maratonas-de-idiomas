@@ -2,12 +2,21 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Classroom } from '@prisma/client';
 import { AbstractClassroomRepository } from 'src/repositories/abstract/classroom.repository';
-import { CreateClassroomDto } from 'src/classroom/dto/classroom.create.dto';
-import { UpdateClassroomDto } from 'src/classroom/dto/classroom.update.dto';
+import { CreateClassroomDto } from 'src/Classroom/dto/classroom.create.dto';
+import { UpdateClassroomDto } from 'src/Classroom/dto/classroom.update.dto';
 
 @Injectable()
 export class PrismaClassroomRepository implements AbstractClassroomRepository {
   constructor(private readonly prisma: PrismaService) {}
+
+  /**
+   * Find a single classroom by its marathonId
+   */
+  async findOneByMarathonId(id: string): Promise<Classroom | null> {
+    return await this.prisma.classroom.findFirst({
+      where: { marathons: { every: { id } } },
+    });
+  }
 
   /**
    * Returns all classrooms created by a specific user

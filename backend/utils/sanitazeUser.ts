@@ -1,4 +1,4 @@
-import { User } from 'src/user/entities/user.entity';
+import { User } from 'src/User/entities/user.entity';
 
 export type SanitedUser = {
   name: string;

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ProfessorStats as PrismaProfessorStats } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AbstractProfessorStatsRepository } from 'src/repositories/abstract/professor-stats.repository';
-import { UpdateStudentStatsDto } from 'src/stats/dto/student.update-stats.dto copy';
+import { UpdateProfessorStatsDto } from 'src/Stats/dto/professor.update-stats.dto';
 
 @Injectable()
 export class PrismaProfessorStatsRepository
@@ -28,7 +28,7 @@ export class PrismaProfessorStatsRepository
 
   async update(
     id: string,
-    updateStatDto: UpdateStudentStatsDto,
+    updateStatDto: UpdateProfessorStatsDto,
   ): Promise<PrismaProfessorStats> {
     return await this.prisma.professorStats.update({
       where: { userId: id },
@@ -39,6 +39,27 @@ export class PrismaProfessorStatsRepository
   async remove(id: string): Promise<void> {
     await this.prisma.studentStats.delete({
       where: { userId: id },
+    });
+  }
+
+  async incrementClasses(userId: string): Promise<void> {
+    await this.prisma.professorStats.update({
+      where: { userId },
+      data: { total_classes: { increment: 1 } },
+    });
+  }
+
+  async incrementMarathons(userId: string): Promise<void> {
+    await this.prisma.professorStats.update({
+      where: { userId },
+      data: { total_marathons: { increment: 1 } },
+    });
+  }
+
+  async incrementStudentsReached(userId: string): Promise<void> {
+    await this.prisma.professorStats.update({
+      where: { userId },
+      data: { total_students_reached: { increment: 1 } },
     });
   }
 }

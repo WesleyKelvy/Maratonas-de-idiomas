@@ -12,6 +12,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { LanguageMarathon } from '@prisma/client';
+import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { ProfessorGuard } from 'src/auth/guards/professor.guard';
 import {
   AbstractLanguageMarathonService,
@@ -33,8 +34,9 @@ export class LanguageMarathonController {
   create(
     @Body() dto: CreateLanguageMarathonDto,
     @Param('code') code: string,
+    @CurrentUser('id') id: string,
   ): Promise<LanguageMarathon> {
-    return this.marathonService.create(dto, code);
+    return this.marathonService.create(dto, code, id);
   }
 
   @Get()

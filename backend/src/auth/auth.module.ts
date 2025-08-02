@@ -1,7 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
-import { UserModule } from 'src/user/user.module';
+import { UserModule } from 'src/User/user.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { ProfessorGuard } from './guards/professor.guard';

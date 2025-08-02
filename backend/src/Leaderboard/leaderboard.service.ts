@@ -1,12 +1,14 @@
 import { InjectQueue } from '@nestjs/bull';
 import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { Leaderboard, Prisma } from '@prisma/client';
+import { Leaderboard } from '@prisma/client';
 import { Queue } from 'bull';
+import { CreateLeaderboardDto } from 'src/Leaderboard/dto/leaderboard.create.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
   AbstractLeaderboardRepository,
   LEADERBOARD_REPOSITORY_TOKEN,
 } from 'src/repositories/abstract/leaderboard.repository';
+import { UpdateStudentStatsDto } from 'src/Stats/dto/student.update-stats.dto copy';
 import { AbstractLeaderboardService } from './abstract-services/abstract-leaderboard.service';
 
 @Injectable()
@@ -61,58 +63,56 @@ export class LeaderboardService implements AbstractLeaderboardService {
     );
   }
 
-  /**
-   * The core logic to generate and save the leaderboard for a given marathon.
-   * This method is now called by the LeaderboardProcessor.
-   * @param marathonId The ID of the marathon.
-   */
   async generateLeaderboardForMarathon(marathonId: string): Promise<void> {
-    // This logic remains the same as before.
+    // 1) Fetch all scored submissions in this marathon
     const submissions = await this.prisma.submission.findMany({
-      where: { question: { marathon_id: marathonId }, score: { not: null } },
+      where: {
+        question: { marathon_id: marathonId },
+        score: { not: null },
+      },
       select: { user_id: true, score: true },
     });
 
+    // 2) Sum up scores per student
     const userScores = new Map<string, number>();
-    for (const submission of submissions) {
-      const currentScore = userScores.get(submission.user_id) || 0;
-      userScores.set(submission.user_id, currentScore + submission.score);
+    for (const { user_id, score } of submissions) {
+      const prev = userScores.get(user_id) ?? 0;
+      userScores.set(user_id, prev + (score ?? 0));
     }
 
+    // 3) Get all enrolled students for this marathon
     const enrollments = await this.prisma.enrollment.findMany({
       where: { marathon_id: marathonId },
       select: { user_id: true },
     });
 
-    const rankedUsers = enrollments
-      .map((enrollment) => ({
-        userId: enrollment.user_id,
-        score: userScores.get(enrollment.user_id) || 0,
+    // 4) Build ranking array
+    const ranking = enrollments
+      .map(({ user_id }) => ({
+        userId: user_id,
+        score: userScores.get(user_id) ?? 0,
       }))
       .sort((a, b) => b.score - a.score);
 
-    const leaderboardData: Prisma.LeaderboardCreateManyInput[] =
-      rankedUsers.map((user, index) => ({
-        marathon_id: marathonId,
-        user_id: user.userId,
-        score: user.score,
-        position: index + 1,
-      }));
-
-    await this.leaderboardRepository.deleteByMarathonId(marathonId);
+    // 5) Write to Leaderboard table
+    const leaderboardData: CreateLeaderboardDto[] = ranking.map((u, idx) => ({
+      marathon_id: marathonId,
+      user_id: u.userId,
+      score: u.score,
+      position: idx + 1,
+    }));
+    // await this.leaderboardRepository.deleteByMarathonId(marathonId);
     await this.leaderboardRepository.createMany(leaderboardData);
 
-    // Mark the marathon so we know the leaderboard was generated
+    await this.updateStudentStats(leaderboardData);
+
+    // 6) Mark marathon as having a generated leaderboard
     await this.prisma.languageMarathon.update({
       where: { id: marathonId },
       data: { leaderboard_generated: true },
     });
   }
 
-  /**
-   * Retrieves the leaderboard for a specific marathon. This remains unchanged.
-   * @param marathonId The ID of the marathon.
-   */
   async getLeaderboardForMarathon(marathonId: string): Promise<Leaderboard[]> {
     const leaderboard =
       await this.leaderboardRepository.findByMarathonId(marathonId);
@@ -122,5 +122,35 @@ export class LeaderboardService implements AbstractLeaderboardService {
       );
     }
     return leaderboard;
+  }
+
+  async updateStudentStats(leaderboardDto: CreateLeaderboardDto[]) {
+    for (const { user_id, score, position } of leaderboardDto.map((u) => ({
+      ...u,
+    }))) {
+      // load existing stats
+      const stats = await this.prisma.studentStats.findUnique({
+        where: { userId: user_id },
+      });
+
+      // prepare updates
+      const updates: Partial<UpdateStudentStatsDto> = {
+        total_points: stats.total_points + score,
+        marathons_participated: stats.marathons_participated + 1,
+      };
+
+      // podium = top 3
+      if (position <= 3) {
+        updates.podiums = stats.podiums + 1;
+        if (position === 1) {
+          updates.first_places = stats.first_places + 1;
+        }
+      }
+
+      await this.prisma.studentStats.update({
+        where: { userId: user_id },
+        data: updates,
+      });
+    }
   }
 }

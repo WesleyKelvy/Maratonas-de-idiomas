@@ -6,6 +6,7 @@ export abstract class AbstractLanguageMarathonService {
   abstract create(
     dto: CreateLanguageMarathonDto,
     code: string,
+    userId: string,
   ): Promise<LanguageMarathon>;
   abstract findOne(id: string): Promise<LanguageMarathon>;
   abstract findAllByClassroomCode(code: string): Promise<LanguageMarathon[]>;

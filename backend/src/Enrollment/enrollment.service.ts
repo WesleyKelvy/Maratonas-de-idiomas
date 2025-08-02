@@ -5,15 +5,27 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Enrollment } from '@prisma/client';
+import {
+  AbstractClassroomService,
+  CLASSROOM_SERVICE_TOKEN,
+} from 'src/Classroom/abstract-services/abstract-classrom.service';
 import { AbstractEnrollmentService } from 'src/Enrollment/abstract-services/abstract-enrollment.service';
 import {
   AbstractEnrollmentRepository,
   ENROLLEMNT_REPOSITORY_TOKEN,
 } from 'src/repositories/abstract/enrollment.repository';
+import {
+  AbstractProfessorStatsService,
+  PROFESSOR_STATS_SERVICE_TOKEN,
+} from 'src/Stats/abstract-services/abstract-professor-stats.service';
 
 @Injectable()
 export class EnrollmentService implements AbstractEnrollmentService {
   constructor(
+    @Inject(PROFESSOR_STATS_SERVICE_TOKEN)
+    private readonly professorStatsService: AbstractProfessorStatsService,
+    @Inject(CLASSROOM_SERVICE_TOKEN)
+    private readonly classroomService: AbstractClassroomService,
     @Inject(ENROLLEMNT_REPOSITORY_TOKEN)
     private readonly enrollmentRepository: AbstractEnrollmentRepository,
   ) {}
@@ -39,6 +51,14 @@ export class EnrollmentService implements AbstractEnrollmentService {
     if (data) {
       throw new ConflictException('Enrollemt already done!');
     }
+
+    const { created_by } =
+      await this.classroomService.findOneByMarathonId(marathon_id);
+
+    await this.professorStatsService.incrementTotalStudentsProfessorStats(
+      created_by,
+    );
+
     return await this.enrollmentRepository.create(userId, marathon_id);
   }
 }

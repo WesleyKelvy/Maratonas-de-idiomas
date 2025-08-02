@@ -1,5 +1,5 @@
 import { StudentStats as PrismaStudentStats } from '@prisma/client';
-import { UpdateStudentStatsDto } from 'src/stats/dto/student.update-stats.dto copy';
+import { UpdateStudentStatsDto } from 'src/Stats/dto/student.update-stats.dto copy';
 
 export abstract class AbstractStudentStatsRepository {
   abstract create(id: string): Promise<PrismaStudentStats>;

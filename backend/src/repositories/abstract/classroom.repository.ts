@@ -1,6 +1,6 @@
 import { Classroom } from '@prisma/client';
-import { CreateClassroomDto } from 'src/classroom/dto/classroom.create.dto';
-import { UpdateClassroomDto } from 'src/classroom/dto/classroom.update.dto';
+import { CreateClassroomDto } from 'src/Classroom/dto/classroom.create.dto';
+import { UpdateClassroomDto } from 'src/Classroom/dto/classroom.update.dto';
 
 export abstract class AbstractClassroomRepository {
   abstract create(
@@ -9,6 +9,7 @@ export abstract class AbstractClassroomRepository {
     userId: string,
   ): Promise<Classroom>;
   abstract findByCode(userId: string): Promise<Classroom | null>;
+  abstract findOneByMarathonId(id: string): Promise<Classroom | null>;
   abstract findAll(userId: string): Promise<Classroom[]>;
   abstract update(
     code: string,

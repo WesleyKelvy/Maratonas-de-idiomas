@@ -2,7 +2,7 @@ import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { AiFeedbackModule } from 'src/AiFeedback/aiFeedback.module';
-import { ClassroomModule } from 'src/classroom/classroom.module';
+import { ClassroomModule } from 'src/Classroom/classroom.module';
 import { EnrollmentModule } from 'src/Enrollment/enrollment.module';
 import { LanguageMarathonModule } from 'src/LanguageMarathon/language-marathon.module';
 import { LeaderboardModule } from 'src/Leaderboard/leaderboard.module';
@@ -12,10 +12,10 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
-import { MailerModule } from './mailer/mailer.module';
+import { MailerModule } from './Mailer/mailer.module';
 import { PrismaModule } from './prisma/prisma.module';
-import { StatsModule } from './stats/stats.module';
-import { UserModule } from './user/user.module';
+import { StatsModule } from './Stats/stats.module';
+import { UserModule } from './User/user.module';
 
 @Module({
   imports: [
