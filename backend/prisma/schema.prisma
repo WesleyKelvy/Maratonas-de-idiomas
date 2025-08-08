@@ -26,22 +26,22 @@ enum Difficulty {
 
 // User model
 model User {
-  id           String   @id @default(uuid())
+  id           String @id @default(uuid())
   name         String
-  email        String   @unique
+  email        String @unique
   passwordHash String
   birthdate    String
   city         String
   occupation   String
-  role         Role     @default(Student)
-  
-  resetToken           String?    @unique
+  role         Role   @default(Student)
+
+  resetToken           String?   @unique
   resetTokenExpiration DateTime?
 
-  studentStats StudentStats?
+  studentStats   StudentStats?
   ProfessorStats ProfessorStats?
 
-  classroomsCreated Classroom[]        @relation("UserClassrooms")
+  classroomsCreated Classroom[]   @relation("UserClassrooms")
   enrollments       Enrollment[]
   submissions       Submission[]
   leaderboard       Leaderboard[]
@@ -49,7 +49,7 @@ model User {
 
 // Student-specific stats
 model StudentStats {
-  userId                 String @id 
+  userId                 String @id
   user                   User   @relation(fields: [userId], references: [id])
   total_points           Int    @default(0)
   marathons_participated Int    @default(0)
@@ -59,7 +59,7 @@ model StudentStats {
 
 // Professor-specific stats
 model ProfessorStats {
-  userId                 String @id 
+  userId                 String @id
   user                   User   @relation(fields: [userId], references: [id])
   total_classes          Int    @default(0)
   total_marathons        Int    @default(0)
@@ -73,25 +73,24 @@ model Classroom {
   invite_expiration DateTime?
   created_at        DateTime  @default(now())
   created_by        String
-  creator    User   @relation("UserClassrooms", fields: [created_by], references: [id])
+  creator           User      @relation("UserClassrooms", fields: [created_by], references: [id])
 
   marathons LanguageMarathon[]
 }
 
 // Language Marathon
-
 model LanguageMarathon {
-  id          String   @id @default(cuid())
-  title       String
-  description String?
-  context     String
-  difficulty  Difficulty
-  timeLimit   Int
-  start_date  DateTime @default(now())
-  end_date    DateTime?
-  number_of_questions Int
+  id                    String     @id @default(cuid())
+  title                 String
+  description           String?
+  context               String
+  difficulty            Difficulty
+  timeLimit             Int
+  start_date            DateTime   @default(now())
+  end_date              DateTime?
+  number_of_questions   Int
   // Add this line
-  leaderboard_generated Boolean @default(false)
+  leaderboard_generated Boolean    @default(false)
 
   classroom_code String
 
@@ -100,11 +99,13 @@ model LanguageMarathon {
   questions   Question[]
   enrollments Enrollment[]
   leaderboard Leaderboard[]
+  AiFeedbacks AiFeedbacks[]
+  Report Report?
 }
 
 // Question
 model Question {
-  id          Int @id @default(autoincrement())
+  id          Int     @id @default(autoincrement())
   marathon_id String
   title       String?
   prompt_text String
@@ -115,14 +116,14 @@ model Question {
 
 // Submission
 model Submission {
-  id              String   @id @default(cuid())
-  question_id     Int
-  user_id         String
-  answer          String
-  submitted_at    DateTime @default(now())
-  corrected_by_ai Boolean  @default(false)
+  id               String   @id @default(cuid())
+  question_id      Int
+  user_id          String
+  answer           String
+  submitted_at     DateTime @default(now())
+  corrected_by_ai  Boolean  @default(false)
   corrected_answer String?
-  score           Float?
+  score            Float?
 
   question Question @relation(fields: [question_id], references: [id])
   user     User     @relation(fields: [user_id], references: [id])
@@ -131,12 +132,14 @@ model Submission {
 }
 
 model AiFeedbacks {
-  id            Int     @id @default(autoincrement())
-  submissionId  String
-  explanation   String
-  points_deducted Int       
+  id              Int    @id @default(autoincrement())
+  submissionId    String
+  explanation     String
+  points_deducted Int
+  marathon_id     String
 
-  submission    Submission @relation(fields: [submissionId], references: [id])
+  submission Submission @relation(fields: [submissionId], references: [id])
+  marathon LanguageMarathon @relation(fields: [marathon_id], references: [id])
 }
 
 // Enrollment
@@ -161,4 +164,25 @@ model Leaderboard {
   user     User             @relation(fields: [user_id], references: [id])
 
   @@unique([marathon_id, user_id])
+}
+
+// Report
+model Report {
+  id             String         @id @default(uuid())
+  classrrom_code String
+  marathon_id    String
+  total_errors   Int
+  report_details ReportDetails?
+
+  marathon LanguageMarathon @relation(fields: [id], references: [id])
+}
+
+model ReportDetails {
+  report_id       String @id @unique
+  occurrences     Int
+  category_name   String
+  examples        String
+  targeted_advice String
+
+  report Report @relation(fields: [report_id], references: [id])
 }

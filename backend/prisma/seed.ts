@@ -1,4 +1,3 @@
-// prisma/seed.ts
 import { Difficulty, PrismaClient, Role } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
@@ -31,7 +30,7 @@ async function main() {
       occupation: 'Language Teacher',
       role: Role.Professor,
       ProfessorStats: {
-        create: {}, // Create stats inline
+        create: {},
       },
     },
   });
@@ -48,7 +47,7 @@ async function main() {
       occupation: 'Learner',
       role: Role.Student,
       studentStats: {
-        create: {}, // Create stats inline
+        create: {},
       },
     },
   });
@@ -64,7 +63,7 @@ async function main() {
       occupation: 'Developer',
       role: Role.Student,
       studentStats: {
-        create: {}, // Create stats inline
+        create: {},
       },
     },
   });
@@ -81,16 +80,16 @@ async function main() {
   console.log(`Created classroom: ${classroom.name} (${classroom.code})`);
 
   // 5) Create LanguageMarathon with a 2-minute duration
-  const marathonEndDate = new Date(Date.now() + 1000 * 60 * 2); // 2 minutes from now
+  const marathonEndDate = new Date(Date.now() + 1000 * 60 * 1); // 1 minutes from now
   const marathon = await prisma.languageMarathon.create({
     data: {
       title: 'Maratona de Teste Rápido',
       context: 'Team work',
       difficulty: Difficulty.Beginner,
-      timeLimit: 2, // minutes
+      timeLimit: 1, // minutes
       start_date: new Date(),
       end_date: marathonEndDate,
-      number_of_questions: 2, // Correctly reflects the number of questions
+      number_of_questions: 2,
       classroom: { connect: { code: classroom.code } },
     },
   });
@@ -140,7 +139,7 @@ async function main() {
       question_id: question2.id,
       user_id: student1.id,
       answer: 'A common challenge is coordinating schedules.',
-      score: 8.0, // Alice's score for Q2
+      score: 8.0,
     },
   });
 
@@ -149,7 +148,7 @@ async function main() {
       question_id: question1.id,
       user_id: student2.id,
       answer: 'I enjoy building the final presentation.',
-      score: 9.0, // Carlos's score for Q1
+      score: 9.0,
     },
   });
   console.log('Created submissions for both students.');
