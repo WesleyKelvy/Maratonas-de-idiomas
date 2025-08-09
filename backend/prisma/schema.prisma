@@ -100,7 +100,7 @@ model LanguageMarathon {
   enrollments Enrollment[]
   leaderboard Leaderboard[]
   AiFeedbacks AiFeedbacks[]
-  Report Report?
+  Report      Report?
 }
 
 // Question
@@ -138,8 +138,8 @@ model AiFeedbacks {
   points_deducted Int
   marathon_id     String
 
-  submission Submission @relation(fields: [submissionId], references: [id])
-  marathon LanguageMarathon @relation(fields: [marathon_id], references: [id])
+  submission Submission       @relation(fields: [submissionId], references: [id])
+  marathon   LanguageMarathon @relation(fields: [marathon_id], references: [id])
 }
 
 // Enrollment
@@ -169,16 +169,17 @@ model Leaderboard {
 // Report
 model Report {
   id             String         @id @default(uuid())
-  classrrom_code String
+  classroom_code String
   marathon_id    String
   total_errors   Int
-  report_details ReportDetails?
+  report_details ReportDetails[]
 
   marathon LanguageMarathon @relation(fields: [id], references: [id])
 }
 
 model ReportDetails {
-  report_id       String @id @unique
+  id              Int    @id @default(autoincrement())
+  report_id       String 
   occurrences     Int
   category_name   String
   examples        String
