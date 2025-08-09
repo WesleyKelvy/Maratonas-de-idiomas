@@ -32,8 +32,13 @@ export class AiFeedbackService implements AbstractAiFeedbackService {
   async saveFeedback(
     dto: SaveAiFeedbackDto[],
     submissionId: string,
+    marathonId: string,
   ): Promise<void> {
-    return await this.aiFeedbackRepository.saveFeedbacks(dto, submissionId);
+    return await this.aiFeedbackRepository.saveFeedbacks(
+      dto,
+      submissionId,
+      marathonId,
+    );
   }
 
   async generateFeedback(
@@ -66,5 +71,9 @@ export class AiFeedbackService implements AbstractAiFeedbackService {
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+  }
+
+  async findAllByMaranhonId(id: string): Promise<AiFeedbacks[]> {
+    return await this.aiFeedbackRepository.findAllByMarathonId(id);
   }
 }

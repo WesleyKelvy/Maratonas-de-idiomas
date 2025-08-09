@@ -6,12 +6,14 @@ import { CorrectionReport } from 'src/AiFeedback/interfaces/correctionResponse';
 export abstract class AbstractAiFeedbackService {
   abstract saveFeedback(
     dto: SaveAiFeedbackDto[],
-    questionId: string,
+    submissionId: string,
+    marathonId: string,
   ): Promise<void>;
   abstract findAllBySubmissionId(id: string): Promise<AiFeedbacks[]>;
   abstract generateFeedback(
     dto: GenerateAiFeedbackDto,
   ): Promise<CorrectionReport>;
+  abstract findAllByMarathonId(id: string): Promise<AiFeedbacks[]>;
 }
 
 export const AI_FEEDBACK_SERVICE_TOKEN = 'AI_FEEDBACK_SERVICE_TOKEN';

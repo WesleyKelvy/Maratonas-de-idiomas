@@ -34,15 +34,13 @@ export class SubmissionService implements AbstractSubmissionService {
     questionId: string,
     userId: string,
   ): Promise<void> {
-    //create a submission
     const submission = await this.submissionRepository.create(
       dto,
       questionId,
       userId,
     );
 
-    // get the question text from the quetionId
-    const { prompt_text } = await this.questionService.findOne(
+    const { prompt_text, marathon_id } = await this.questionService.findOne(
       submission.question_id,
     );
 
@@ -62,7 +60,11 @@ export class SubmissionService implements AbstractSubmissionService {
     }));
 
     // save feedback errors for question answer
-    await this.aiFeedbackService.saveFeedback(formattedErrors, submission.id);
+    await this.aiFeedbackService.saveFeedback(
+      formattedErrors,
+      submission.id,
+      marathon_id,
+    );
 
     // update submission with AI feedback
     await this.submissionRepository.update(

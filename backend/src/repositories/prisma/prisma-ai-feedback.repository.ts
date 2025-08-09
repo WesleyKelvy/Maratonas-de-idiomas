@@ -13,12 +13,14 @@ export class PrismaAiFeedbackRepository
   async saveFeedbacks(
     dto: SaveAiFeedbackDto[],
     submissionId: string,
+    marathonId: string,
   ): Promise<void> {
     const dataToCreate: Prisma.AiFeedbacksCreateManyInput[] = dto.map(
       (feedbackDto) => ({
         submissionId: submissionId,
         explanation: feedbackDto.explanation,
         points_deducted: feedbackDto.pointsDeducted,
+        marathon_id: marathonId,
       }),
     );
 
@@ -38,6 +40,13 @@ export class PrismaAiFeedbackRepository
     return await this.prisma.aiFeedbacks.findMany({
       where: { submissionId },
       orderBy: { id: 'asc' },
+    });
+  }
+
+  async findAllByMarathonId(marathonId: string): Promise<AiFeedbacks[]> {
+    return await this.prisma.aiFeedbacks.findMany({
+      where: { marathon_id: marathonId },
+      // orderBy: { id: 'asc' },
     });
   }
 }
