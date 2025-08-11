@@ -12,9 +12,12 @@ import {
 import { AbstractReportService } from 'src/Report/abstract-services/abstract-report.service';
 import { createClassificationPrompt } from 'src/Report/ai/createClassificationPrompt';
 import { createReportGenerationPrompt } from 'src/Report/ai/createReportGenerationPrompt';
+import { CreateReport } from 'src/Report/types/createReport.type';
 import { ReportType } from 'src/Report/types/report.type';
-import { AI_FEEDBACK_REPOSITORY_TOKEN } from 'src/repositories/abstract/aiFeedback.repository';
-import { AbstractReportRepository } from 'src/repositories/abstract/report.repository';
+import {
+  AbstractReportRepository,
+  REPORT_REPOSITORY_TOKEN,
+} from 'src/repositories/abstract/report.repository';
 
 @Injectable()
 export class ReportService implements AbstractReportService {
@@ -23,7 +26,7 @@ export class ReportService implements AbstractReportService {
     private readonly classroomService: AbstractClassroomService,
     @Inject(AI_FEEDBACK_SERVICE_TOKEN)
     private readonly aiFeedbackService: AbstractAiFeedbackService,
-    @Inject(AI_FEEDBACK_REPOSITORY_TOKEN)
+    @Inject(REPORT_REPOSITORY_TOKEN)
     private readonly reportRepository: AbstractReportRepository,
     @Inject()
     private readonly gemini: GoogleGenAI,
@@ -62,7 +65,7 @@ export class ReportService implements AbstractReportService {
 
     const { report } = await this.createFinalReport(explanations);
 
-    const reportData = {
+    const reportData: CreateReport = {
       classroom_code: classroom.code,
       marathon_id: marathonId,
       total_errors: report.total_errors,
@@ -70,7 +73,7 @@ export class ReportService implements AbstractReportService {
         create: report.categories.map((category) => ({
           category_name: category.category_name,
           occurrences: category.occurrences,
-          examples: category.examples,
+          examples: JSON.stringify(category.examples),
           targeted_advice: category.targeted_advice,
         })),
       },
@@ -97,6 +100,7 @@ export class ReportService implements AbstractReportService {
           occurrences,
           explanationSamples: examples,
         });
+
         const output = await this.gemini.models.generateContent({
           model: 'gemini-2.5-flash',
           contents: advicePrompt,
@@ -111,7 +115,7 @@ export class ReportService implements AbstractReportService {
 
         // parse into the wrapper
         const genResp = JSON.parse(cleanedText);
-        const { targeted_advice } = JSON.parse(genResp);
+        const { targeted_advice } = genResp;
 
         reportCategories.push({
           category_name: categoryName,

@@ -7,25 +7,25 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { Report } from '@prisma/client';
+import { ProfessorGuard } from 'src/auth/guards/professor.guard';
 import {
   AbstractReportService,
   REPORT_SERVICE_TOKEN,
 } from 'src/Report/abstract-services/abstract-report.service';
-import { StudentGuard } from '../auth/guards/student.guard';
-import { Report } from '@prisma/client';
 
-@UseGuards(StudentGuard)
+@UseGuards(ProfessorGuard)
 @Controller('marathon/:marathonId/report')
-export class AiFeedbackController {
+export class ReportController {
   constructor(
     @Inject(REPORT_SERVICE_TOKEN)
     private readonly reportService: AbstractReportService,
   ) {}
 
   @Post()
-  @HttpCode(HttpStatus.OK)
-  async createReport(@Param('marathonId') submissionId: string): Promise<void> {
-    return this.reportService.createReport(submissionId);
+  @HttpCode(HttpStatus.CREATED)
+  async createReport(@Param('marathonId') marathonId: string): Promise<Report> {
+    return this.reportService.createReport(marathonId);
   }
 
   @Post()

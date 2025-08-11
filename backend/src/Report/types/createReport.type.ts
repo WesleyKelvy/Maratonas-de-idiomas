@@ -1,8 +1,10 @@
-import { ReportDetails } from '@prisma/client';
+import { ReportDetailsType } from 'src/Report/types/reportDetails.type';
 
 export type CreateReport = {
   classroom_code: string;
   marathon_id: string;
   total_errors: number;
-  report_details: ReportDetails[];
+  report_details: {
+    create: ReportDetailsType[];
+  };
 };

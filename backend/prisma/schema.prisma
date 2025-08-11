@@ -93,7 +93,6 @@ model LanguageMarathon {
   leaderboard_generated Boolean    @default(false)
 
   classroom_code String
-
   classroom Classroom @relation(fields: [classroom_code], references: [code])
 
   questions   Question[]
@@ -170,11 +169,11 @@ model Leaderboard {
 model Report {
   id             String         @id @default(uuid())
   classroom_code String
-  marathon_id    String
+  marathon_id    String         @unique
   total_errors   Int
   report_details ReportDetails[]
 
-  marathon LanguageMarathon @relation(fields: [id], references: [id])
+  marathon LanguageMarathon @relation(fields: [marathon_id], references: [id])
 }
 
 model ReportDetails {

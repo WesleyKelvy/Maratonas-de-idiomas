@@ -1,15 +1,21 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, Report } from '@prisma/client';
+import { Report } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { CreateReport } from 'src/Report/types/createReport.type';
 import { AbstractReportRepository } from 'src/repositories/abstract/report.repository';
 
 @Injectable()
 export class PrismaReportRepository implements AbstractReportRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async createReport(data: Prisma.ReportCreateInput): Promise<Report> {
+  async createReport(dto: CreateReport): Promise<Report> {
     return this.prisma.report.create({
-      data,
+      data: {
+        classroom_code: dto.classroom_code,
+        total_errors: dto.total_errors,
+        report_details: dto.report_details,
+        marathon: { connect: { id: dto.marathon_id } },
+      },
       include: {
         report_details: true, // Include the details in the returned object
       },

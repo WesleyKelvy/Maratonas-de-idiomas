@@ -16,6 +16,7 @@ import { MailerModule } from './Mailer/mailer.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { StatsModule } from './Stats/stats.module';
 import { UserModule } from './User/user.module';
+import { ReportModule } from 'src/Report/report.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { UserModule } from './User/user.module';
     SubmissionModule,
     AiFeedbackModule,
     LeaderboardModule,
+    ReportModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: JwtAuthGuard }],

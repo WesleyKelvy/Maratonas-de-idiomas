@@ -24,6 +24,9 @@ export class AiFeedbackService implements AbstractAiFeedbackService {
   ) {
     this.gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   }
+  async findAllByMarathonId(id: string): Promise<AiFeedbacks[]> {
+    return await this.aiFeedbackRepository.findAllByMarathonId(id);
+  }
 
   async findAllBySubmissionId(id: string): Promise<AiFeedbacks[]> {
     return await this.aiFeedbackRepository.findAllBySubmissionId(id);

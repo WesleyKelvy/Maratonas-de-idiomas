@@ -7,7 +7,11 @@ async function main() {
   console.log('Starting seed process...');
 
   // 1) Clean up previous seed data to ensure a fresh start
+  await prisma.aiFeedbacks.deleteMany(); // Added to clean AI Feedbacks
+  await prisma.reportDetails.deleteMany(); // Added to clean Report Details
+  await prisma.report.deleteMany(); // Added to clean Reports
   await prisma.submission.deleteMany();
+  await prisma.leaderboard.deleteMany(); // Added to clean Leaderboard
   await prisma.enrollment.deleteMany();
   await prisma.question.deleteMany();
   await prisma.languageMarathon.deleteMany();
@@ -79,17 +83,17 @@ async function main() {
   });
   console.log(`Created classroom: ${classroom.name} (${classroom.code})`);
 
-  // 5) Create LanguageMarathon with a 2-minute duration
+  // 5) Create LanguageMarathon with a 5-minute duration
   const marathonEndDate = new Date(Date.now() + 1000 * 60 * 1); // 1 minutes from now
   const marathon = await prisma.languageMarathon.create({
     data: {
-      title: 'Maratona de Teste Rápido',
+      title: 'Maratona de Teste de Relatório',
       context: 'Team work',
-      difficulty: Difficulty.Beginner,
+      difficulty: Difficulty.Intermediate, // Changed to Intermediate
       timeLimit: 1, // minutes
       start_date: new Date(),
       end_date: marathonEndDate,
-      number_of_questions: 2,
+      number_of_questions: 5, // Updated to 5 questions
       classroom: { connect: { code: classroom.code } },
     },
   });
@@ -100,18 +104,44 @@ async function main() {
   // 6) Create Questions for the marathon
   const question1 = await prisma.question.create({
     data: {
-      prompt_text: 'What is your favorite team activity?',
+      prompt_text:
+        'Describe a situation where a team you were part of faced a significant challenge. How did the team collaborate to overcome it, and what was your specific role in that process?',
       marathon: { connect: { id: marathon.id } },
     },
   });
 
   const question2 = await prisma.question.create({
     data: {
-      prompt_text: 'Describe a challenge in group projects.',
+      prompt_text:
+        "In your opinion, what are the most crucial elements for effective teamwork? Provide examples of how these elements contribute to a team's success or failure.",
       marathon: { connect: { id: marathon.id } },
     },
   });
-  console.log(`Created 2 questions for marathon: ${marathon.id}`);
+
+  const question3 = await prisma.question.create({
+    data: {
+      prompt_text:
+        'Imagine a new team is being formed for a project. What steps would you recommend they take to establish strong communication and a positive working environment from the outset?',
+      marathon: { connect: { id: marathon.id } },
+    },
+  });
+
+  const question4 = await prisma.question.create({
+    data: {
+      prompt_text:
+        'Reflect on a time when a team project did not go as planned. Analyze the reasons for the difficulties and suggest alternative approaches the team could have taken to achieve a better outcome.',
+      marathon: { connect: { id: marathon.id } },
+    },
+  });
+
+  const question5 = await prisma.question.create({
+    data: {
+      prompt_text:
+        'How can diverse perspectives and skills within a team contribute to more innovative solutions? Discuss a scenario where varied viewpoints led to a creative breakthrough.',
+      marathon: { connect: { id: marathon.id } },
+    },
+  });
+  console.log(`Created 5 questions for marathon: ${marathon.id}`);
 
   // 7) Enroll both students in the marathon
   await prisma.enrollment.createMany({
@@ -124,34 +154,153 @@ async function main() {
     `Enrolled ${student1.name} and ${student2.name} in the marathon.`,
   );
 
-  // 8) Create submissions from each student for the questions
-  await prisma.submission.create({
+  // 8) Create submissions and AI feedback from student1 for all 5 questions
+  const submission1_q1 = await prisma.submission.create({
     data: {
       question_id: question1.id,
       user_id: student1.id,
-      answer: 'My favorite activity is brainstorming ideas together.',
-      score: 9.5, // Alice's score for Q1
+      answer:
+        'Our team faced a difficult coding bug. We worked together, debugging line by line. My role was checking the logs.',
+      score: 8.5,
+    },
+  });
+  await prisma.aiFeedbacks.create({
+    data: {
+      submissionId: submission1_q1.id,
+      explanation:
+        'Grammar: The sentence "My role was checking the logs" could be improved for formality. Consider "My role was to check the logs."',
+      points_deducted: 1,
+      marathon_id: marathon.id,
+    },
+  });
+
+  const submission1_q2 = await prisma.submission.create({
+    data: {
+      question_id: question2.id,
+      user_id: student1.id,
+      answer:
+        'Communication and trust are vital. Without good communication, misunderstandings happen.',
+      score: 9.0,
+    },
+  });
+  await prisma.aiFeedbacks.create({
+    data: {
+      submissionId: submission1_q2.id,
+      explanation:
+        'Punctuation: A comma is needed before "Without" in the second sentence for better flow.',
+      points_deducted: 0.5,
+      marathon_id: marathon.id,
+    },
+  });
+
+  const submission1_q3 = await prisma.submission.create({
+    data: {
+      question_id: question3.id,
+      user_id: student1.id,
+      answer:
+        'They should have regular meetings and establish clear roles early.',
+      score: 8.8,
+    },
+  });
+  await prisma.aiFeedbacks.create({
+    data: {
+      submissionId: submission1_q3.id,
+      explanation:
+        'Vocabulary: "Have regular meetings" could be more formal. Consider "conduct regular meetings."',
+      points_deducted: 0.7,
+      marathon_id: marathon.id,
+    },
+  });
+
+  const submission1_q4 = await prisma.submission.create({
+    data: {
+      question_id: question4.id,
+      user_id: student1.id,
+      answer: `'Once, a presentation failed because we didn't practice enough. We should have done more mock runs.'`,
+      score: 7.5,
+    },
+  });
+  await prisma.aiFeedbacks.create({
+    data: {
+      submissionId: submission1_q4.id,
+      explanation:
+        'Clarity: "Done more mock runs" is a bit informal. Consider "conducted more practice sessions."',
+      points_deducted: 1.2,
+      marathon_id: marathon.id,
+    },
+  });
+
+  const submission1_q5 = await prisma.submission.create({
+    data: {
+      question_id: question5.id,
+      user_id: student1.id,
+      answer:
+        'Different ideas lead to better results. In a design project, varied backgrounds helped us innovate.',
+      score: 9.2,
+    },
+  });
+  await prisma.aiFeedbacks.create({
+    data: {
+      submissionId: submission1_q5.id,
+      explanation:
+        'Cohesion: The connection between the two sentences could be stronger. Consider using a transition word like "For example," or "Indeed,".',
+      points_deducted: 0.3,
+      marathon_id: marathon.id,
+    },
+  });
+
+  // Create some submissions for student2 as well (without feedback for this test)
+  await prisma.submission.create({
+    data: {
+      question_id: question1.id,
+      user_id: student2.id,
+      answer:
+        'My team had trouble with project scope. We broke it into smaller tasks. I managed the task list.',
+      score: 9.0,
     },
   });
 
   await prisma.submission.create({
     data: {
       question_id: question2.id,
-      user_id: student1.id,
-      answer: 'A common challenge is coordinating schedules.',
+      user_id: student2.id,
+      answer:
+        'Respect and clear objectives are key. Without them, teams can become disorganized and inefficient.',
+      score: 9.5,
+    },
+  });
+
+  await prisma.submission.create({
+    data: {
+      question_id: question3.id,
+      user_id: student2.id,
+      answer:
+        'Regular check-ins and an open-door policy for feedback are crucial to building trust and good vibes.',
+      score: 8.7,
+    },
+  });
+
+  await prisma.submission.create({
+    data: {
+      question_id: question4.id,
+      user_id: student2.id,
+      answer:
+        'A past group project struggled with uneven workload distribution. We should have assigned responsibilities more clearly from the start and had more frequent progress reviews.',
       score: 8.0,
     },
   });
 
   await prisma.submission.create({
     data: {
-      question_id: question1.id,
+      question_id: question5.id,
       user_id: student2.id,
-      answer: 'I enjoy building the final presentation.',
-      score: 9.0,
+      answer:
+        'When a team has diverse backgrounds, they bring unique perspectives that can lead to more creative and comprehensive solutions. For instance, different cultural insights in a marketing campaign led to broader appeal.',
+      score: 9.3,
     },
   });
-  console.log('Created submissions for both students.');
+
+  console.log('Created submissions and AI feedbacks for student1.');
   console.log(
     'Seed process finished successfully. The leaderboard generation job should be scheduled in Redis.',
   );
