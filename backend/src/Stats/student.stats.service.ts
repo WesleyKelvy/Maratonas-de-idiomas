@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { StudentStats } from '@prisma/client';
+import { CreateLeaderboardDto } from 'src/Leaderboard/dto/leaderboard.create.dto';
 import {
   AbstractStudentStatsRepository,
   STUDENT_STATS_REPOSITORY_TOKEN,
@@ -72,5 +73,30 @@ export class StudentStatsService implements AbstractStudentStatsService {
       throw new NotFoundException(`Student stats with ID ${id} not found.`);
     }
     await this.studentStatsRepository.remove(id);
+  }
+
+  async updateStudentStats(leaderboardDto: CreateLeaderboardDto[]) {
+    for (const { user_id, score, position } of leaderboardDto.map((u) => ({
+      ...u,
+    }))) {
+      // load existing stats
+      const stats = await this.findOne(user_id);
+
+      // prepare updates
+      const updates: Partial<UpdateStudentStatsDto> = {
+        total_points: stats.total_points + score,
+        marathons_participated: stats.marathons_participated + 1,
+      };
+
+      // podium = top 3
+      if (position <= 3) {
+        updates.podiums = stats.podiums + 1;
+        if (position === 1) {
+          updates.first_places = stats.first_places + 1;
+        }
+      }
+
+      await this.update(user_id, updates as UpdateStudentStatsDto);
+    }
   }
 }

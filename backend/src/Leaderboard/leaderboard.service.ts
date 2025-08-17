@@ -8,7 +8,8 @@ import {
   AbstractLeaderboardRepository,
   LEADERBOARD_REPOSITORY_TOKEN,
 } from 'src/repositories/abstract/leaderboard.repository';
-import { UpdateStudentStatsDto } from 'src/Stats/dto/student.update-stats.dto copy';
+import { STUDENT_STATS_SERVICE_TOKEN } from 'src/Stats/abstract-services/abstract-student-stats.service';
+import { StudentStatsService } from 'src/Stats/student.stats.service';
 import { AbstractLeaderboardService } from './abstract-services/abstract-leaderboard.service';
 
 @Injectable()
@@ -16,6 +17,8 @@ export class LeaderboardService implements AbstractLeaderboardService {
   private readonly logger = new Logger(LeaderboardService.name);
 
   constructor(
+    @Inject(STUDENT_STATS_SERVICE_TOKEN)
+    private readonly studentStats: StudentStatsService,
     @Inject(LEADERBOARD_REPOSITORY_TOKEN)
     private readonly leaderboardRepository: AbstractLeaderboardRepository,
     private readonly prisma: PrismaService,
@@ -28,15 +31,6 @@ export class LeaderboardService implements AbstractLeaderboardService {
   ): Promise<void> {
     const now = new Date();
     const delay = endDate.getTime() - now.getTime();
-
-    if (delay <= 0) {
-      this.logger.warn(
-        `Marathon ${marathonId} has already ended. Generating leaderboard immediately.`,
-      );
-      // If the end date is in the past, generate it right away.
-      await this.generateLeaderboardForMarathon(marathonId);
-      return;
-    }
 
     // Add a job to the queue with a specific name 'generate' and a delay.
     // Bull will hold this job and only release it to the processor after the delay.
@@ -98,7 +92,7 @@ export class LeaderboardService implements AbstractLeaderboardService {
     // await this.leaderboardRepository.deleteByMarathonId(marathonId);
     await this.leaderboardRepository.createMany(leaderboardData);
 
-    await this.updateStudentStats(leaderboardData);
+    await this.studentStats.updateStudentStats(leaderboardData);
 
     // 6) Mark marathon as having a generated leaderboard
     await this.prisma.languageMarathon.update({
@@ -116,36 +110,6 @@ export class LeaderboardService implements AbstractLeaderboardService {
       );
     }
     return leaderboard;
-  }
-
-  async updateStudentStats(leaderboardDto: CreateLeaderboardDto[]) {
-    for (const { user_id, score, position } of leaderboardDto.map((u) => ({
-      ...u,
-    }))) {
-      // load existing stats
-      const stats = await this.prisma.studentStats.findUnique({
-        where: { userId: user_id },
-      });
-
-      // prepare updates
-      const updates: Partial<UpdateStudentStatsDto> = {
-        total_points: stats.total_points + score,
-        marathons_participated: stats.marathons_participated + 1,
-      };
-
-      // podium = top 3
-      if (position <= 3) {
-        updates.podiums = stats.podiums + 1;
-        if (position === 1) {
-          updates.first_places = stats.first_places + 1;
-        }
-      }
-
-      await this.prisma.studentStats.update({
-        where: { userId: user_id },
-        data: updates,
-      });
-    }
   }
 
   async deleteScheduledLeaderboardGeneration(
