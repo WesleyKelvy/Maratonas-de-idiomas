@@ -19,15 +19,9 @@ export class LeaderboardService implements AbstractLeaderboardService {
     @Inject(LEADERBOARD_REPOSITORY_TOKEN)
     private readonly leaderboardRepository: AbstractLeaderboardRepository,
     private readonly prisma: PrismaService,
-    // Inject the 'leaderboard' queue
     @InjectQueue('leaderboard') private readonly leaderboardQueue: Queue,
   ) {}
 
-  /**
-   * Schedules a job to generate a leaderboard at a specific time.
-   * @param marathonId The ID of the marathon.
-   * @param endDate The exact date and time the leaderboard should be generated.
-   */
   async scheduleLeaderboardGeneration(
     marathonId: string,
     endDate: Date,
@@ -152,5 +146,16 @@ export class LeaderboardService implements AbstractLeaderboardService {
         data: updates,
       });
     }
+  }
+
+  async deleteScheduledLeaderboardGeneration(
+    marathonId: string,
+  ): Promise<void> {
+    const job = await this.leaderboardQueue.getJob(`marathon-${marathonId}`);
+    await job?.remove();
+
+    this.logger.log(
+      `Deleted scheduled leaderboard generation for marathon ${marathonId}}`,
+    );
   }
 }

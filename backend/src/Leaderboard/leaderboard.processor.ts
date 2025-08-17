@@ -27,9 +27,6 @@ export class LeaderboardProcessor implements OnModuleInit {
    * It's the perfect place to check for jobs that were missed while the server was offline.
    */
   async onModuleInit() {
-    // console.log(
-    //   'Checking for marathons that have already ended and need a leaderboard...',
-    // );
     this.logger.log(
       'Checking for marathons that have already ended and need a leaderboard...',
     );

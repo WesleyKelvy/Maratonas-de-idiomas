@@ -3,17 +3,17 @@ import { CreateLanguageMarathonDto } from 'src/LanguageMarathon/dto/language-mar
 import { UpdateLanguageMarathonDto } from 'src/LanguageMarathon/dto/language-marathon.update.dto';
 
 export abstract class AbstractLanguageMarathonRepository {
+  abstract findAllByClassroomCode(code: string): Promise<LanguageMarathon[]>;
   abstract create(
     dto: CreateLanguageMarathonDto,
     code: string,
   ): Promise<LanguageMarathon>;
-  abstract findOne(id: string): Promise<LanguageMarathon | null>;
-  abstract findAllByClassroomCode(code: string): Promise<LanguageMarathon[]>;
+  abstract findOneById(id: string): Promise<LanguageMarathon | null>;
   abstract update(
-    code: string,
-    updateStatDto: UpdateLanguageMarathonDto,
+    id: string,
+    updateMarathonDto: UpdateLanguageMarathonDto,
   ): Promise<LanguageMarathon>;
-  abstract remove(code: string): Promise<void>;
+  abstract remove(id: string): Promise<void>;
 }
 
 export const LANGUAGE_MARATHON_REPOSITORY_TOKEN =

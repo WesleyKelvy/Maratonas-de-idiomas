@@ -42,10 +42,12 @@ export class LanguageMarathonService
 
   async create(
     dto: CreateLanguageMarathonDto,
-    code: string,
-    id: string,
+    classroomCode: string,
+    professorId: string,
   ): Promise<LanguageMarathon> {
-    await this.professorStatsService.incrementMarathonsProfessorStats(id);
+    await this.professorStatsService.incrementMarathonsProfessorStats(
+      professorId,
+    );
 
     const startDate = new Date();
     const endDate = new Date(startDate);
@@ -53,25 +55,22 @@ export class LanguageMarathonService
 
     const newMarathon = await this.marathonRepository.create(
       { ...dto, endDate: endDate, startDate },
-      code,
+      classroomCode,
     );
 
     if (newMarathon.end_date) {
-      // Cast leaderboardService to the concrete class to access the new method
-      const concreteLeaderboardService = this.leaderboardService as any;
-      if (concreteLeaderboardService.scheduleLeaderboardGeneration) {
-        await concreteLeaderboardService.scheduleLeaderboardGeneration(
-          newMarathon.id,
-          newMarathon.end_date,
-        );
-      }
+      // console.log('Starting Job schedule');
+      this.leaderboardService.scheduleLeaderboardGeneration(
+        newMarathon.id,
+        newMarathon.end_date,
+      );
     }
 
     return newMarathon;
   }
 
   async findOne(id: string): Promise<LanguageMarathon> {
-    const marathon = await this.marathonRepository.findOne(id);
+    const marathon = await this.marathonRepository.findOneById(id);
     if (!marathon) {
       throw new NotFoundException(`Marathon with ID ${id} not found.`);
     }
@@ -83,7 +82,7 @@ export class LanguageMarathonService
     id: string,
     dto: UpdateLanguageMarathonDto,
   ): Promise<LanguageMarathon> {
-    const marathon = await this.marathonRepository.findOne(id);
+    const marathon = await this.marathonRepository.findOneById(id);
     if (!marathon) {
       throw new NotFoundException(`Marathon with ID ${id} not found.`);
     }
@@ -94,25 +93,22 @@ export class LanguageMarathonService
     );
 
     if (updatedMarathon.end_date) {
-      // The `jobId` we set earlier ensures that the old job for this marathon
-      // is replaced with this new one, preventing duplicates.
-      const concreteLeaderboardService = this.leaderboardService as any;
-      if (concreteLeaderboardService.scheduleLeaderboardGeneration) {
-        await concreteLeaderboardService.scheduleLeaderboardGeneration(
-          updatedMarathon.id,
-          updatedMarathon.end_date,
-        );
-      }
+      this.leaderboardService.scheduleLeaderboardGeneration(
+        updatedMarathon.id,
+        updatedMarathon.end_date,
+      );
     }
 
     return updatedMarathon;
   }
 
   async remove(id: string): Promise<void> {
-    const existingClassroom =
-      await this.marathonRepository.findAllByClassroomCode(id);
-    if (!existingClassroom) {
-      throw new NotFoundException(`Classroom with ID ${id} not found.`);
+    const existingMarathons = await this.marathonRepository.findOneById(id);
+
+    this.leaderboardService.deleteScheduledLeaderboardGeneration(id);
+
+    if (!existingMarathons) {
+      throw new NotFoundException(`Marathon with ID ${id} not found.`);
     }
     await this.marathonRepository.remove(id);
   }

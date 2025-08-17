@@ -20,6 +20,12 @@ export class PrismaLanguageMarathonRepository
     });
   }
 
+  async findAllById(id: string): Promise<LanguageMarathon[]> {
+    return this.prisma.languageMarathon.findMany({
+      where: { id },
+    });
+  }
+
   /**
    * Creates a new language marathon for a classroom
    */
@@ -45,7 +51,7 @@ export class PrismaLanguageMarathonRepository
   /**
    * Finds a single marathon by its ID
    */
-  async findOne(id: string): Promise<LanguageMarathon | null> {
+  async findOneById(id: string): Promise<LanguageMarathon | null> {
     return this.prisma.languageMarathon.findUnique({
       where: { id },
     });
