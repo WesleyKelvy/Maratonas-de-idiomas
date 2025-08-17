@@ -13,13 +13,13 @@ export class PrismaSubmissionRepository
 
   async create(
     dto: CreateSubmissionDto,
-    questionId: string,
+    questionId: number,
     userId: string,
   ): Promise<Submission> {
     const data: Prisma.SubmissionCreateInput = {
       answer: dto.answer,
       question: {
-        connect: { id: parseInt(questionId) },
+        connect: { id: questionId },
       },
       user: {
         connect: { id: userId },

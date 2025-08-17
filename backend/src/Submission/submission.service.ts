@@ -1,15 +1,16 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bull';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Submission } from '@prisma/client';
+import { Queue } from 'bull';
 import {
-  AbstractAiFeedbackService,
-  AI_FEEDBACK_SERVICE_TOKEN,
-} from 'src/AiFeedback/abstract-services/abstract-aiFeedback.service';
-import { GenerateAiFeedbackDto } from 'src/AiFeedback/dto/aiFeedback.generate.dto';
-import { SaveAiFeedbackDto } from 'src/AiFeedback/dto/aiFeedback.save.dto';
-import {
-  AbstractQuestionService,
-  QUESTION_SERVICE_TOKEN,
-} from 'src/Question/abstract-services/abstract-question.service';
+  AbstractLanguageMarathonService,
+  LANGUAGE_MARATHON_SERVICE_TOKEN,
+} from 'src/LanguageMarathon/abstract-services/abstract-language-marathon.service';
 import {
   AbstractSubmissionRepository,
   SUBMISSION_REPOSITORY_TOKEN,
@@ -23,53 +24,40 @@ export class SubmissionService implements AbstractSubmissionService {
   constructor(
     @Inject(SUBMISSION_REPOSITORY_TOKEN)
     private readonly submissionRepository: AbstractSubmissionRepository,
-    @Inject(QUESTION_SERVICE_TOKEN)
-    private readonly questionService: AbstractQuestionService,
-    @Inject(AI_FEEDBACK_SERVICE_TOKEN)
-    private readonly aiFeedbackService: AbstractAiFeedbackService,
+    @Inject(LANGUAGE_MARATHON_SERVICE_TOKEN)
+    private readonly marathonService: AbstractLanguageMarathonService,
+    @InjectQueue('feedback') private readonly feedbackQueue: Queue,
   ) {}
 
   async create(
     dto: CreateSubmissionDto,
-    questionId: string,
+    questionId: number,
     userId: string,
+    marathonId: string,
   ): Promise<void> {
-    const submission = await this.submissionRepository.create(
+    const { end_date } = await this.marathonService.findOne(marathonId);
+
+    if (end_date < new Date()) throw new BadRequestException();
+
+    const { id, answer } = await this.submissionRepository.create(
       dto,
       questionId,
       userId,
     );
 
-    const { prompt_text, marathon_id } = await this.questionService.findOne(
-      submission.question_id,
-    );
-
-    // make data for generate AI feedback
-    const data: GenerateAiFeedbackDto = {
-      question: prompt_text,
-      studentAnswer: submission.answer,
-    };
-
-    // calls AI for generate the feedback
-    const { corrected_answer, errors, final_score } =
-      await this.aiFeedbackService.generateFeedback(data);
-
-    const formattedErrors: SaveAiFeedbackDto[] = errors.map((error) => ({
-      explanation: error.explanation,
-      pointsDeducted: error.points_deducted,
-    }));
-
-    // save feedback errors for question answer
-    await this.aiFeedbackService.saveFeedback(
-      formattedErrors,
-      submission.id,
-      marathon_id,
-    );
-
-    // update submission with AI feedback
-    await this.submissionRepository.update(
-      { correctedAnswer: corrected_answer, score: final_score },
-      submission.id,
+    await this.feedbackQueue.add(
+      'generate-feedback',
+      {
+        submissionId: id,
+        questionId: questionId,
+        studentAnswer: answer,
+      },
+      {
+        // Optional: remove job from redis after it's completed
+        removeOnComplete: true,
+        // Optional: unique job ID to prevent duplicates if the marathon is updated multiple times
+        jobId: `question-${id}`,
+      },
     );
   }
 

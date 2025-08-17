@@ -20,7 +20,7 @@ import {
 import { CreateSubmissionDto } from 'src/Submission/dto/submission.create.dto';
 
 @UseGuards(StudentGuard)
-@Controller('question/:questionId/submission')
+@Controller('marathon/:marathonId/question/:questionId/submission')
 export class SubmissionController {
   constructor(
     @Inject(SUBMISSION_SERVICE_TOKEN)
@@ -32,10 +32,16 @@ export class SubmissionController {
   create(
     @Body() dto: CreateSubmissionDto,
     @Param('questionId') questionId: string,
+    @Param('marathonId') marathonId: string,
     @CurrentUser()
     user: UserFromJwt,
   ): Promise<void> {
-    return this.submissionService.create(dto, questionId, user.id);
+    return this.submissionService.create(
+      dto,
+      parseInt(questionId),
+      user.id,
+      marathonId,
+    );
   }
 
   @Get()

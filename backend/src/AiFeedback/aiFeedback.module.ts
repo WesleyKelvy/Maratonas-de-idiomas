@@ -3,7 +3,9 @@ import { forwardRef, Module } from '@nestjs/common';
 import { AI_FEEDBACK_SERVICE_TOKEN } from 'src/AiFeedback/abstract-services/abstract-aiFeedback.service';
 import { AiFeedbackController } from 'src/AiFeedback/aiFeedback.controller';
 import { AiFeedbackService } from 'src/AiFeedback/aiFeedback.service';
+import { FeedbackProcessor } from 'src/AiFeedback/feedback.processor';
 import { ProfessorGuard } from 'src/auth/guards/professor.guard';
+import { QuestionModule } from 'src/Question/question.module';
 import { AI_FEEDBACK_REPOSITORY_TOKEN } from 'src/repositories/abstract/aiFeedback.repository';
 import { PrismaAiFeedbackRepository } from 'src/repositories/prisma/prisma-ai-feedback.repository';
 import { ProfessorStats } from 'src/Stats/entities/professor.stats.entity';
@@ -11,9 +13,15 @@ import { StudentStats } from 'src/Stats/entities/student.stats.entity';
 import { SubmissionModule } from 'src/Submission/submission.module';
 
 @Module({
-  imports: [forwardRef(() => SubmissionModule), StudentStats, ProfessorStats],
+  imports: [
+    forwardRef(() => SubmissionModule),
+    StudentStats,
+    ProfessorStats,
+    QuestionModule,
+  ],
   controllers: [AiFeedbackController],
   providers: [
+    FeedbackProcessor,
     {
       provide: AI_FEEDBACK_SERVICE_TOKEN,
       useClass: AiFeedbackService,

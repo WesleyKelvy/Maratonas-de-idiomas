@@ -5,8 +5,9 @@ import { UpdateSubmissionDto } from 'src/Submission/dto/submission.update.dto';
 export abstract class AbstractSubmissionService {
   abstract create(
     dto: CreateSubmissionDto,
-    questionId: string,
+    questionId: number,
     userId: string,
+    marathonId: string,
   ): Promise<void>;
   abstract findAllByUserId(userId: string): Promise<Submission[]>;
   abstract findOne(submissionId: string): Promise<Submission>;

@@ -5,7 +5,7 @@ import { UpdateSubmissionDto } from 'src/Submission/dto/submission.update.dto';
 export abstract class AbstractSubmissionRepository {
   abstract create(
     dto: CreateSubmissionDto,
-    questionId: string,
+    questionId: number,
     userId: string,
   ): Promise<Submission>;
   abstract findOne(id: string): Promise<Submission | null>;
