@@ -18,7 +18,7 @@ export class LeaderboardService implements AbstractLeaderboardService {
 
   constructor(
     @Inject(STUDENT_STATS_SERVICE_TOKEN)
-    private readonly studentStats: StudentStatsService,
+    private readonly studentStatsService: StudentStatsService,
     @Inject(LEADERBOARD_REPOSITORY_TOKEN)
     private readonly leaderboardRepository: AbstractLeaderboardRepository,
     private readonly prisma: PrismaService,
@@ -92,7 +92,7 @@ export class LeaderboardService implements AbstractLeaderboardService {
     // await this.leaderboardRepository.deleteByMarathonId(marathonId);
     await this.leaderboardRepository.createMany(leaderboardData);
 
-    await this.studentStats.updateStudentStats(leaderboardData);
+    await this.studentStatsService.updateStudentStats(leaderboardData);
 
     // 6) Mark marathon as having a generated leaderboard
     await this.prisma.languageMarathon.update({
