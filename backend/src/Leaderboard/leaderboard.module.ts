@@ -6,12 +6,14 @@ import { LEADERBOARD_SERVICE_TOKEN } from './abstract-services/abstract-leaderbo
 import { LeaderboardController } from './leaderboard.controller';
 import { LeaderboardService } from './leaderboard.service';
 import { LeaderboardProcessor } from 'src/Leaderboard/leaderboard.processor';
+import { StatsModule } from 'src/Stats/stats.module';
 
 @Module({
   imports: [
     BullModule.registerQueue({
       name: 'leaderboard',
     }),
+    StatsModule,
   ],
   controllers: [LeaderboardController],
   providers: [
