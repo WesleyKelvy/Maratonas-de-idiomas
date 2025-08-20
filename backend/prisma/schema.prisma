@@ -136,6 +136,7 @@ model AiFeedbacks {
   explanation     String
   points_deducted Int
   marathon_id     String
+  category        String
 
   submission Submission       @relation(fields: [submissionId], references: [id])
   marathon   LanguageMarathon @relation(fields: [marathon_id], references: [id])
