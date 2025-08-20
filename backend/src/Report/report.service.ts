@@ -10,14 +10,19 @@ import {
   CLASSROOM_SERVICE_TOKEN,
 } from 'src/Classroom/abstract-services/abstract-classrom.service';
 import { AbstractReportService } from 'src/Report/abstract-services/abstract-report.service';
-import { createClassificationPrompt } from 'src/Report/ai/createClassificationPrompt';
 import { createReportGenerationPrompt } from 'src/Report/ai/createReportGenerationPrompt';
 import { CreateReport } from 'src/Report/types/createReport.type';
 import { ReportType } from 'src/Report/types/report.type';
+import { ReportDetailsType } from 'src/Report/types/reportDetails.type';
 import {
   AbstractReportRepository,
   REPORT_REPOSITORY_TOKEN,
 } from 'src/repositories/abstract/report.repository';
+
+type FinalReportData = {
+  explanation: string;
+  category: string;
+};
 
 @Injectable()
 export class ReportService implements AbstractReportService {
@@ -39,8 +44,10 @@ export class ReportService implements AbstractReportService {
   }
 
   async createReport(marathonId: string): Promise<Report> {
-    const classroom =
-      await this.classroomService.findOneByMarathonId(marathonId);
+    const [classroom, aiFeedbacks] = await Promise.all([
+      this.classroomService.findOneByMarathonId(marathonId),
+      this.aiFeedbackService.findAllByMarathonId(marathonId),
+    ]);
 
     if (!classroom) {
       throw new HttpException(
@@ -49,9 +56,6 @@ export class ReportService implements AbstractReportService {
       );
     }
 
-    const aiFeedbacks =
-      await this.aiFeedbackService.findAllByMarathonId(marathonId);
-
     if (aiFeedbacks.length === 0) {
       throw new HttpException(
         'No feedback available to generate a report.',
@@ -59,11 +63,11 @@ export class ReportService implements AbstractReportService {
       );
     }
 
-    const explanations: string[] = aiFeedbacks.map(
-      ({ explanation }) => explanation,
+    const dataToCreateFinalReport: FinalReportData[] = aiFeedbacks.map(
+      ({ explanation, category }) => ({ explanation, category }),
     );
 
-    const { report } = await this.createFinalReport(explanations);
+    const { report } = await this.createFinalReport(dataToCreateFinalReport);
 
     const reportData: CreateReport = {
       classroom_code: classroom.code,
@@ -82,19 +86,47 @@ export class ReportService implements AbstractReportService {
     return await this.reportRepository.createReport(reportData);
   }
 
-  async createFinalReport(explanations: string[]): Promise<ReportType> {
+  // current refectoring
+  async createFinalReport(errors: FinalReportData[]): Promise<ReportType> {
     try {
-      const total_errors = explanations.length;
-      const categoryMap = await this.processErrors(explanations);
+      const total_errors = errors.length;
 
-      const reportCategories = [];
+      // Step 1: Group explanations by category. This is a fast, in-memory operation.
+      const categoryMap = new Map<string, { explanations: string[] }>();
+      for (const error of errors) {
+        if (!categoryMap.has(error.category)) {
+          categoryMap.set(error.category, { explanations: [] });
+        }
+        categoryMap.get(error.category).explanations.push(error.explanation);
+      }
 
-      for (const [categoryName, data] of categoryMap.entries()) {
+      // Step 2: Create a promise for each category using the new helper function.
+      const reportCategoryPromises = this._generateAdvicePromises(categoryMap);
+
+      // Step 3: Execute all advice generation promises in parallel.
+      const reportCategories = await Promise.all(reportCategoryPromises);
+
+      return {
+        report: {
+          total_errors,
+          categories: reportCategories,
+        },
+      };
+    } catch (error) {
+      console.error('Error in createFinalReport:', error);
+      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  private _generateAdvicePromises(
+    categoryMap: Map<string, { explanations: string[] }>,
+  ): Promise<ReportDetailsType>[] {
+    return Array.from(categoryMap.entries()).map(
+      async ([categoryName, data]) => {
         const occurrences = data.explanations.length;
-        // Take the first 3 unique explanations as examples
+        // Take up to 3 unique explanations as examples.
         const examples = [...new Set(data.explanations)].slice(0, 3);
 
-        // Call the AI to get advice for this specific category (Step 3)
         const advicePrompt = createReportGenerationPrompt({
           categoryName,
           occurrences,
@@ -107,56 +139,22 @@ export class ReportService implements AbstractReportService {
         });
 
         const response = output.text;
-
         const cleanedText = response
           .replace(/```json/g, '')
           .replace(/```/g, '')
           .trim();
-
-        // parse into the wrapper
         const genResp = JSON.parse(cleanedText);
         const { targeted_advice } = genResp;
 
-        reportCategories.push({
+        // The returned object now matches the ReportDetailsType structure.
+        // 'examples' is converted to a JSON string here.
+        return {
           category_name: categoryName,
           occurrences,
-          examples,
+          examples: JSON.stringify(examples), // Corrected: Stringify here
           targeted_advice,
-        });
-      }
-
-      return {
-        report: {
-          total_errors,
-          categories: reportCategories,
-        },
-      };
-    } catch (error) {
-      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-  }
-
-  async processErrors(explanations: string[]) {
-    try {
-      const categoryMap = new Map();
-
-      for (const explanation of explanations) {
-        // This can be parallelized for speed
-        const output = await this.gemini.models.generateContent({
-          model: 'gemini-2.5-flash',
-          contents: createClassificationPrompt(explanation),
-        });
-
-        const category = output.text;
-
-        if (!categoryMap.has(category)) {
-          categoryMap.set(category, { explanations: [] });
-        }
-        categoryMap.get(category).explanations.push(explanation);
-      }
-      return categoryMap;
-    } catch (error) {
-      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+        };
+      },
+    );
   }
 }
