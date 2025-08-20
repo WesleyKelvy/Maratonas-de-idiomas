@@ -1,17 +1,18 @@
 import { AiFeedbacks } from '@prisma/client';
-import { GenerateAiFeedbackDto } from 'src/AiFeedback/dto/aiFeedback.generate.dto';
-import { SaveAiFeedbackDto } from 'src/AiFeedback/dto/aiFeedback.save.dto';
+
 import { CorrectionReport } from 'src/AiFeedback/interfaces/correctionResponse';
+import { GenerateAiFeedbackType } from 'src/AiFeedback/types/aiFeedback.generate.type';
+import { AiFeedback } from 'src/AiFeedback/types/aiFeedback.type';
 
 export abstract class AbstractAiFeedbackService {
   abstract saveFeedback(
-    dto: SaveAiFeedbackDto[],
+    feedback: AiFeedback[],
     submissionId: string,
     marathonId: string,
   ): Promise<void>;
   abstract findAllBySubmissionId(id: string): Promise<AiFeedbacks[]>;
   abstract generateFeedback(
-    dto: GenerateAiFeedbackDto,
+    dto: GenerateAiFeedbackType,
   ): Promise<CorrectionReport>;
   abstract findAllByMarathonId(id: string): Promise<AiFeedbacks[]>;
 }

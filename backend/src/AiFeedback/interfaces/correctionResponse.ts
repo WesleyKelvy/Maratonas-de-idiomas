@@ -1,14 +1,15 @@
-export interface Error {
+export type Error = {
   explanation: string;
   points_deducted: number;
-}
+  category: string;
+};
 
-export interface CorrectionReport {
+export type CorrectionReport = {
   corrected_answer: string;
   errors: Error[];
   final_score: number;
-}
+};
 
-export interface RawAiCorrection {
+export type RawAiCorrection = {
   correction_report: CorrectionReport;
-}
+};

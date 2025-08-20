@@ -2,8 +2,7 @@ import { GoogleGenAI } from '@google/genai';
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { AiFeedbacks } from '@prisma/client';
 import { AbstractAiFeedbackService } from 'src/AiFeedback/abstract-services/abstract-aiFeedback.service';
-import { GenerateAiFeedbackDto } from 'src/AiFeedback/dto/aiFeedback.generate.dto';
-import { SaveAiFeedbackDto } from 'src/AiFeedback/dto/aiFeedback.save.dto';
+import { GenerateAiFeedbackType } from 'src/AiFeedback/types/aiFeedback.generate.type';
 import {
   CorrectionReport,
   RawAiCorrection,
@@ -13,6 +12,7 @@ import {
   AbstractAiFeedbackRepository,
   AI_FEEDBACK_REPOSITORY_TOKEN,
 } from 'src/repositories/abstract/aiFeedback.repository';
+import { AiFeedback } from 'src/AiFeedback/types/aiFeedback.type';
 
 @Injectable()
 export class AiFeedbackService implements AbstractAiFeedbackService {
@@ -33,19 +33,19 @@ export class AiFeedbackService implements AbstractAiFeedbackService {
   }
 
   async saveFeedback(
-    dto: SaveAiFeedbackDto[],
+    feedback: AiFeedback[],
     submissionId: string,
     marathonId: string,
   ): Promise<void> {
     return await this.aiFeedbackRepository.saveFeedbacks(
-      dto,
+      feedback,
       submissionId,
       marathonId,
     );
   }
 
   async generateFeedback(
-    dto: GenerateAiFeedbackDto,
+    dto: GenerateAiFeedbackType,
   ): Promise<CorrectionReport> {
     const promptTemplate = createCorrectionPromptJsonOutput(dto);
 

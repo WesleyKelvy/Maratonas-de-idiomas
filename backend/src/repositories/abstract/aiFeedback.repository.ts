@@ -1,9 +1,9 @@
 import { AiFeedbacks } from '@prisma/client';
-import { SaveAiFeedbackDto } from 'src/AiFeedback/dto/aiFeedback.save.dto';
+import { AiFeedback } from 'src/AiFeedback/types/aiFeedback.type';
 
 export abstract class AbstractAiFeedbackRepository {
   abstract saveFeedbacks(
-    dto: SaveAiFeedbackDto[],
+    feedback: AiFeedback[],
     submissionId: string,
     marathonId: string,
   ): Promise<void>;

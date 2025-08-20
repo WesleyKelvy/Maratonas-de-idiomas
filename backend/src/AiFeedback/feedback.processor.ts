@@ -3,8 +3,8 @@ import { Inject } from '@nestjs/common';
 import { Job } from 'bull';
 import { AI_FEEDBACK_SERVICE_TOKEN } from 'src/AiFeedback/abstract-services/abstract-aiFeedback.service';
 import { AiFeedbackService } from 'src/AiFeedback/aiFeedback.service';
-import { GenerateAiFeedbackDto } from 'src/AiFeedback/dto/aiFeedback.generate.dto';
-import { SaveAiFeedbackDto } from 'src/AiFeedback/dto/aiFeedback.save.dto';
+import { GenerateAiFeedbackType } from 'src/AiFeedback/types/aiFeedback.generate.type';
+import { AiFeedback } from 'src/AiFeedback/types/aiFeedback.type';
 import { QUESTION_SERVICE_TOKEN } from 'src/Question/abstract-services/abstract-question.service';
 import { QuestionService } from 'src/Question/question.service';
 import { SUBMISSION_SERVICE_TOKEN } from 'src/Submission/abstract-services/abstract-submission.service';
@@ -36,7 +36,7 @@ export class FeedbackProcessor {
         await this.questionService.findOne(questionId);
 
       // Prepare data for AI feedback generation
-      const data: GenerateAiFeedbackDto = {
+      const data: GenerateAiFeedbackType = {
         question: prompt_text,
         studentAnswer: studentAnswer,
       };
@@ -45,9 +45,10 @@ export class FeedbackProcessor {
       const { corrected_answer, errors, final_score } =
         await this.aiFeedbackService.generateFeedback(data);
 
-      const formattedErrors: SaveAiFeedbackDto[] = errors.map((error) => ({
+      const formattedErrors: AiFeedback[] = errors.map((error) => ({
         explanation: error.explanation,
         pointsDeducted: error.points_deducted,
+        category: error.category,
       }));
 
       // Save feedback and update submission in parallel

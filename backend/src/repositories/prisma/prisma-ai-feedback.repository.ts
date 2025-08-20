@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AiFeedbacks, Prisma } from '@prisma/client';
-import { SaveAiFeedbackDto } from 'src/AiFeedback/dto/aiFeedback.save.dto';
+import { AiFeedback } from 'src/AiFeedback/types/aiFeedback.type';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AbstractAiFeedbackRepository } from 'src/repositories/abstract/aiFeedback.repository';
 
@@ -11,16 +11,17 @@ export class PrismaAiFeedbackRepository
   constructor(private readonly prisma: PrismaService) {}
 
   async saveFeedbacks(
-    dto: SaveAiFeedbackDto[],
+    dto: AiFeedback[],
     submissionId: string,
     marathonId: string,
   ): Promise<void> {
     const dataToCreate: Prisma.AiFeedbacksCreateManyInput[] = dto.map(
-      (feedbackDto) => ({
+      (feedback) => ({
         submissionId: submissionId,
-        explanation: feedbackDto.explanation,
-        points_deducted: feedbackDto.pointsDeducted,
+        explanation: feedback.explanation,
+        points_deducted: feedback.pointsDeducted,
         marathon_id: marathonId,
+        category: feedback.category,
       }),
     );
 
