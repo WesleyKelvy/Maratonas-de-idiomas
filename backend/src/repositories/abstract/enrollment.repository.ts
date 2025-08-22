@@ -10,4 +10,4 @@ export abstract class AbstractEnrollmentRepository {
   // abstract remove(code: string): Promise<void>;
 }
 
-export const ENROLLEMNT_REPOSITORY_TOKEN = 'ENROLLEMNT_REPOSITORY_TOKEN';
+export const ENROLLMENT_REPOSITORY_TOKEN = 'ENROLLMENT_REPOSITORY_TOKEN';
