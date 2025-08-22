@@ -12,15 +12,17 @@ import { Enrollment } from '@prisma/client';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { StudentGuard } from 'src/auth/guards/student.guard';
 import { UserFromJwt } from 'src/auth/models/UserFromJwt';
-import { ENROLLEMENT_SERVICE_TOKEN } from 'src/Enrollment/abstract-services/abstract-enrollment.service';
-import { AbstractEnrollmentRepository } from 'src/repositories/abstract/enrollment.repository';
+import {
+  AbstractEnrollmentService,
+  ENROLLMENT_SERVICE_TOKEN,
+} from 'src/Enrollment/abstract-services/abstract-enrollment.service';
 
 @UseGuards(StudentGuard)
 @Controller('/student/enrollment/:marathonId')
 export class EnrollmentController {
   constructor(
-    @Inject(ENROLLEMENT_SERVICE_TOKEN)
-    private readonly enrollmentService: AbstractEnrollmentRepository,
+    @Inject(ENROLLMENT_SERVICE_TOKEN)
+    private readonly enrollmentService: AbstractEnrollmentService,
   ) {}
 
   @Post()

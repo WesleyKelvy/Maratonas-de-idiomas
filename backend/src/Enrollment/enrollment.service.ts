@@ -12,7 +12,7 @@ import {
 import { AbstractEnrollmentService } from 'src/Enrollment/abstract-services/abstract-enrollment.service';
 import {
   AbstractEnrollmentRepository,
-  ENROLLEMNT_REPOSITORY_TOKEN,
+  ENROLLMENT_REPOSITORY_TOKEN,
 } from 'src/repositories/abstract/enrollment.repository';
 import {
   AbstractProfessorStatsService,
@@ -26,16 +26,14 @@ export class EnrollmentService implements AbstractEnrollmentService {
     private readonly professorStatsService: AbstractProfessorStatsService,
     @Inject(CLASSROOM_SERVICE_TOKEN)
     private readonly classroomService: AbstractClassroomService,
-    @Inject(ENROLLEMNT_REPOSITORY_TOKEN)
+    @Inject(ENROLLMENT_REPOSITORY_TOKEN)
     private readonly enrollmentRepository: AbstractEnrollmentRepository,
   ) {}
 
   async findAllByUserId(id: string): Promise<Enrollment[]> {
     const enrollment = await this.enrollmentRepository.findAllByUserId(id);
     if (!enrollment) {
-      throw new NotFoundException(
-        `Marathons for this classroom does not exist.`,
-      );
+      throw new NotFoundException('Marathons for this classroom do not exist.');
     }
 
     return enrollment;
@@ -49,7 +47,7 @@ export class EnrollmentService implements AbstractEnrollmentService {
     const data = await this.findOne(marathon_id, userId);
 
     if (data) {
-      throw new ConflictException('Enrollemt already done!');
+      throw new ConflictException('Enrollment already done!');
     }
 
     const { created_by } =
