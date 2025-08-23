@@ -36,6 +36,7 @@ async function main() {
       ProfessorStats: {
         create: {},
       },
+      accountVerified: true,
     },
   });
   console.log(`Created professor: ${professor.name} (${professor.id})`);
@@ -53,6 +54,7 @@ async function main() {
       studentStats: {
         create: {},
       },
+      accountVerified: true,
     },
   });
   console.log(`Created student: ${student1.name} (${student1.id})`);
@@ -69,6 +71,7 @@ async function main() {
       studentStats: {
         create: {},
       },
+      accountVerified: true,
     },
   });
   console.log(`Created student: ${student2.name} (${student2.id})`);

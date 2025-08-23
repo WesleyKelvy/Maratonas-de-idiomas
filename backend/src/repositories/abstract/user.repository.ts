@@ -2,11 +2,12 @@ import { Prisma, User } from '@prisma/client';
 
 export abstract class AbstractUserRepository {
   abstract create(createUserDto: Prisma.UserCreateInput): Promise<User>;
+  abstract findByCode(code: string): Promise<User>;
   abstract findAll(): Promise<User[]>;
   abstract findOne(id: string): Promise<User>;
   abstract findByEmail(email: string): Promise<User>;
   abstract update(
-    email: string,
+    id: string,
     updateUserDto: Prisma.UserUpdateInput,
   ): Promise<User>;
   abstract remove(id: string): Promise<void>;

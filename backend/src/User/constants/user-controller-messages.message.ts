@@ -4,4 +4,5 @@ export const MESSAGES = {
   USER_DELETED: 'User deleted successfully.',
   USER_RETRIEVED: 'User retrieved successfully.',
   PASSWORD_CHANGED: 'User password changed successfully.',
+  ACCOUNT_CONFIRMED_SUCCESSFULLY: 'Account confirmed successfully!',
 };

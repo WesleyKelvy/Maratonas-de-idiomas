@@ -38,6 +38,9 @@ model User {
   resetToken           String?   @unique
   resetTokenExpiration DateTime?
 
+  confirmationCode String?
+  accountVerified  Boolean @default(false)
+
   studentStats   StudentStats?
   ProfessorStats ProfessorStats?
 

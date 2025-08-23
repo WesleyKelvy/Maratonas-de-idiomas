@@ -4,14 +4,15 @@ import { SanitedUser } from 'utils/sanitazeUser';
 
 export abstract class AbstractUserService {
   abstract create(createUserDto: CreateUserDto): Promise<SanitedUser>;
+  abstract confirmAccount(code: string): Promise<void>;
   abstract findByEmail(email: string): Promise<SanitedUser>;
   abstract findById(id: string): Promise<SanitedUser>;
   abstract update(
-    email: string,
+    id: string,
     updateUserDto: UpdateUserDto,
   ): Promise<SanitedUser>;
   abstract remove(id: string): Promise<void>;
-  abstract sendResetPasswordEmail(email: string): Promise<void>;
+  abstract sendResetPasswordEmail(email: string): Promise<string>;
   abstract resetPassword(token: string, newPassword: string): Promise<void>;
 }
 

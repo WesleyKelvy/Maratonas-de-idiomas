@@ -8,8 +8,6 @@ import {
   Patch,
   Post,
   Query,
-  UsePipes,
-  ValidationPipe,
 } from '@nestjs/common';
 import {
   AbstractUserService,
@@ -17,7 +15,6 @@ import {
 } from 'src/User/abstract-services/abstract-user.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { IsPublic } from '../auth/decorators/is-public.decorator';
-import { UserFromJwt } from '../auth/models/UserFromJwt';
 import { MESSAGES } from './constants/user-controller-messages.message';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -32,13 +29,22 @@ export class UserController {
   @IsPublic()
   @HttpCode(201)
   @Post()
-  @UsePipes(ValidationPipe)
   async create(@Body() createUserDto: CreateUserDto) {
     const data = await this.userService.create(createUserDto);
 
     return {
       data: data,
       message: MESSAGES.USER_CREATED,
+    };
+  }
+  @IsPublic()
+  @HttpCode(200)
+  @Post('confirm-account') // Use a more specific path
+  async confirmAccount(@Body() code: string) {
+    await this.userService.confirmAccount(code);
+
+    return {
+      message: MESSAGES.ACCOUNT_CONFIRMED_SUCCESSFULLY,
     };
   }
 
@@ -54,10 +60,10 @@ export class UserController {
 
   @Patch()
   async update(
-    @CurrentUser() user: UserFromJwt,
+    @CurrentUser('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    const data = await this.userService.update(user.email, updateUserDto);
+    const data = await this.userService.update(id, updateUserDto);
 
     return {
       data: data,
@@ -66,8 +72,8 @@ export class UserController {
   }
 
   @Delete()
-  async remove(@CurrentUser() user: UserFromJwt) {
-    const data = await this.userService.remove(user.id);
+  async remove(@CurrentUser('id') id: string) {
+    const data = await this.userService.remove(id);
 
     return {
       data: data,
@@ -78,8 +84,8 @@ export class UserController {
   @IsPublic()
   @Post('send-email-password-reset')
   async requestPasswordReset(@Body('email') email: string) {
-    await this.userService.sendResetPasswordEmail(email);
-    return { message: 'Password reset email sent.' };
+    const url = await this.userService.sendResetPasswordEmail(email);
+    return { url, message: 'Password reset email sent.' };
   }
 
   @IsPublic()

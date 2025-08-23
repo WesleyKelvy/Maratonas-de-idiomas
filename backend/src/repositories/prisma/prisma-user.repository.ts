@@ -7,6 +7,12 @@ import { AbstractUserRepository } from 'src/repositories/abstract/user.repositor
 export class PrismaAbstractUserRepository implements AbstractUserRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  async findByCode(code: string): Promise<User> {
+    return this.prisma.user.findFirst({
+      where: { confirmationCode: code },
+    });
+  }
+
   async create(createUserDto: Prisma.UserCreateInput): Promise<User> {
     const createdUser = await this.prisma.user.create({
       data: createUserDto,
