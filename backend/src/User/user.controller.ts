@@ -39,7 +39,7 @@ export class UserController {
   }
   @IsPublic()
   @HttpCode(200)
-  @Post('confirm-account') // Use a more specific path
+  @Post('confirm-account')
   async confirmAccount(@Body() code: string) {
     await this.userService.confirmAccount(code);
 
