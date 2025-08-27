@@ -1,6 +1,6 @@
 import { Request } from 'express';
-import { User } from '../../User/entities/user.entity';
+import { UserFromJwt } from 'src/auth/models/UserFromJwt';
 
 export interface AuthRequest extends Request {
-  user: User;
+  user: UserFromJwt;
 }

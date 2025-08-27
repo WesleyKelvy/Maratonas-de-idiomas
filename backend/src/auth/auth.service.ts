@@ -8,7 +8,7 @@ import {
 import { SanitedUser } from 'utils/sanitazeUser';
 import { User } from '../User/entities/user.entity';
 import { UserPayload } from './models/UserPayload';
-import { UserToken } from './models/UserToken';
+import { UserFromJwt } from 'src/auth/models/UserFromJwt';
 
 @Injectable()
 export class AuthService {
@@ -18,9 +18,7 @@ export class AuthService {
     private readonly AbstractUserRepository: AbstractUserRepository,
   ) {}
 
-  login(user: User): UserToken {
-    // transform user into jwt
-
+  login(user: UserFromJwt): { accessToken: string } {
     const payload: UserPayload = {
       id: user.id,
       email: user.email,
@@ -29,29 +27,30 @@ export class AuthService {
       role: user.role,
     };
 
-    const jwtToken = this.jwtService.sign(payload);
-    return {
-      accessToken: jwtToken,
-    };
+    // Create a short-lived access token (e.g., 15 minutes)
+    const accessToken = this.jwtService.sign(payload, {
+      expiresIn: '7d',
+      secret: process.env.JWT_SECRET,
+    });
+
+    return { accessToken };
   }
 
-  async refreshToken(id: string) {
-    const user: User = await this.AbstractUserRepository.findOne(id);
+  // async refreshToken(id: string) {
+  //   const user: User = await this.AbstractUserRepository.findOne(id);
 
-    const payload: UserPayload = {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      sub: user.id,
-      role: user.role,
-    };
+  //   const payload: UserPayload = {
+  //     id: user.id,
+  //     email: user.email,
+  //     name: user.name,
+  //     sub: user.id,
+  //     role: user.role,
+  //   };
 
-    const jwtToken = this.jwtService.sign(payload);
+  //   const jwtToken = this.jwtService.sign(payload);
 
-    return {
-      refreshToken: jwtToken,
-    };
-  }
+  //   return jwtToken;
+  // }
 
   async validateUser(email: string, password: string): Promise<SanitedUser> {
     const user: User = await this.AbstractUserRepository.findByEmail(email);
