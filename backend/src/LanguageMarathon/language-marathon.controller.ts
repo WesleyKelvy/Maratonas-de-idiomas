@@ -11,9 +11,10 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { LanguageMarathon } from '@prisma/client';
+import { LanguageMarathon, Role } from '@prisma/client';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
-import { ProfessorGuard } from 'src/auth/guards/professor.guard';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 import {
   AbstractLanguageMarathonService,
   LANGUAGE_MARATHON_SERVICE_TOKEN,
@@ -21,7 +22,8 @@ import {
 import { CreateLanguageMarathonDto } from 'src/LanguageMarathon/dto/language-marathon.create.dto';
 import { UpdateLanguageMarathonDto } from 'src/LanguageMarathon/dto/language-marathon.update.dto';
 
-@UseGuards(ProfessorGuard)
+@UseGuards(RolesGuard)
+@Roles(Role.Professor)
 @Controller('/classrooms/:code/marathon')
 export class LanguageMarathonController {
   constructor(

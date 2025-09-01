@@ -11,8 +11,9 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { Question } from '@prisma/client';
-import { ProfessorGuard } from 'src/auth/guards/professor.guard';
+import { Question, Role } from '@prisma/client';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 import {
   AbstractLanguageMarathonService,
   LANGUAGE_MARATHON_SERVICE_TOKEN,
@@ -28,7 +29,8 @@ import {
 } from 'src/Question/interfaces/geminiResponse';
 import { GenerateQuestionsDto } from 'src/Question/interfaces/generateQuestionsDto';
 
-@UseGuards(ProfessorGuard)
+@UseGuards(RolesGuard)
+@Roles(Role.Professor)
 @Controller('/classrooms/:code/marathon/:marathonId')
 export class QuestionController {
   constructor(

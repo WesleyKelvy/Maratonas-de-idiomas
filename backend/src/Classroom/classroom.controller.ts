@@ -12,9 +12,10 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { Classroom } from '@prisma/client';
+import { Classroom, Role } from '@prisma/client';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
-import { ProfessorGuard } from 'src/auth/guards/professor.guard';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { UserFromJwt } from 'src/auth/models/UserFromJwt';
 import {
   AbstractClassroomService,
@@ -23,7 +24,8 @@ import {
 import { CreateClassroomDto } from 'src/Classroom/dto/classroom.create.dto';
 import { UpdateClassroomDto } from 'src/Classroom/dto/classroom.update.dto';
 
-@UseGuards(ProfessorGuard)
+@UseGuards(RolesGuard)
+@Roles(Role.Professor)
 @Controller('classroom')
 export class ClassroomController {
   constructor(

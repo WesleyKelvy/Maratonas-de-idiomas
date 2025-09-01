@@ -7,14 +7,16 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { Report } from '@prisma/client';
-import { ProfessorGuard } from 'src/auth/guards/professor.guard';
+import { Report, Role } from '@prisma/client';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 import {
   AbstractReportService,
   REPORT_SERVICE_TOKEN,
 } from 'src/Report/abstract-services/abstract-report.service';
 
-@UseGuards(ProfessorGuard)
+@UseGuards(RolesGuard)
+@Roles(Role.Professor)
 @Controller('marathon/:marathonId/report')
 export class ReportController {
   constructor(

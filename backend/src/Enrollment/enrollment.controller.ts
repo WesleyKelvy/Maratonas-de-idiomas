@@ -8,16 +8,18 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { Enrollment } from '@prisma/client';
+import { Enrollment, Role } from '@prisma/client';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
-import { StudentGuard } from 'src/auth/guards/student.guard';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { UserFromJwt } from 'src/auth/models/UserFromJwt';
 import {
   AbstractEnrollmentService,
   ENROLLMENT_SERVICE_TOKEN,
 } from 'src/Enrollment/abstract-services/abstract-enrollment.service';
 
-@UseGuards(StudentGuard)
+@UseGuards(RolesGuard)
+@Roles(Role.Student)
 @Controller('/student/enrollment/:marathonId')
 export class EnrollmentController {
   constructor(

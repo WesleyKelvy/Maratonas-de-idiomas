@@ -9,9 +9,10 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { Submission } from '@prisma/client';
+import { Role, Submission } from '@prisma/client';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
-import { StudentGuard } from 'src/auth/guards/student.guard';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { UserFromJwt } from 'src/auth/models/UserFromJwt';
 import {
   AbstractSubmissionService,
@@ -19,7 +20,8 @@ import {
 } from 'src/Submission/abstract-services/abstract-submission.service';
 import { CreateSubmissionDto } from 'src/Submission/dto/submission.create.dto';
 
-@UseGuards(StudentGuard)
+@UseGuards(RolesGuard)
+@Roles(Role.Student)
 @Controller('marathon/:marathonId/question/:questionId/submission')
 export class SubmissionController {
   constructor(

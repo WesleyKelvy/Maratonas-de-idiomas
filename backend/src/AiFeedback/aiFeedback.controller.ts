@@ -8,20 +8,22 @@ import {
   Param,
   UseGuards,
 } from '@nestjs/common';
-import { AiFeedbacks } from '@prisma/client';
+import { AiFeedbacks, Role } from '@prisma/client';
+import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { UserFromJwt } from 'src/auth/models/UserFromJwt';
 import {
   AbstractSubmissionService,
   SUBMISSION_SERVICE_TOKEN,
 } from 'src/Submission/abstract-services/abstract-submission.service';
-import { StudentGuard } from '../auth/guards/student.guard';
 import {
   AbstractAiFeedbackService,
   AI_FEEDBACK_SERVICE_TOKEN,
 } from './abstract-services/abstract-aiFeedback.service';
-import { UserFromJwt } from 'src/auth/models/UserFromJwt';
-import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 
-@UseGuards(StudentGuard)
+@UseGuards(RolesGuard)
+@Roles(Role.Student)
 @Controller('submission/:submissionId/ai-feedback')
 export class AiFeedbackController {
   constructor(

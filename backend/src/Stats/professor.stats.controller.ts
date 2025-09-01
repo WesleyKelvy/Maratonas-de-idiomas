@@ -10,14 +10,19 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
-import { ProfessorStats } from '@prisma/client';
+import { ProfessorStats, Role } from '@prisma/client';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 import {
   AbstractProfessorStatsService,
   PROFESSOR_STATS_SERVICE_TOKEN,
 } from 'src/Stats/abstract-services/abstract-professor-stats.service';
 import { UpdateProfessorStatsDto } from 'src/Stats/dto/professor.update-stats.dto';
 
+@UseGuards(RolesGuard)
+@Roles(Role.Professor)
 @Controller('professor-stats')
 export class ProfessorStatsController {
   constructor(
