@@ -37,7 +37,7 @@ export class EnrollmentController {
   }
 
   @Get()
-  findAllByUserId(@Param('marathonId') id: string): Promise<Enrollment[]> {
+  findAllByUserId(@CurrentUser('id') id: string): Promise<Enrollment[]> {
     return this.enrollmentService.findAllByUserId(id);
   }
 }
