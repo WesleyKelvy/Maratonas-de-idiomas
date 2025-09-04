@@ -9,9 +9,11 @@ export abstract class AbstractQuestionService {
   abstract findAllByMarathonId(id: string): Promise<Question[]>;
   abstract update(id: number, dto: UpdateQuestionDto): Promise<Question>;
   abstract remove(id: number): Promise<void>;
-  abstract generateQuestionsWithGemini(
-    dto: GenerateQuestionsDto,
-  ): Promise<QuestionArray>;
+  abstract generateQuestionsWithGemini({
+    context,
+    difficulty,
+    number_of_questions,
+  }: GenerateQuestionsDto): Promise<QuestionArray>;
 }
 
 export const QUESTION_SERVICE_TOKEN = 'QUESTION_SERVICE_TOKEN';

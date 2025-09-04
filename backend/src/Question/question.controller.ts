@@ -45,8 +45,13 @@ export class QuestionController {
   async getGeminiQuestions(
     @Param('marathonId') marathonId: string,
   ): Promise<QuestionArray> {
-    const data = await this.marathonService.findOne(marathonId);
-    return this.questionService.generateQuestionsWithGemini(data);
+    const { context, difficulty, number_of_questions } =
+      await this.marathonService.findOne(marathonId);
+    return this.questionService.generateQuestionsWithGemini({
+      context,
+      difficulty,
+      number_of_questions,
+    });
   }
 
   @Post('save-questions')
