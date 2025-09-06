@@ -20,8 +20,6 @@ import {
 } from 'src/Submission/abstract-services/abstract-submission.service';
 import { CreateSubmissionDto } from 'src/Submission/dto/submission.create.dto';
 
-@UseGuards(RolesGuard)
-@Roles(Role.Student)
 @Controller('marathon/:marathonId/question/:questionId/submission')
 export class SubmissionController {
   constructor(
@@ -29,6 +27,8 @@ export class SubmissionController {
     private readonly submissionService: AbstractSubmissionService,
   ) {}
 
+  @UseGuards(RolesGuard)
+  @Roles(Role.Student)
   @Post()
   @HttpCode(HttpStatus.CREATED)
   create(
