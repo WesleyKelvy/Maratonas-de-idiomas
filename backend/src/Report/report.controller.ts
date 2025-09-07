@@ -1,5 +1,6 @@
 import {
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Inject,
@@ -30,7 +31,7 @@ export class ReportController {
     return this.reportService.createReport(marathonId);
   }
 
-  @Post()
+  @Get()
   @HttpCode(HttpStatus.OK)
   async getReport(@Param('marathonId') marathonId: string): Promise<Report> {
     return this.reportService.findByMarathonId(marathonId);
