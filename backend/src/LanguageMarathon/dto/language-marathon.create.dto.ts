@@ -23,7 +23,6 @@ export class CreateLanguageMarathonDto {
   context: string;
 
   @IsEnum(Difficulty)
-  @IsOptional()
   difficulty: Difficulty;
 
   @IsInt()
