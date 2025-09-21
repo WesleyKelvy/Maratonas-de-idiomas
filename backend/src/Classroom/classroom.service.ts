@@ -1,4 +1,9 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Classroom } from '@prisma/client';
 import { randomBytes } from 'crypto';
 import { AbstractClassroomService } from 'src/Classroom/abstract-services/abstract-classrom.service';
@@ -25,19 +30,14 @@ export class ClassroomService implements AbstractClassroomService {
   async findOneByMarathonId(id: string): Promise<Classroom> {
     const classroom = await this.classroomRepository.findOneByMarathonId(id);
     if (!classroom) {
-      throw new NotFoundException(`Classrooms for this user does not exist.`);
+      throw new NotFoundException(`No classroom found for marathon ID ${id}.`);
     }
 
     return classroom;
   }
 
   async findAllByUserId(id: string): Promise<Classroom[]> {
-    const classroom = await this.classroomRepository.findAll(id);
-    if (!classroom) {
-      throw new NotFoundException(`Classrooms for this user does not exist.`);
-    }
-
-    return classroom;
+    return await this.classroomRepository.findAll(id);
   }
 
   async create(dto: CreateClassroomDto, userId: string): Promise<Classroom> {
@@ -45,32 +45,43 @@ export class ClassroomService implements AbstractClassroomService {
 
     const code = randomBytes(8).toString('hex');
 
-    return await this.classroomRepository.create({ ...dto }, code, userId);
+    return this.classroomRepository.create(dto, code, userId);
   }
 
   async findOne(code: string): Promise<Classroom> {
     const classroom = await this.classroomRepository.findByCode(code);
     if (!classroom) {
-      throw new NotFoundException(`Classroom with code ${code} not found.`);
+      throw new NotFoundException(`No classroom found with code ${code}`);
     }
 
     return classroom;
   }
 
-  async update(code: string, dto: UpdateClassroomDto): Promise<Classroom> {
+  async update(
+    code: string,
+    dto: UpdateClassroomDto,
+    userId: string,
+  ): Promise<Classroom> {
     const classroom = await this.classroomRepository.findByCode(code);
     if (!classroom) {
-      throw new NotFoundException(`Classroom with code ${code} not found.`);
+      throw new NotFoundException(`No classroom found with code ${code}`);
     }
 
-    return await this.classroomRepository.update(classroom.code, dto);
+    if (classroom.created_by !== userId)
+      throw new ForbiddenException('Not allowed!');
+
+    return this.classroomRepository.update(code, dto, userId);
   }
 
-  async remove(code: string): Promise<void> {
-    const existingClassroom = await this.classroomRepository.findByCode(code);
-    if (!existingClassroom) {
-      throw new NotFoundException(`Classroom with code ${code} not found.`);
+  async remove(code: string, userId: string): Promise<void> {
+    const classroom = await this.classroomRepository.findByCode(code);
+    if (!classroom) {
+      throw new NotFoundException(`No classroom found with code ${code}`);
     }
-    await this.classroomRepository.remove(code);
+
+    if (classroom.created_by !== userId)
+      throw new ForbiddenException('Not allowed!');
+
+    this.classroomRepository.remove(code, userId);
   }
 }

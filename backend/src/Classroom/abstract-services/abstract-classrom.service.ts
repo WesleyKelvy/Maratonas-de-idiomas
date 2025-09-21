@@ -13,8 +13,9 @@ export abstract class AbstractClassroomService {
   abstract update(
     code: string,
     updateStatsDto: UpdateClassroomDto,
+    userId: string,
   ): Promise<Classroom>;
-  abstract remove(id: string): Promise<void>;
+  abstract remove(id: string, userId: string): Promise<void>;
 }
 
 export const CLASSROOM_SERVICE_TOKEN = 'CLASSROOM_SERVICE_TOKEN';

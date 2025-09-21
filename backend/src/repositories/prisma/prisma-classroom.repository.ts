@@ -48,7 +48,7 @@ export class PrismaClassroomRepository implements AbstractClassroomRepository {
   }
 
   /**
-   * Finds a single classroom by its id
+   * Finds a single classroom by its code
    */
   async findByCode(code: string): Promise<Classroom | null> {
     return await this.prisma.classroom.findUnique({
@@ -59,16 +59,13 @@ export class PrismaClassroomRepository implements AbstractClassroomRepository {
   /**
    * Updates classroom properties by code
    */
-  async update(code: string, dto: UpdateClassroomDto): Promise<Classroom> {
-    // Ensure classroom exists
-    const existing = await this.prisma.classroom.findUnique({
-      where: { code },
-    });
-    if (!existing) {
-      throw new NotFoundException(`Classroom with code ${code} not found.`);
-    }
+  async update(
+    code: string,
+    dto: UpdateClassroomDto,
+    userId: string,
+  ): Promise<Classroom> {
     return await this.prisma.classroom.update({
-      where: { code },
+      where: { code, created_by: userId },
       data: {
         name: dto.name,
         code: code,
@@ -78,11 +75,11 @@ export class PrismaClassroomRepository implements AbstractClassroomRepository {
   }
 
   /**
-   * Removes a classroom by id
+   * Removes a classroom by code
    */
-  async remove(code: string): Promise<void> {
+  async remove(code: string, userId: string): Promise<void> {
     const existing = await this.prisma.classroom.findUnique({
-      where: { code },
+      where: { code, created_by: userId },
     });
     if (!existing) {
       throw new NotFoundException(`Classroom with code ${code} not found.`);

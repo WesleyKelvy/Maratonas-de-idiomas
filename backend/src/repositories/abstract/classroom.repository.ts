@@ -14,8 +14,9 @@ export abstract class AbstractClassroomRepository {
   abstract update(
     code: string,
     updateStatDto: UpdateClassroomDto,
+    userId: string,
   ): Promise<Classroom>;
-  abstract remove(code: string): Promise<void>;
+  abstract remove(code: string, userId: string): Promise<void>;
 }
 
 export const CLASSROOM_REPOSITORY_TOKEN = 'CLASSROOM_REPOSITORY_TOKEN';

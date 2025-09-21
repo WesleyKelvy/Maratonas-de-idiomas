@@ -7,7 +7,6 @@ import {
   HttpStatus,
   Inject,
   Param,
-  ParseUUIDPipe,
   Patch,
   Post,
   UseGuards,
@@ -53,16 +52,21 @@ export class ClassroomController {
   }
 
   @Patch(':code')
+  @HttpCode(HttpStatus.OK)
   update(
     @Param('code') code: string,
     @Body() updateDto: UpdateClassroomDto,
+    @CurrentUser() user: UserFromJwt,
   ): Promise<Classroom> {
-    return this.classroomService.update(code, updateDto);
+    return this.classroomService.update(code, updateDto, user.id);
   }
 
   @Delete(':code')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id', ParseUUIDPipe) code: string): Promise<void> {
-    return this.classroomService.remove(code);
+  remove(
+    @CurrentUser() user: UserFromJwt,
+    @Param('code') code: string,
+  ): Promise<void> {
+    return this.classroomService.remove(code, user.id);
   }
 }
