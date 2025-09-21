@@ -12,7 +12,7 @@ export abstract class AbstractUserService {
     updateUserDto: UpdateUserDto,
   ): Promise<SanitedUser>;
   abstract remove(id: string): Promise<void>;
-  abstract sendResetPasswordEmail(email: string): Promise<string>;
+  abstract sendResetPasswordByEmail(email: string): Promise<string>;
   abstract resetPassword(token: string, newPassword: string): Promise<void>;
 }
 

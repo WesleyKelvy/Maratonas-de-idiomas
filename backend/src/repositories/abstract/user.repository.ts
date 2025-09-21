@@ -1,4 +1,5 @@
 import { Prisma, User } from '@prisma/client';
+import { UpdateUserDto } from 'src/User/dto/update-user.dto';
 
 export abstract class AbstractUserRepository {
   abstract create(createUserDto: Prisma.UserCreateInput): Promise<User>;
@@ -6,16 +7,12 @@ export abstract class AbstractUserRepository {
   abstract findAll(): Promise<User[]>;
   abstract findOne(id: string): Promise<User>;
   abstract findByEmail(email: string): Promise<User>;
-  abstract update(
+  abstract findbyToken(token: string): Promise<User>;
+  abstract updateById(
     id: string,
-    updateUserDto: Prisma.UserUpdateInput,
+    updateUserDto: Partial<UpdateUserDto>,
   ): Promise<User>;
   abstract remove(id: string): Promise<void>;
-  abstract findbyToken(token: string): Promise<User>;
-  abstract updateByEmail(
-    email: string,
-    updateUserDto: Prisma.UserUpdateInput,
-  ): Promise<User>;
   abstract resetPassword(token: string, newPassword: string): Promise<void>;
 }
 

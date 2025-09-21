@@ -18,11 +18,10 @@ export class CreateUserDto {
 
   @IsString()
   @IsNotEmpty()
-  //Characters, number and special characters
-  @Matches(/^(?=.*[A-Z])(?=.*[!@#$&*])(?=.*[0-9])(?=.*[a-z]).{8,}$/, {
+  @Matches(/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[\W_]).{8,}$/, {
     message: 'password too weak!',
   })
-  passwordHash: string;
+  password: string;
 
   @IsString()
   @IsNotEmpty()

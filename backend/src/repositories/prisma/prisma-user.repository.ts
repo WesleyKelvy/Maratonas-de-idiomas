@@ -36,7 +36,7 @@ export class PrismaAbstractUserRepository implements AbstractUserRepository {
     });
   }
 
-  async update(
+  async updateById(
     id: string,
     updateUserDto: Prisma.UserUpdateInput,
   ): Promise<User> {
@@ -58,15 +58,15 @@ export class PrismaAbstractUserRepository implements AbstractUserRepository {
     });
   }
 
-  async updateByEmail(
-    email: string,
-    updateUserDto: Prisma.UserUpdateInput,
-  ): Promise<User> {
-    return await this.prisma.user.update({
-      where: { email },
-      data: updateUserDto,
-    });
-  }
+  // async updateByEmail(
+  //   email: string,
+  //   updateUserDto: Prisma.UserUpdateInput,
+  // ): Promise<User> {
+  //   return await this.prisma.user.update({
+  //     where: { email },
+  //     data: updateUserDto,
+  //   });
+  // }
 
   async resetPassword(token: string, newPasswordHash: string): Promise<void> {
     await this.prisma.user.update({

@@ -37,6 +37,7 @@ model User {
 
   resetToken           String?   @unique
   resetTokenExpiration DateTime?
+  resetRequestedAt     DateTime?
 
   confirmationCode String?
   accountVerified  Boolean @default(false)

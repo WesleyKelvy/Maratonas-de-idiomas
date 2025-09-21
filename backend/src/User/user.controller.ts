@@ -84,7 +84,7 @@ export class UserController {
   @IsPublic()
   @Post('send-email-password-reset')
   async requestPasswordReset(@Body('email') email: string) {
-    const url = await this.userService.sendResetPasswordEmail(email);
+    const url = await this.userService.sendResetPasswordByEmail(email);
     return { url, message: 'Password reset email sent.' };
   }
 
