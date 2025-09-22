@@ -13,8 +13,9 @@ export abstract class AbstractLanguageMarathonService {
   abstract update(
     code: string,
     updateStatsDto: UpdateLanguageMarathonDto,
+    userId: string,
   ): Promise<LanguageMarathon>;
-  abstract remove(id: string): Promise<void>;
+  abstract remove(id: string, userId: string): Promise<void>;
 }
 
 export const LANGUAGE_MARATHON_SERVICE_TOKEN =

@@ -7,13 +7,15 @@ export abstract class AbstractLanguageMarathonRepository {
   abstract create(
     dto: CreateLanguageMarathonDto,
     code: string,
+    userId: string,
   ): Promise<LanguageMarathon>;
   abstract findOneById(id: string): Promise<LanguageMarathon | null>;
   abstract update(
     id: string,
     updateMarathonDto: UpdateLanguageMarathonDto,
+    userId: string,
   ): Promise<LanguageMarathon>;
-  abstract remove(id: string): Promise<void>;
+  abstract remove(id: string, userId: string): Promise<void>;
 }
 
 export const LANGUAGE_MARATHON_REPOSITORY_TOKEN =

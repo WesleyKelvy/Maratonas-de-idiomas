@@ -20,18 +20,13 @@ export class PrismaLanguageMarathonRepository
     });
   }
 
-  async findAllById(id: string): Promise<LanguageMarathon[]> {
-    return this.prisma.languageMarathon.findMany({
-      where: { id },
-    });
-  }
-
   /**
    * Creates a new language marathon for a classroom
    */
   async create(
     dto: CreateLanguageMarathonDto,
     code: string,
+    professorId: string,
   ): Promise<LanguageMarathon> {
     return this.prisma.languageMarathon.create({
       data: {
@@ -44,6 +39,7 @@ export class PrismaLanguageMarathonRepository
         end_date: dto.endDate,
         number_of_questions: dto.number_of_questions,
         classroom: { connect: { code } },
+        created_by: professorId,
       },
     });
   }
@@ -63,9 +59,10 @@ export class PrismaLanguageMarathonRepository
   async update(
     id: string,
     dto: UpdateLanguageMarathonDto,
+    userId: string,
   ): Promise<LanguageMarathon> {
     return this.prisma.languageMarathon.update({
-      where: { id },
+      where: { id, created_by: userId },
       data: {
         title: dto.title,
         description: dto.description,
@@ -81,7 +78,15 @@ export class PrismaLanguageMarathonRepository
   /**
    * Removes a marathon by its ID
    */
-  async remove(id: string): Promise<void> {
-    await this.prisma.languageMarathon.delete({ where: { id } });
+  async remove(id: string, userId: string): Promise<void> {
+    await this.prisma.languageMarathon.delete({
+      where: { id, created_by: userId },
+    });
   }
+
+  // async findAllById(id: string): Promise<LanguageMarathon[]> {
+  //   return this.prisma.languageMarathon.findMany({
+  //     where: { id },
+  //   });
+  // }
 }

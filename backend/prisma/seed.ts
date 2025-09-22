@@ -98,6 +98,7 @@ async function main() {
       end_date: marathonEndDate,
       number_of_questions: 5, // Updated to 5 questions
       classroom: { connect: { code: classroom.code } },
+      created_by: professor.id,
     },
   });
   console.log(

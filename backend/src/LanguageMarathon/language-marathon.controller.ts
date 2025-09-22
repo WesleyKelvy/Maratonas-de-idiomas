@@ -54,16 +54,21 @@ export class LanguageMarathonController {
   }
 
   @Patch(':id')
+  @HttpCode(HttpStatus.OK)
   update(
     @Param('id') id: string,
     @Body() updateDto: UpdateLanguageMarathonDto,
+    @CurrentUser('id') userId: string,
   ): Promise<LanguageMarathon> {
-    return this.marathonService.update(id, updateDto);
+    return this.marathonService.update(id, updateDto, userId);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id') id: string): Promise<void> {
-    return this.marathonService.remove(id);
+  remove(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+  ): Promise<void> {
+    return this.marathonService.remove(id, userId);
   }
 }

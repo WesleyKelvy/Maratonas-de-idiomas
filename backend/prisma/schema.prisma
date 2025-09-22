@@ -97,7 +97,8 @@ model LanguageMarathon {
   leaderboard_generated Boolean    @default(false)
 
   classroom_code String
-  classroom Classroom @relation(fields: [classroom_code], references: [code])
+  classroom      Classroom @relation(fields: [classroom_code], references: [code])
+  created_by     String
 
   questions   Question[]
   enrollments Enrollment[]
@@ -172,9 +173,9 @@ model Leaderboard {
 
 // Report
 model Report {
-  id             String         @id @default(uuid())
+  id             String          @id @default(uuid())
   classroom_code String
-  marathon_id    String         @unique
+  marathon_id    String          @unique
   total_errors   Int
   report_details ReportDetails[]
 
@@ -183,7 +184,7 @@ model Report {
 
 model ReportDetails {
   id              Int    @id @default(autoincrement())
-  report_id       String 
+  report_id       String
   occurrences     Int
   category_name   String
   examples        String
