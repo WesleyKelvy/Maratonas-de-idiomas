@@ -1,5 +1,4 @@
 import {
-  Body,
   Controller,
   HttpCode,
   HttpStatus,
@@ -9,13 +8,12 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Response } from 'express';
+import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import { UserPayload } from 'src/auth/models/UserPayload';
 import { AuthService } from './auth.service';
 import { IsPublic } from './decorators/is-public.decorator';
 import { LocalAuthGuard } from './guards/local-auth.guards';
 import { AuthRequest } from './models/AuthRequest';
-import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
-import { UserPayload } from 'src/auth/models/UserPayload';
-import { LoginRequestBody } from 'src/auth/models/LoginRequestBody';
 
 @Controller()
 export class AuthController {
@@ -29,7 +27,6 @@ export class AuthController {
     @Request() req: AuthRequest,
     @Res({ passthrough: true }) res: Response,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    @Body() loginDto: LoginRequestBody,
   ) {
     const { accessToken } = this.authService.login(req.user);
 
