@@ -3,12 +3,8 @@ import { CreateClassroomDto } from 'src/Classroom/dto/classroom.create.dto';
 import { UpdateClassroomDto } from 'src/Classroom/dto/classroom.update.dto';
 
 export abstract class AbstractClassroomRepository {
-  abstract create(
-    dto: CreateClassroomDto,
-    code: string,
-    userId: string,
-  ): Promise<Classroom>;
-  abstract findByCode(userId: string): Promise<Classroom | null>;
+  abstract create(dto: CreateClassroomDto, userId: string): Promise<Classroom>;
+  abstract findById(id: string): Promise<Classroom | null>;
   abstract findOneByMarathonId(id: string): Promise<Classroom | null>;
   abstract findAll(userId: string): Promise<Classroom[]>;
   abstract update(

@@ -30,15 +30,10 @@ export class PrismaClassroomRepository implements AbstractClassroomRepository {
   /**
    * Creates a new classroom with the given data
    */
-  async create(
-    dto: CreateClassroomDto,
-    code: string,
-    userId: string,
-  ): Promise<Classroom> {
+  async create(dto: CreateClassroomDto, userId: string): Promise<Classroom> {
     return await this.prisma.classroom.create({
       data: {
         name: dto.name,
-        code: code,
         invite_expiration: dto.invite_expiration,
         creator: {
           connect: { id: userId },
@@ -50,9 +45,9 @@ export class PrismaClassroomRepository implements AbstractClassroomRepository {
   /**
    * Finds a single classroom by its code
    */
-  async findByCode(code: string): Promise<Classroom | null> {
+  async findById(id: string): Promise<Classroom | null> {
     return await this.prisma.classroom.findUnique({
-      where: { code },
+      where: { id },
     });
   }
 
@@ -60,15 +55,14 @@ export class PrismaClassroomRepository implements AbstractClassroomRepository {
    * Updates classroom properties by code
    */
   async update(
-    code: string,
+    id: string,
     dto: UpdateClassroomDto,
     userId: string,
   ): Promise<Classroom> {
     return await this.prisma.classroom.update({
-      where: { code, created_by: userId },
+      where: { id, created_by: userId },
       data: {
         name: dto.name,
-        code: code,
         invite_expiration: dto.invite_expiration,
       },
     });
@@ -77,14 +71,14 @@ export class PrismaClassroomRepository implements AbstractClassroomRepository {
   /**
    * Removes a classroom by code
    */
-  async remove(code: string, userId: string): Promise<void> {
+  async remove(id: string, userId: string): Promise<void> {
     const existing = await this.prisma.classroom.findUnique({
-      where: { code, created_by: userId },
+      where: { id, created_by: userId },
     });
     if (!existing) {
-      throw new NotFoundException(`Classroom with code ${code} not found.`);
+      throw new NotFoundException(`Classroom with code ${id} not found.`);
     }
 
-    await this.prisma.classroom.delete({ where: { code } });
+    await this.prisma.classroom.delete({ where: { id } });
   }
 }

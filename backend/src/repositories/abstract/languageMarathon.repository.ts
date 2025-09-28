@@ -3,13 +3,15 @@ import { CreateLanguageMarathonDto } from 'src/LanguageMarathon/dto/language-mar
 import { UpdateLanguageMarathonDto } from 'src/LanguageMarathon/dto/language-marathon.update.dto';
 
 export abstract class AbstractLanguageMarathonRepository {
-  abstract findAllByClassroomCode(code: string): Promise<LanguageMarathon[]>;
+  abstract findAllByClassroom(id: string): Promise<LanguageMarathon[]>;
   abstract create(
     dto: CreateLanguageMarathonDto,
-    code: string,
+    id: string,
     userId: string,
+    code: string,
   ): Promise<LanguageMarathon>;
   abstract findOneById(id: string): Promise<LanguageMarathon | null>;
+  abstract findOneByCode(code: string): Promise<LanguageMarathon | null>;
   abstract update(
     id: string,
     updateMarathonDto: UpdateLanguageMarathonDto,

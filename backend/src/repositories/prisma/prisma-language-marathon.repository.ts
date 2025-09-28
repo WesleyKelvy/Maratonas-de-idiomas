@@ -14,9 +14,9 @@ export class PrismaLanguageMarathonRepository
   /**
    * Finds all marathons for a given classroom code
    */
-  async findAllByClassroomCode(code: string): Promise<LanguageMarathon[]> {
+  async findAllByClassroom(id: string): Promise<LanguageMarathon[]> {
     return this.prisma.languageMarathon.findMany({
-      where: { classroom_code: code },
+      where: { id },
     });
   }
 
@@ -25,11 +25,13 @@ export class PrismaLanguageMarathonRepository
    */
   async create(
     dto: CreateLanguageMarathonDto,
-    code: string,
+    id: string,
     professorId: string,
+    code: string,
   ): Promise<LanguageMarathon> {
     return this.prisma.languageMarathon.create({
       data: {
+        code,
         title: dto.title,
         description: dto.description,
         context: dto.context,
@@ -38,7 +40,7 @@ export class PrismaLanguageMarathonRepository
         start_date: dto.startDate,
         end_date: dto.endDate,
         number_of_questions: dto.number_of_questions,
-        classroom: { connect: { code } },
+        classroom: { connect: { id } },
         created_by: professorId,
       },
     });
@@ -50,6 +52,15 @@ export class PrismaLanguageMarathonRepository
   async findOneById(id: string): Promise<LanguageMarathon | null> {
     return this.prisma.languageMarathon.findUnique({
       where: { id },
+    });
+  }
+
+  /**
+   * Finds a single marathon by its ID
+   */
+  async findOneByCode(code: string): Promise<LanguageMarathon | null> {
+    return this.prisma.languageMarathon.findFirst({
+      where: { code },
     });
   }
 

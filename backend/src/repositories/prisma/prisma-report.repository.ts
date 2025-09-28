@@ -11,7 +11,7 @@ export class PrismaReportRepository implements AbstractReportRepository {
   async createReport(dto: CreateReport): Promise<Report> {
     return this.prisma.report.create({
       data: {
-        classroom_code: dto.classroom_code,
+        classroom_name: dto.classroom_name,
         total_errors: dto.total_errors,
         report_details: dto.report_details,
         marathon: { connect: { id: dto.marathon_id } },
