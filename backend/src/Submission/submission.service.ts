@@ -35,7 +35,7 @@ export class SubmissionService implements AbstractSubmissionService {
     userId: string,
     marathonId: string,
   ): Promise<void> {
-    const { end_date } = await this.marathonService.findOne(marathonId);
+    const { end_date } = await this.marathonService.findOneById(marathonId);
 
     if (end_date < new Date()) throw new BadRequestException();
 
