@@ -5,7 +5,6 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Classroom } from '@prisma/client';
-import { randomBytes } from 'crypto';
 import { AbstractClassroomService } from 'src/Classroom/abstract-services/abstract-classrom.service';
 import { CreateClassroomDto } from 'src/Classroom/dto/classroom.create.dto';
 import { UpdateClassroomDto } from 'src/Classroom/dto/classroom.update.dto';
@@ -43,45 +42,43 @@ export class ClassroomService implements AbstractClassroomService {
   async create(dto: CreateClassroomDto, userId: string): Promise<Classroom> {
     await this.professorStatsService.incrementClassesProfessorStats(userId);
 
-    const code = randomBytes(8).toString('hex');
-
-    return this.classroomRepository.create(dto, code, userId);
+    return this.classroomRepository.create(dto, userId);
   }
 
-  async findOne(code: string): Promise<Classroom> {
-    const classroom = await this.classroomRepository.findByCode(code);
+  async findOne(id: string): Promise<Classroom> {
+    const classroom = await this.classroomRepository.findById(id);
     if (!classroom) {
-      throw new NotFoundException(`No classroom found with code ${code}`);
+      throw new NotFoundException(`No classroom found with Id ${id}`);
     }
 
     return classroom;
   }
 
   async update(
-    code: string,
+    id: string,
     dto: UpdateClassroomDto,
     userId: string,
   ): Promise<Classroom> {
-    const classroom = await this.classroomRepository.findByCode(code);
+    const classroom = await this.classroomRepository.findById(id);
     if (!classroom) {
-      throw new NotFoundException(`No classroom found with code ${code}`);
+      throw new NotFoundException(`No classroom found with Id ${id}`);
     }
 
     if (classroom.created_by !== userId)
       throw new ForbiddenException('Not allowed!');
 
-    return this.classroomRepository.update(code, dto, userId);
+    return this.classroomRepository.update(id, dto, userId);
   }
 
-  async remove(code: string, userId: string): Promise<void> {
-    const classroom = await this.classroomRepository.findByCode(code);
+  async remove(id: string, userId: string): Promise<void> {
+    const classroom = await this.classroomRepository.findById(id);
     if (!classroom) {
-      throw new NotFoundException(`No classroom found with code ${code}`);
+      throw new NotFoundException(`No classroom found with code ${id}`);
     }
 
     if (classroom.created_by !== userId)
       throw new ForbiddenException('Not allowed!');
 
-    this.classroomRepository.remove(code, userId);
+    this.classroomRepository.remove(id, userId);
   }
 }

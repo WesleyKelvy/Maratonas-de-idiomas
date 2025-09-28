@@ -46,26 +46,26 @@ export class ClassroomController {
     return this.classroomService.findAllByUserId(user.id);
   }
 
-  @Get(':code')
-  findOne(@Param('code') code: string): Promise<Classroom> {
+  @Get(':id')
+  findOne(@Param('id') code: string): Promise<Classroom> {
     return this.classroomService.findOne(code);
   }
 
-  @Patch(':code')
+  @Patch(':id')
   @HttpCode(HttpStatus.OK)
   update(
-    @Param('code') code: string,
+    @Param('id') code: string,
     @Body() updateDto: UpdateClassroomDto,
     @CurrentUser() user: UserFromJwt,
   ): Promise<Classroom> {
     return this.classroomService.update(code, updateDto, user.id);
   }
 
-  @Delete(':code')
+  @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(
     @CurrentUser() user: UserFromJwt,
-    @Param('code') code: string,
+    @Param('id') code: string,
   ): Promise<void> {
     return this.classroomService.remove(code, user.id);
   }
