@@ -89,7 +89,8 @@ export class LeaderboardService implements AbstractLeaderboardService {
       score: u.score,
       position: idx + 1,
     }));
-    // await this.leaderboardRepository.deleteByMarathonId(marathonId);
+
+    await this.leaderboardRepository.deleteByMarathonId(marathonId);
     await this.leaderboardRepository.createMany(leaderboardData);
 
     await this.studentStatsService.updateStudentStats(leaderboardData);

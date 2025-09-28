@@ -5,7 +5,7 @@ export abstract class AbstractLeaderboardService {
     marathonId: string,
     endDate: Date,
   ): Promise<void>;
-  abstract generateLeaderboardForMarathon(marathonId: string): Promise<void>;
+  abstract generateLeaderboardForMarathon(code: string): Promise<void>;
   abstract getLeaderboardForMarathon(
     marathonId: string,
   ): Promise<Leaderboard[]>;

@@ -8,8 +8,9 @@ export abstract class AbstractLanguageMarathonService {
     code: string,
     userId: string,
   ): Promise<LanguageMarathon>;
-  abstract findOne(id: string): Promise<LanguageMarathon>;
-  abstract findAllByClassroomCode(code: string): Promise<LanguageMarathon[]>;
+  abstract findOneById(id: string): Promise<LanguageMarathon>;
+  abstract findOneByCode(code: string): Promise<LanguageMarathon>;
+  abstract findAllByClassroomId(id: string): Promise<LanguageMarathon[]>;
   abstract update(
     code: string,
     updateStatsDto: UpdateLanguageMarathonDto,

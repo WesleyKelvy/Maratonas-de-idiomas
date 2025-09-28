@@ -6,7 +6,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { LanguageMarathon } from '@prisma/client';
-import { CLASSROOM_SERVICE_TOKEN } from 'src/Classroom/abstract-services/abstract-classrom.service';
+import { randomBytes } from 'crypto';
+import {
+  AbstractClassroomService,
+  CLASSROOM_SERVICE_TOKEN,
+} from 'src/Classroom/abstract-services/abstract-classrom.service';
 import { AbstractLanguageMarathonService } from 'src/LanguageMarathon/abstract-services/abstract-language-marathon.service';
 import { CreateLanguageMarathonDto } from 'src/LanguageMarathon/dto/language-marathon.create.dto';
 import { UpdateLanguageMarathonDto } from 'src/LanguageMarathon/dto/language-marathon.update.dto';
@@ -14,7 +18,6 @@ import {
   AbstractLeaderboardService,
   LEADERBOARD_SERVICE_TOKEN,
 } from 'src/Leaderboard/abstract-services/abstract-leaderboard.service';
-import { AbstractClassroomRepository } from 'src/repositories/abstract/classroom.repository';
 import {
   AbstractLanguageMarathonRepository,
   LANGUAGE_MARATHON_REPOSITORY_TOKEN,
@@ -36,42 +39,43 @@ export class LanguageMarathonService
     @Inject(LEADERBOARD_SERVICE_TOKEN)
     private readonly leaderboardService: AbstractLeaderboardService,
     @Inject(CLASSROOM_SERVICE_TOKEN)
-    private readonly classroomService: AbstractClassroomRepository,
+    private readonly classroomService: AbstractClassroomService,
   ) {}
 
-  async findAllByClassroomCode(code: string): Promise<LanguageMarathon[]> {
-    const classroom = await this.classroomService.findByCode(code);
+  async findAllByClassroomId(id: string): Promise<LanguageMarathon[]> {
+    const classroom = await this.classroomService.findOne(id);
 
     if (!classroom)
-      throw new NotFoundException(`No found classroom for code: ${code}.`);
+      throw new NotFoundException(`No found classroom for code: ${id}.`);
 
-    const marathons =
-      await this.marathonRepository.findAllByClassroomCode(code);
+    const marathons = await this.marathonRepository.findAllByClassroom(id);
 
     return marathons;
   }
 
   async create(
     dto: CreateLanguageMarathonDto,
-    classroomCode: string,
+    classroomId: string,
     professorId: string,
   ): Promise<LanguageMarathon> {
-    const classroom = await this.classroomService.findByCode(classroomCode);
+    const classroom = await this.classroomService.findOne(classroomId);
 
     if (classroom.created_by !== professorId)
       throw new ForbiddenException('Not allowed!');
 
-    await this.professorStatsService.incrementMarathonsProfessorStats(
-      professorId,
-    );
-
+    const code = randomBytes(8).toString('hex');
     const startDate = new Date();
     const endDate = new Date(startDate);
     endDate.setMinutes(startDate.getMinutes() + dto.timeLimit);
 
     const newMarathon = await this.marathonRepository.create(
       { ...dto, endDate: endDate, startDate },
-      classroomCode,
+      classroomId,
+      professorId,
+      code,
+    );
+
+    await this.professorStatsService.incrementMarathonsProfessorStats(
       professorId,
     );
 
@@ -86,10 +90,19 @@ export class LanguageMarathonService
     return newMarathon;
   }
 
-  async findOne(id: string): Promise<LanguageMarathon> {
+  async findOneById(id: string): Promise<LanguageMarathon> {
     const marathon = await this.marathonRepository.findOneById(id);
     if (!marathon) {
       throw new NotFoundException(`Marathon with ID ${id} not found.`);
+    }
+
+    return marathon;
+  }
+
+  async findOneByCode(code: string): Promise<LanguageMarathon> {
+    const marathon = await this.marathonRepository.findOneByCode(code);
+    if (!marathon) {
+      throw new NotFoundException(`Marath on with Code ${code} not found.`);
     }
 
     return marathon;
