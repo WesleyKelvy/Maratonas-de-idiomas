@@ -70,7 +70,7 @@ export class ReportService implements AbstractReportService {
     const { report } = await this.createFinalReport(dataToCreateFinalReport);
 
     const reportData: CreateReport = {
-      classroom_code: classroom.code,
+      classroom_name: classroom.name,
       marathon_id: marathonId,
       total_errors: report.total_errors,
       report_details: {
