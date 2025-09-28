@@ -11,6 +11,10 @@ import {
 } from 'src/Classroom/abstract-services/abstract-classrom.service';
 import { AbstractEnrollmentService } from 'src/Enrollment/abstract-services/abstract-enrollment.service';
 import {
+  AbstractLanguageMarathonService,
+  LANGUAGE_MARATHON_SERVICE_TOKEN,
+} from 'src/LanguageMarathon/abstract-services/abstract-language-marathon.service';
+import {
   AbstractEnrollmentRepository,
   ENROLLMENT_REPOSITORY_TOKEN,
 } from 'src/repositories/abstract/enrollment.repository';
@@ -26,6 +30,8 @@ export class EnrollmentService implements AbstractEnrollmentService {
     private readonly professorStatsService: AbstractProfessorStatsService,
     @Inject(CLASSROOM_SERVICE_TOKEN)
     private readonly classroomService: AbstractClassroomService,
+    @Inject(LANGUAGE_MARATHON_SERVICE_TOKEN)
+    private readonly marathonService: AbstractLanguageMarathonService,
     @Inject(ENROLLMENT_REPOSITORY_TOKEN)
     private readonly enrollmentRepository: AbstractEnrollmentRepository,
   ) {}
@@ -39,24 +45,29 @@ export class EnrollmentService implements AbstractEnrollmentService {
     return enrollment;
   }
 
-  async findOne(marathon_id: string, userId: string): Promise<Enrollment> {
-    return await this.enrollmentRepository.findOne(marathon_id, userId);
+  async findOne(code: string, userId: string): Promise<Enrollment> {
+    return await this.enrollmentRepository.findOne(code, userId);
   }
 
-  async create(userId: string, marathon_id: string): Promise<Enrollment> {
-    const data = await this.findOne(marathon_id, userId);
+  async create(userId: string, code: string): Promise<Enrollment> {
+    const data = await this.findOne(code, userId);
 
-    if (data) {
-      throw new ConflictException('Enrollment already done!');
-    }
+    if (data) throw new ConflictException('Enrollment already done!');
+
+    const { id: marathonId, code: marathonCode } =
+      await this.marathonService.findOneByCode(code);
 
     const { created_by } =
-      await this.classroomService.findOneByMarathonId(marathon_id);
+      await this.classroomService.findOneByMarathonId(code);
 
     await this.professorStatsService.incrementTotalStudentsProfessorStats(
       created_by,
     );
 
-    return await this.enrollmentRepository.create(userId, marathon_id);
+    return await this.enrollmentRepository.create(
+      userId,
+      marathonId,
+      marathonCode,
+    );
   }
 }

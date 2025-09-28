@@ -4,12 +4,13 @@ import { ClassroomModule } from 'src/Classroom/classroom.module';
 import { ENROLLMENT_SERVICE_TOKEN } from 'src/Enrollment/abstract-services/abstract-enrollment.service';
 import { EnrollmentController } from 'src/Enrollment/enrollment.controller';
 import { EnrollmentService } from 'src/Enrollment/enrollment.service';
+import { LanguageMarathonModule } from 'src/LanguageMarathon/language-marathon.module';
 import { ENROLLMENT_REPOSITORY_TOKEN } from 'src/repositories/abstract/enrollment.repository';
 import { PrismaEnrollmentRepository } from 'src/repositories/prisma/prisma-enrollment.repository';
 import { StatsModule } from 'src/Stats/stats.module';
 
 @Module({
-  imports: [ClassroomModule, StatsModule],
+  imports: [ClassroomModule, StatsModule, LanguageMarathonModule],
   controllers: [EnrollmentController],
   providers: [
     {

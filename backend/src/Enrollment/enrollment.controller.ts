@@ -20,7 +20,7 @@ import {
 
 @UseGuards(RolesGuard)
 @Roles(Role.Student)
-@Controller('/student/enrollment/:marathonId')
+@Controller('/student/enrollment/:marathonCode')
 export class EnrollmentController {
   constructor(
     @Inject(ENROLLMENT_SERVICE_TOKEN)
@@ -31,9 +31,10 @@ export class EnrollmentController {
   @HttpCode(HttpStatus.CREATED)
   create(
     @CurrentUser() user: UserFromJwt,
-    @Param('marathonId') id: string,
+    @Param('marathonCode') code: string,
   ): Promise<Enrollment> {
-    return this.enrollmentService.create(id, user.id);
+    console.log('controller: ', code);
+    return this.enrollmentService.create(user.id, code);
   }
 
   @Get()
