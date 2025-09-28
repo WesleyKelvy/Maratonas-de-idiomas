@@ -40,13 +40,13 @@ export class QuestionController {
     private readonly marathonService: AbstractLanguageMarathonService,
   ) {}
 
-  @Post('/get-questions')
+  @Post('/create-questions')
   @HttpCode(HttpStatus.CREATED)
   async getGeminiQuestions(
     @Param('marathonId') marathonId: string,
   ): Promise<QuestionArray> {
     const { context, difficulty, number_of_questions } =
-      await this.marathonService.findOne(marathonId);
+      await this.marathonService.findOneById(marathonId);
     return this.questionService.generateQuestionsWithGemini({
       context,
       difficulty,
