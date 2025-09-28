@@ -1,3 +1,4 @@
+// (to test create leaderboard)
 import { Difficulty, PrismaClient, Role } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
@@ -72,25 +73,26 @@ async function main() {
   // 4) Create Classroom
   const classroom = await prisma.classroom.create({
     data: {
-      code: 'CLASS-TEST-01',
+      id: '1',
       name: 'Português para Testes',
       creator: { connect: { id: professor.id } },
     },
   });
-  console.log(`Created classroom: ${classroom.name} (${classroom.code})`);
+  console.log(`Created classroom: ${classroom.name} (${classroom.id})`);
 
   // 5) Create LanguageMarathon with a 2-minute duration
   const marathonEndDate = new Date(Date.now() + 1000 * 60 * 1); // 1 minutes from now
   const marathon = await prisma.languageMarathon.create({
     data: {
+      code: 'CODE-TEST-01',
       title: 'Maratona de Teste Rápido',
       context: 'Team work',
       difficulty: Difficulty.Beginner,
-      timeLimit: 1, // minutes
+      timeLimit: 0.1, // minutes
       start_date: new Date(),
       end_date: marathonEndDate,
       number_of_questions: 2,
-      classroom: { connect: { code: classroom.code } },
+      classroom: { connect: { id: classroom.id } },
       created_by: professor.id,
     },
   });
@@ -117,8 +119,16 @@ async function main() {
   // 7) Enroll both students in the marathon
   await prisma.enrollment.createMany({
     data: [
-      { user_id: student1.id, marathon_id: marathon.id },
-      { user_id: student2.id, marathon_id: marathon.id },
+      {
+        user_id: student1.id,
+        marathon_id: marathon.id,
+        marathon_code: 'CODE-TEST-01',
+      },
+      {
+        user_id: student2.id,
+        marathon_id: marathon.id,
+        marathon_code: 'CODE-TEST-01',
+      },
     ],
   });
   console.log(

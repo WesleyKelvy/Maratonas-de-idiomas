@@ -72,7 +72,7 @@ model ProfessorStats {
 
 // Classroom
 model Classroom {
-  code              String    @id
+  id                String    @id @default(cuid())
   name              String
   invite_expiration DateTime?
   created_at        DateTime  @default(now())
@@ -85,6 +85,7 @@ model Classroom {
 // Language Marathon
 model LanguageMarathon {
   id                    String     @id @default(cuid())
+  code                  String
   title                 String
   description           String?
   context               String
@@ -96,9 +97,9 @@ model LanguageMarathon {
   // Add this line
   leaderboard_generated Boolean    @default(false)
 
-  classroom_code String
-  classroom      Classroom @relation(fields: [classroom_code], references: [code])
-  created_by     String
+  classroom_id String
+  classroom    Classroom @relation(fields: [classroom_id], references: [id])
+  created_by   String
 
   questions   Question[]
   enrollments Enrollment[]
@@ -149,9 +150,10 @@ model AiFeedbacks {
 
 // Enrollment
 model Enrollment {
-  id          String @id @default(uuid())
-  user_id     String
-  marathon_id String
+  id            String @id @default(uuid())
+  user_id       String
+  marathon_id   String
+  marathon_code String
 
   user     User             @relation(fields: [user_id], references: [id])
   marathon LanguageMarathon @relation(fields: [marathon_id], references: [id])
@@ -174,7 +176,7 @@ model Leaderboard {
 // Report
 model Report {
   id             String          @id @default(uuid())
-  classroom_code String
+  classroom_name String
   marathon_id    String          @unique
   total_errors   Int
   report_details ReportDetails[]
