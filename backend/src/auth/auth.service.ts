@@ -1,4 +1,9 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import {
@@ -54,6 +59,10 @@ export class AuthService {
 
   async validateUser(email: string, password: string): Promise<SanitedUser> {
     const user: User = await this.AbstractUserRepository.findByEmail(email);
+
+    if (user.accountDeactivated === true) {
+      throw new ForbiddenException('Account deactivated');
+    }
 
     if (user) {
       //Check if password hash matches its own hash in BD

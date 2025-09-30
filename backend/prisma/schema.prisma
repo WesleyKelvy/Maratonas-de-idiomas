@@ -26,14 +26,15 @@ enum Difficulty {
 
 // User model
 model User {
-  id           String @id @default(uuid())
-  name         String
-  email        String @unique
-  passwordHash String
-  birthdate    String
-  city         String
-  occupation   String
-  role         Role   @default(Student)
+  id                 String  @id @default(uuid())
+  name               String
+  email              String  @unique
+  passwordHash       String
+  birthdate          String
+  city               String
+  occupation         String
+  role               Role    @default(Student)
+  accountDeactivated Boolean @default(false)
 
   resetToken           String?   @unique
   resetTokenExpiration DateTime?

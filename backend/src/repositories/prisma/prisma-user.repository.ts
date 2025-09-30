@@ -47,8 +47,9 @@ export class PrismaAbstractUserRepository implements AbstractUserRepository {
   }
 
   async remove(id: string): Promise<void> {
-    await this.prisma.user.delete({
+    await this.prisma.user.update({
       where: { id },
+      data: { accountDeactivated: true },
     });
   }
 

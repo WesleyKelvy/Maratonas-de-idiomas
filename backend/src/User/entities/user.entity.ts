@@ -13,6 +13,7 @@ export class User {
   city: string;
   occupation: string;
   role: Role;
+  accountDeactivated: boolean;
 
   resetToken?: string;
   resetTokenExpiration?: Date;
