@@ -33,7 +33,7 @@ export class EnrollmentController {
     @CurrentUser() user: UserFromJwt,
     @Param('marathonCode') code: string,
   ): Promise<Enrollment> {
-    console.log('controller: ', code);
+    // console.log('controller: ', code);
     return this.enrollmentService.create(user.id, code);
   }
 

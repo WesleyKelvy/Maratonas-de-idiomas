@@ -45,8 +45,8 @@ export class EnrollmentService implements AbstractEnrollmentService {
     return enrollment;
   }
 
-  async findOne(code: string, userId: string): Promise<Enrollment> {
-    return await this.enrollmentRepository.findOne(code, userId);
+  async findOne(marathonId: string, userId: string): Promise<Enrollment> {
+    return await this.enrollmentRepository.findOne(marathonId, userId);
   }
 
   async create(userId: string, code: string): Promise<Enrollment> {
