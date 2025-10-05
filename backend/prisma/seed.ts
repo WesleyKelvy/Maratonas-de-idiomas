@@ -87,14 +87,14 @@ async function main() {
   console.log(`Created classroom: ${classroom.name} (${classroom.id})`);
 
   // 5) Create LanguageMarathon with a 5-minute duration
-  const marathonEndDate = new Date(Date.now() + 1000 * 60 * 1); // 1 minutes from now
+  const marathonEndDate = new Date(Date.now() + 1000 * 60 * 1000); // 1 minutes from now
   const marathon = await prisma.languageMarathon.create({
     data: {
-      code: 'CODE-TEST-01',
+      code: 'TEST-01',
       title: 'Maratona de Teste de Relatório',
       context: 'Team work',
       difficulty: Difficulty.Intermediate, // Changed to Intermediate
-      timeLimit: 1, // minutes
+      timeLimit: 1000, // minutes
       start_date: new Date(),
       end_date: marathonEndDate,
       number_of_questions: 5, // Updated to 5 questions
@@ -154,12 +154,12 @@ async function main() {
       {
         user_id: student1.id,
         marathon_id: marathon.id,
-        marathon_code: 'CODE-TEST-01',
+        marathon_code: 'TEST-01',
       },
       {
         user_id: student2.id,
         marathon_id: marathon.id,
-        marathon_code: 'CODE-TEST-01',
+        marathon_code: 'TEST-01',
       },
     ],
   });

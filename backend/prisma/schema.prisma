@@ -46,10 +46,11 @@ model User {
   studentStats   StudentStats?
   ProfessorStats ProfessorStats?
 
-  classroomsCreated Classroom[]   @relation("UserClassrooms")
+  classroomsCreated Classroom[]        @relation("UserClassrooms")
   enrollments       Enrollment[]
   submissions       Submission[]
   leaderboard       Leaderboard[]
+  marathonProgress  MarathonProgress[]
 }
 
 // Student-specific stats
@@ -95,7 +96,6 @@ model LanguageMarathon {
   start_date            DateTime   @default(now())
   end_date              DateTime?
   number_of_questions   Int
-  // Add this line
   leaderboard_generated Boolean    @default(false)
 
   classroom_id String
@@ -107,6 +107,26 @@ model LanguageMarathon {
   leaderboard Leaderboard[]
   AiFeedbacks AiFeedbacks[]
   Report      Report?
+  progress    MarathonProgress[]
+}
+
+model MarathonProgress {
+  id                  String    @id @default(uuid())
+  user_id             String
+  marathon_id         String
+  current_question_id Int?
+  draft_answer        String
+  started_at          DateTime  @default(now())
+  last_updated_at     DateTime  @updatedAt
+  completed           Boolean   @default(false)
+  completed_at        DateTime?
+
+  user     User             @relation(fields: [user_id], references: [id])
+  marathon LanguageMarathon @relation(fields: [marathon_id], references: [id])
+
+  @@unique([user_id, marathon_id])
+  @@index([marathon_id])
+  @@index([user_id])
 }
 
 // Question
