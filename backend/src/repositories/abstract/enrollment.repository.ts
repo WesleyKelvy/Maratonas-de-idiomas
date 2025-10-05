@@ -7,7 +7,10 @@ export abstract class AbstractEnrollmentRepository {
     code: string,
   ): Promise<Enrollment>;
   abstract findAllByUserId(userId: string): Promise<Enrollment[] | null>;
-  abstract findOne(userId: string, code: string): Promise<Enrollment | null>;
+  abstract findOne(
+    marathonId: string,
+    userId: string,
+  ): Promise<Enrollment | null>;
 }
 
 export const ENROLLMENT_REPOSITORY_TOKEN = 'ENROLLMENT_REPOSITORY_TOKEN';
