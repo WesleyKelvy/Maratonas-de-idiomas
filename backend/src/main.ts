@@ -1,11 +1,15 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import * as cookieParser from 'cookie-parser';
+import { AuthenticatedSocketAdapter } from 'src/auth/adapter/authenticated-socket.adapter';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
   app.use(cookieParser());
+
+  app.useWebSocketAdapter(new AuthenticatedSocketAdapter(app));
 
   app.useGlobalPipes(
     new ValidationPipe({
