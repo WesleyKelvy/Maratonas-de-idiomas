@@ -27,11 +27,9 @@ import {
   QuestionArray,
   QuestionArrayDto,
 } from 'src/Question/interfaces/geminiResponse';
-import { GenerateQuestionsDto } from 'src/Question/interfaces/generateQuestionsDto';
 
 @UseGuards(RolesGuard)
-@Roles(Role.Professor)
-@Controller('/classrooms/:code/marathon/:marathonId')
+@Controller('/marathon/:marathonId')
 export class QuestionController {
   constructor(
     @Inject(QUESTION_SERVICE_TOKEN)
@@ -40,6 +38,19 @@ export class QuestionController {
     private readonly marathonService: AbstractLanguageMarathonService,
   ) {}
 
+  @Get(':id')
+  findOne(@Param('id') id: number): Promise<Question> {
+    return this.questionService.findOne(id);
+  }
+
+  @Get('questions')
+  findAllByMarathonId(
+    @Param('marathonId') marathonId: string,
+  ): Promise<Question[]> {
+    return this.questionService.findAllByMarathonId(marathonId);
+  }
+
+  @Roles(Role.Professor)
   @Post('/create-questions')
   @HttpCode(HttpStatus.CREATED)
   async getGeminiQuestions(
@@ -54,33 +65,17 @@ export class QuestionController {
     });
   }
 
+  @Roles(Role.Professor)
   @Post('save-questions')
   @HttpCode(HttpStatus.CREATED)
-  async sabeQuestions(
+  async saveQuestions(
     @Param('marathonId') marathonId: string,
     @Body() dto: QuestionArrayDto,
   ): Promise<Question[]> {
     return this.questionService.create(dto.questions, marathonId);
   }
 
-  @Post() // Gemini
-  @HttpCode(HttpStatus.CREATED)
-  generateQuestions(@Body() dto: GenerateQuestionsDto): Promise<QuestionArray> {
-    return this.questionService.generateQuestionsWithGemini(dto);
-  }
-
-  @Get('questions')
-  findAllByMarathonId(
-    @Param('marathonId') marathonId: string,
-  ): Promise<Question[]> {
-    return this.questionService.findAllByMarathonId(marathonId);
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: number): Promise<Question> {
-    return this.questionService.findOne(id);
-  }
-
+  @Roles(Role.Professor)
   @Patch(':id')
   update(
     @Param('id') id: number,
@@ -89,6 +84,7 @@ export class QuestionController {
     return this.questionService.update(id, updateDto);
   }
 
+  @Roles(Role.Professor)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id') id: number): Promise<void> {
