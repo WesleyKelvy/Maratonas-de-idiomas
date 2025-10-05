@@ -15,7 +15,9 @@ import {
   AbstractReportService,
   REPORT_SERVICE_TOKEN,
 } from 'src/Report/abstract-services/abstract-report.service';
+import { CreateReportDto } from 'src/Report/dto/report.create.dto';
 
+// Replaced by the WebSocket implementation -----------------------//
 @UseGuards(RolesGuard)
 @Roles(Role.Professor)
 @Controller('marathon/:marathonId/report')
@@ -26,8 +28,10 @@ export class ReportController {
   ) {}
 
   @Post()
-  @HttpCode(HttpStatus.CREATED)
-  async createReport(@Param('marathonId') marathonId: string): Promise<Report> {
+  @HttpCode(HttpStatus.ACCEPTED)
+  async createReport(
+    @Param('marathonId') { marathonId }: CreateReportDto,
+  ): Promise<Report> {
     return this.reportService.createReport(marathonId);
   }
 

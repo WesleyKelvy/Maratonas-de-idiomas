@@ -11,6 +11,7 @@ import {
 } from 'src/Classroom/abstract-services/abstract-classrom.service';
 import { AbstractReportService } from 'src/Report/abstract-services/abstract-report.service';
 import { createReportGenerationPrompt } from 'src/Report/ai/createReportGenerationPrompt';
+import { ReportGateway } from 'src/Report/gateway/report.gateway';
 import { CreateReport } from 'src/Report/types/createReport.type';
 import { ReportType } from 'src/Report/types/report.type';
 import { ReportDetailsType } from 'src/Report/types/reportDetails.type';
@@ -26,6 +27,9 @@ type FinalReportData = {
 
 @Injectable()
 export class ReportService implements AbstractReportService {
+  // Gateway is being injected by the module to avoid circular dependention
+  private reportGateway: ReportGateway;
+
   constructor(
     @Inject(CLASSROOM_SERVICE_TOKEN)
     private readonly classroomService: AbstractClassroomService,
@@ -39,59 +43,105 @@ export class ReportService implements AbstractReportService {
     this.gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   }
 
+  setReportGateway(gateway: ReportGateway) {
+    this.reportGateway = gateway;
+  }
+
   async findByMarathonId(marathonId: string): Promise<Report> {
     return await this.reportRepository.findByMarathonId(marathonId);
   }
 
   async createReport(marathonId: string): Promise<Report> {
-    const [classroom, aiFeedbacks] = await Promise.all([
-      this.classroomService.findOneByMarathonId(marathonId),
-      this.aiFeedbackService.findAllByMarathonId(marathonId),
-    ]);
-
-    if (!classroom) {
-      throw new HttpException(
-        'Classroom not found for the given marathon.',
-        HttpStatus.NOT_FOUND,
+    try {
+      // Progress: 10%
+      this._emitProgress(
+        marathonId,
+        10,
+        'Buscando dados da turma e feedbacks...',
       );
-    }
 
-    if (aiFeedbacks.length === 0) {
-      throw new HttpException(
-        'No feedback available to generate a report.',
-        HttpStatus.BAD_REQUEST,
+      const [classroom, aiFeedbacks] = await Promise.all([
+        this.classroomService.findOneByMarathonId(marathonId),
+        this.aiFeedbackService.findAllByMarathonId(marathonId),
+      ]);
+
+      if (!classroom) {
+        throw new HttpException(
+          'Classroom not found for the given marathon.',
+          HttpStatus.NOT_FOUND,
+        );
+      }
+
+      if (aiFeedbacks.length === 0) {
+        throw new HttpException(
+          'No feedback available to generate a report.',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      // Progress: 20%
+      this._emitProgress(
+        marathonId,
+        20,
+        'Dados carregados. Processando feedbacks...',
       );
+
+      const dataToCreateFinalReport: FinalReportData[] = aiFeedbacks.map(
+        ({ explanation, category }) => ({ explanation, category }),
+      );
+
+      // Progress: 30%
+      this._emitProgress(marathonId, 30, 'Gerando análises com IA...');
+
+      const { report } = await this._createFinalReport(
+        marathonId,
+        dataToCreateFinalReport,
+      );
+
+      // Progress: 90%
+      this._emitProgress(
+        marathonId,
+        90,
+        'Salvando relatório no banco de dados...',
+      );
+
+      const reportData: CreateReport = {
+        classroom_name: classroom.name,
+        marathon_id: marathonId,
+        total_errors: report.total_errors,
+        report_details: {
+          create: report.categories.map((category) => ({
+            category_name: category.category_name,
+            occurrences: category.occurrences,
+            examples: category.examples,
+            targeted_advice: category.targeted_advice,
+          })),
+        },
+      };
+
+      const savedReport = await this.reportRepository.createReport(reportData);
+
+      // Progress: 100%
+      this._emitProgress(marathonId, 100, 'Relatório concluído!');
+
+      return savedReport;
+    } catch (error) {
+      console.error(`Error creating report for marathon ${marathonId}:`, error);
+      throw error;
     }
-
-    const dataToCreateFinalReport: FinalReportData[] = aiFeedbacks.map(
-      ({ explanation, category }) => ({ explanation, category }),
-    );
-
-    const { report } = await this.createFinalReport(dataToCreateFinalReport);
-
-    const reportData: CreateReport = {
-      classroom_name: classroom.name,
-      marathon_id: marathonId,
-      total_errors: report.total_errors,
-      report_details: {
-        create: report.categories.map((category) => ({
-          category_name: category.category_name,
-          occurrences: category.occurrences,
-          examples: JSON.stringify(category.examples),
-          targeted_advice: category.targeted_advice,
-        })),
-      },
-    };
-
-    return await this.reportRepository.createReport(reportData);
   }
 
-  // current refectoring
-  async createFinalReport(errors: FinalReportData[]): Promise<ReportType> {
+  private async _createFinalReport(
+    marathonId: string,
+    errors: FinalReportData[],
+  ): Promise<ReportType> {
     try {
       const total_errors = errors.length;
 
-      // Step 1: Group explanations by category. This is a fast, in-memory operation.
+      // Progress: 40%
+      this._emitProgress(marathonId, 40, 'Agrupando erros por categoria...');
+
+      // Step 1: Group explanations by category
       const categoryMap = new Map<string, { explanations: string[] }>();
       for (const error of errors) {
         if (!categoryMap.has(error.category)) {
@@ -100,11 +150,35 @@ export class ReportService implements AbstractReportService {
         categoryMap.get(error.category).explanations.push(error.explanation);
       }
 
-      // Step 2: Create a promise for each category using the new helper function.
+      // Progress: 50%
+      this._emitProgress(
+        marathonId,
+        50,
+        `Gerando conselhos para ${categoryMap.size} categorias...`,
+      );
+
+      // Step 2: Create promises for each category
       const reportCategoryPromises = this._generateAdvicePromises(categoryMap);
 
-      // Step 3: Execute all advice generation promises in parallel.
-      const reportCategories = await Promise.all(reportCategoryPromises);
+      // Progress: 60% - 80%
+      const totalCategories = categoryMap.size;
+      let completedCategories = 0;
+
+      // Step 3: Execute all advice generation promises in parallel
+      const reportCategories = await Promise.all(
+        reportCategoryPromises.map(async (promise) => {
+          const result = await promise;
+          completedCategories++;
+          const progress =
+            60 + Math.floor((completedCategories / totalCategories) * 20);
+          this._emitProgress(
+            marathonId,
+            progress,
+            `Processando categoria ${completedCategories}/${totalCategories}...`,
+          );
+          return result;
+        }),
+      );
 
       return {
         report: {
@@ -124,7 +198,7 @@ export class ReportService implements AbstractReportService {
     return Array.from(categoryMap.entries()).map(
       async ([categoryName, data]) => {
         const occurrences = data.explanations.length;
-        // Take up to 3 unique explanations as examples.
+        // Take up to 3 unique explanations as examples
         const examples = [...new Set(data.explanations)].slice(0, 3);
 
         const advicePrompt = createReportGenerationPrompt({
@@ -146,15 +220,25 @@ export class ReportService implements AbstractReportService {
         const genResp = JSON.parse(cleanedText);
         const { targeted_advice } = genResp;
 
-        // The returned object now matches the ReportDetailsType structure.
-        // 'examples' is converted to a JSON string here.
+        // Return object matches ReportDetailsType structure
         return {
           category_name: categoryName,
           occurrences,
-          examples: JSON.stringify(examples), // Corrected: Stringify here
+          examples: JSON.stringify(examples), // Convert to string as per type
           targeted_advice,
         };
       },
     );
+  }
+
+  // Helper to emit Progress
+  private _emitProgress(
+    marathonId: string,
+    progress: number,
+    message?: string,
+  ) {
+    if (this.reportGateway) {
+      this.reportGateway.emitReportProgress(marathonId, progress, message);
+    }
   }
 }

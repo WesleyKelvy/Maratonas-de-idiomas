@@ -1,10 +1,10 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { WsAuthService } from 'src/auth/ws-auth.service';
 import { UserModule } from 'src/User/user.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { ProfessorGuard } from './guards/professor.guard';
 import { LoginValidationMiddleware } from './middlewares/login-validation.middleware';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
@@ -19,7 +19,8 @@ import { LocalStrategy } from './strategies/local.strategy';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, LocalStrategy, JwtStrategy, ProfessorGuard],
+  providers: [AuthService, LocalStrategy, JwtStrategy, WsAuthService],
+  exports: [WsAuthService],
 })
 export class AuthModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
