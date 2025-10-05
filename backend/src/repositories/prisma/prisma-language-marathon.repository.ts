@@ -16,7 +16,7 @@ export class PrismaLanguageMarathonRepository
    */
   async findAllByClassroom(id: string): Promise<LanguageMarathon[]> {
     return this.prisma.languageMarathon.findMany({
-      where: { id },
+      where: { classroom_id: id },
     });
   }
 
