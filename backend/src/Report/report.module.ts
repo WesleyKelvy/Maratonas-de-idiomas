@@ -1,6 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 import { Inject, Module } from '@nestjs/common';
 import { AiFeedbackModule } from 'src/AiFeedback/aiFeedback.module';
+import { AuthModule } from 'src/auth/auth.module';
 import { ProfessorGuard } from 'src/auth/guards/professor.guard';
 import { ClassroomModule } from 'src/Classroom/classroom.module';
 import { REPORT_SERVICE_TOKEN } from 'src/Report/abstract-services/abstract-report.service';
@@ -11,7 +12,7 @@ import { REPORT_REPOSITORY_TOKEN } from 'src/repositories/abstract/report.reposi
 import { PrismaReportRepository } from 'src/repositories/prisma/prisma-report.repository';
 
 @Module({
-  imports: [ClassroomModule, AiFeedbackModule],
+  imports: [ClassroomModule, AiFeedbackModule, AuthModule],
   controllers: [ReportController],
   providers: [
     ReportGateway,
