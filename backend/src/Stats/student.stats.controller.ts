@@ -1,15 +1,9 @@
 import {
-  Body,
   Controller,
-  Delete,
   Get,
-  HttpCode,
-  HttpStatus,
   Inject,
   Param,
   ParseUUIDPipe,
-  Patch,
-  Post,
   UseGuards,
 } from '@nestjs/common';
 import { Role, StudentStats } from '@prisma/client';
@@ -19,10 +13,8 @@ import {
   AbstractStudentStatsService,
   STUDENT_STATS_SERVICE_TOKEN,
 } from 'src/Stats/abstract-services/abstract-student-stats.service';
-import { UpdateStudentStatsDto } from 'src/Stats/dto/student.update-stats.dto copy';
 
 @UseGuards(RolesGuard)
-@Roles(Role.Student)
 @Controller('student-stats')
 export class StudentStatsController {
   constructor(
@@ -30,28 +22,29 @@ export class StudentStatsController {
     private readonly studentStatsService: AbstractStudentStatsService,
   ) {}
 
-  @Post()
-  @HttpCode(HttpStatus.CREATED)
-  create(@Body() id: string): Promise<StudentStats> {
-    return this.studentStatsService.create(id);
-  }
+  // @Post()
+  // @HttpCode(HttpStatus.CREATED)
+  // create(@Body() id: string): Promise<StudentStats> {
+  //   return this.studentStatsService.create(id);
+  // }
 
-  @Get(':id')
+  @Roles(Role.Student)
+  @Get('user/:id')
   findOne(@Param('id', ParseUUIDPipe) id: string): Promise<StudentStats> {
-    return this.studentStatsService.findOne(id);
+    return this.studentStatsService.findByUserId(id);
   }
 
-  @Patch(':id')
-  update(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() updateStatDto: UpdateStudentStatsDto,
-  ): Promise<StudentStats> {
-    return this.studentStatsService.update(id, updateStatDto);
-  }
+  // @Patch(':id')
+  // update(
+  //   @Param('id', ParseUUIDPipe) id: string,
+  //   @Body() updateStatDto: UpdateStudentStatsDto,
+  // ): Promise<StudentStats> {
+  //   return this.studentStatsService.update(id, updateStatDto);
+  // }
 
-  @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
-    return this.studentStatsService.remove(id);
-  }
+  // @Delete(':id')
+  // @HttpCode(HttpStatus.NO_CONTENT)
+  // remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
+  //   return this.studentStatsService.remove(id);
+  // }
 }

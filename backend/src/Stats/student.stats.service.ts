@@ -32,7 +32,7 @@ export class StudentStatsService implements AbstractStudentStatsService {
     return await this.studentStatsRepository.create(id);
   }
 
-  async findOne(id: string): Promise<StudentStats> {
+  async findByUserId(id: string): Promise<StudentStats> {
     const prismaStat = await this.studentStatsRepository.findByUserId(id);
     if (!prismaStat) {
       throw new NotFoundException(`Student stats with ID ${id} not found.`);
@@ -80,7 +80,7 @@ export class StudentStatsService implements AbstractStudentStatsService {
       ...u,
     }))) {
       // load existing stats
-      const stats = await this.findOne(user_id);
+      const stats = await this.findByUserId(user_id);
 
       // prepare updates
       const updates: Partial<UpdateStudentStatsDto> = {

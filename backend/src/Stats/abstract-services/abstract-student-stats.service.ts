@@ -8,7 +8,7 @@ export abstract class AbstractStudentStatsService {
     id: string,
     updateStatDto: UpdateStudentStatsDto,
   ): Promise<StudentStats>;
-  abstract findOne(id: string): Promise<StudentStats>;
+  abstract findByUserId(id: string): Promise<StudentStats>;
   abstract remove(id: string): Promise<void>;
   abstract updateStudentStats(leaderboardDto: CreateLeaderboardDto[]);
 }
