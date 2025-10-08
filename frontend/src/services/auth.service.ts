@@ -102,8 +102,18 @@ export class AuthService {
   }
 
   static async logout(): Promise<void> {
-    // Como não há endpoint de logout no backend, apenas limpamos localmente
-    // O cookie será limpo pelo SameSite policy
+    try {
+      // Fazer uma requisição para invalidar os cookies no servidor
+      await apiClient.post("/logout", {});
+    } catch (error) {
+      // Se não houver endpoint de logout, apenas continue
+      // console.log("Logout endpoint not available, clearing locally");
+    }
+
+    // Limpar cookies localmente (caso não seja possível via servidor)
+    document.cookie =
+      "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+
     return Promise.resolve();
   }
 

@@ -39,16 +39,16 @@ const Login = () => {
         password: data.password!,
       };
 
-      console.log("Attempting login with:", loginData);
+      // console.log("Attempting login with:", loginData);
 
       await loginMutation.mutateAsync(loginData);
 
-      console.log("Login successful, fetching user data...");
+      // console.log("Login successful, fetching user data...");
 
       // Buscar dados do usuário após login bem-sucedido
       const { data: userData } = await refetchUser();
 
-      console.log("User data fetched:", userData);
+      // console.log("User data fetched:", userData);
 
       toast({
         title: "Login realizado com sucesso!",
@@ -60,7 +60,7 @@ const Login = () => {
         navigate("/dashboard");
       }, 100);
     } catch (error) {
-      console.error("Login error:", error);
+      // console.error("Login error:", error);
       let errorMessage = "Email ou senha inválidos.";
 
       if (error instanceof ApiError) {

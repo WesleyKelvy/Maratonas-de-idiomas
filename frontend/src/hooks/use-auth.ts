@@ -15,6 +15,36 @@ export const authKeys = {
   user: () => [...authKeys.all, "user"] as const,
 } as const;
 
+// Estado global para controlar se deve buscar o usuário
+const getUserFetchEnabled = () => {
+  try {
+    const stored = localStorage.getItem("shouldFetchUser");
+    return stored !== "false"; // Default true, false apenas se explicitamente definido
+  } catch {
+    return true;
+  }
+};
+
+let shouldFetchUser = getUserFetchEnabled();
+
+export const disableUserFetch = () => {
+  shouldFetchUser = false;
+  try {
+    localStorage.setItem("shouldFetchUser", "false");
+  } catch {
+    // Ignorar erros de localStorage
+  }
+};
+
+export const enableUserFetch = () => {
+  shouldFetchUser = true;
+  try {
+    localStorage.setItem("shouldFetchUser", "true");
+  } catch {
+    // Ignorar erros de localStorage
+  }
+};
+
 // Hook para obter usuário atual
 export const useCurrentUser = () => {
   return useQuery({
@@ -23,12 +53,19 @@ export const useCurrentUser = () => {
     retry: (failureCount, error: any) => {
       // Não retry se for erro 401/403 (não autenticado)
       if (error?.status === 401 || error?.status === 403) {
+        // Desabilitar futuras buscas quando receber 401/403
+        disableUserFetch();
         return false;
       }
       // Retry até 2 vezes para outros erros
       return failureCount < 2;
     },
     staleTime: 5 * 60 * 1000, // 5 minutos
+    refetchOnWindowFocus: false, // Não refetch ao focar na janela
+    refetchOnMount: true, // Só refetch ao montar o componente
+    refetchInterval: false, // Não fazer polling automático
+    // Desabilitar a query se shouldFetchUser for false
+    enabled: shouldFetchUser,
   });
 };
 
@@ -39,6 +76,9 @@ export const useLogin = () => {
   return useMutation({
     mutationFn: (data: LoginRequest) => AuthService.login(data),
     onSuccess: async () => {
+      // Reabilitar busca de usuário após login bem-sucedido
+      enableUserFetch();
+
       // Após login bem-sucedido, buscar dados do usuário
       await queryClient.invalidateQueries({ queryKey: authKeys.user() });
     },
@@ -59,9 +99,27 @@ export const useLogout = () => {
   return useMutation({
     mutationFn: () => AuthService.logout(),
     onSuccess: () => {
+      // Desabilitar busca de usuário imediatamente
+      disableUserFetch();
+
       // Limpar cache do usuário após logout
       queryClient.removeQueries({ queryKey: authKeys.user() });
       queryClient.clear(); // Limpar todo o cache se necessário
+
+      // Aguardar um pouco antes de redirecionar para evitar requisições residuais
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 100);
+    },
+    onError: (error) => {
+      // console.error("Logout error:", error);
+      // Desabilitar busca de usuário mesmo com erro
+      disableUserFetch();
+      // Mesmo com erro, limpar cache e redirecionar
+      queryClient.clear();
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 100);
     },
   });
 };

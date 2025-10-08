@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useLogout } from "@/hooks/use-auth";
 
 import {
   Sidebar,
@@ -26,7 +27,8 @@ import {
 
 export function AppSidebar() {
   const { state } = useSidebar();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
+  const logoutMutation = useLogout();
   const location = useLocation();
   const currentPath = location.pathname;
 
@@ -114,11 +116,14 @@ export function AppSidebar() {
 
         <div className="mt-auto p-4">
           <SidebarMenuButton
-            onClick={logout}
+            onClick={() => logoutMutation.mutate()}
+            disabled={logoutMutation.isPending}
             className="w-full justify-start text-destructive hover:text-destructive-foreground hover:bg-destructive"
           >
             <LogOut className="mr-2 h-4 w-4" />
-            {state !== "collapsed" && <span>Sair</span>}
+            {state !== "collapsed" && (
+              <span>{logoutMutation.isPending ? "Saindo..." : "Sair"}</span>
+            )}
           </SidebarMenuButton>
         </div>
       </SidebarContent>

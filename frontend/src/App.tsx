@@ -36,7 +36,30 @@ import SubmissionDetails from "./pages/SubmissionDetails";
 import Submissions from "./pages/Submissions";
 import TeacherSubmissions from "./pages/TeacherSubmissions";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Não fazer retry em erros 401/403
+      retry: (failureCount, error: any) => {
+        if (error?.status === 401 || error?.status === 403) {
+          return false;
+        }
+        return failureCount < 3;
+      },
+      // Reduzir intervalo de refetch para evitar spam
+      refetchOnWindowFocus: false,
+      staleTime: 1000 * 60 * 5, // 5 minutos
+    },
+    mutations: {
+      retry: (failureCount, error: any) => {
+        if (error?.status === 401 || error?.status === 403) {
+          return false;
+        }
+        return failureCount < 2;
+      },
+    },
+  },
+});
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading, user } = useAuth();
