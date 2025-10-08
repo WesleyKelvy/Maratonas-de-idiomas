@@ -60,4 +60,19 @@ export class AuthController {
 
     return { message: 'Access token refreshed successfully' };
   }
+
+  @IsPublic()
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  async logout(@Res({ passthrough: true }) res: Response) {
+    // Limpar o cookie de autenticação
+    res.clearCookie('access_token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV !== 'development',
+      sameSite: 'strict',
+      path: '/',
+    });
+
+    return { message: 'Logout successful' };
+  }
 }

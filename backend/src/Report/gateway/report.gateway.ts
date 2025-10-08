@@ -55,24 +55,24 @@ export class ReportGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.clientRooms.delete(client.id);
   }
 
-  @SubscribeMessage('subscribe-marathon')
-  handleSubscribeMarathonReport(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() data: { marathonId: string },
-  ) {
-    const { marathonId } = data;
-    client.join(`marathon-${marathonId}`);
-    this.clientRooms.set(client.id, marathonId);
+  // @SubscribeMessage('subscribe-marathon')
+  // handleSubscribeMarathonReport(
+  //   @ConnectedSocket() client: Socket,
+  //   @MessageBody() data: { marathonId: string },
+  // ) {
+  //   const { marathonId } = data;
+  //   client.join(`marathon-${marathonId}`);
+  //   this.clientRooms.set(client.id, marathonId);
 
-    console.log(
-      `[WebSocket] Client ${client.id} subscribed to marathon ${marathonId}`,
-    );
+  //   console.log(
+  //     `[WebSocket] Client ${client.id} subscribed to marathon ${marathonId}`,
+  //   );
 
-    return {
-      event: 'subscribed',
-      data: { marathonId, message: 'Inscrito com sucesso no marathon' },
-    };
-  }
+  //   return {
+  //     event: 'subscribed',
+  //     data: { marathonId, message: 'Inscrito com sucesso no marathon' },
+  //   };
+  // }
 
   @SubscribeMessage('generate-report')
   async handleGenerateReport(
