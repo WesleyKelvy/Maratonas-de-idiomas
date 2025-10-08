@@ -146,7 +146,7 @@ async function main() {
       marathon: { connect: { id: marathon.id } },
     },
   });
-  console.log(`Created 5 questions for marathon: ${marathon.id}`);
+  console.log(`Created 1 questions for marathon: ${marathon.id}`);
 
   // 7) Enroll both students in the marathon
   await prisma.enrollment.createMany({
@@ -266,11 +266,8 @@ async function main() {
       category: 'Cohesion',
     },
   });
-  console.log(
-    `Created submissions and AI feedbacks for student ${student1.name}.`,
-  );
 
-  // 9) Create submissions for student2
+  // Create some submissions for student2 as well (without feedback for this test)
   await prisma.submission.create({
     data: {
       question_id: question1.id,
@@ -320,58 +317,8 @@ async function main() {
       score: 9.3,
     },
   });
-  console.log(`Created submissions for student ${student2.name}.`);
 
-  // 10) Create Report for Student 1 based on their submissions
-  await prisma.report.create({
-    data: {
-      id: '93a27753-743a-43d9-bdf1-ab2e3b8484e6',
-      marathon_id: marathon.id,
-      total_errors: 5,
-      classroom_name: classroom.id,
-      report_details: {
-        create: [
-          {
-            occurrences: 1,
-            category_name: 'Grammar',
-            examples: `["Grammar: The sentence \\"My role was checking the logs\\" could be improved for formality. Consider \\"My role was to check the logs.\\""]`,
-            targeted_advice:
-              'To improve your grammar, focus on distinguishing when to use infinitives (to + verb) versus gerunds (-ing) to describe roles or purposes, often favoring infinitives for formality and precision.',
-          },
-          {
-            occurrences: 1,
-            category_name: 'Punctuation',
-            examples: `["Punctuation: A comma is needed before \\"Without\\" in the second sentence for better flow."]`,
-            targeted_advice:
-              'To improve your punctuation, focus on using commas to separate introductory phrases or clauses that precede the main sentence, as this significantly enhances readability and flow.',
-          },
-          {
-            occurrences: 1,
-            category_name: 'Vocabulary',
-            examples: `["Vocabulary: \\"Have regular meetings\\" could be more formal. Consider \\"conduct regular meetings.\\""]`,
-            targeted_advice:
-              'To improve your vocabulary, focus on selecting more formal and precise verbs and nouns, especially for professional or academic contexts. Practice by identifying informal terms and finding their more appropriate formal equivalents.',
-          },
-          {
-            occurrences: 1,
-            category_name: 'Clarity',
-            examples: `["Clarity: \\"Done more mock runs\\" is a bit informal. Consider \\"conducted more practice sessions.\\""]`,
-            targeted_advice:
-              'To enhance clarity, replace informal or vague verbs and nouns with more precise and professional alternatives that clearly communicate your intended meaning.',
-          },
-          {
-            occurrences: 1,
-            category_name: 'Cohesion',
-            examples: `["Cohesion: The connection between the two sentences could be stronger. Consider using a transition word like \\"For example,\\" or \\"Indeed,\\"."]`,
-            targeted_advice:
-              "To improve cohesion, consciously use transition words and phrases (e.g., 'however,' 'therefore,' 'for example') to clearly link your sentences and ideas, ensuring a smooth logical flow for the reader.",
-          },
-        ],
-      },
-    },
-  });
-  console.log(`Created report for marathon ID ${marathon.id} in marathon .`);
-
+  // console.log('Created submissions and AI feedbacks for student1.');
   console.log(
     'Seed process finished successfully. The leaderboard generation job should be scheduled in Redis.',
   );
