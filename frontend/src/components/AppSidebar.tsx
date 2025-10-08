@@ -50,7 +50,7 @@ export function AppSidebar() {
     { title: "Turmas", url: "/classes", icon: Users },
     { title: "Maratonas", url: "/marathons", icon: Trophy },
     { title: "Submissões", url: "/teacher-submissions", icon: FileText },
-    { title: "Relatório", url: "/marathons/1/report", icon: BarChart3 },
+    { title: "Relatórios", url: "/reports", icon: BarChart3 },
     { title: "Ranking", url: "/ranking", icon: Medal },
     { title: "Perfil", url: "/profile", icon: User },
   ];

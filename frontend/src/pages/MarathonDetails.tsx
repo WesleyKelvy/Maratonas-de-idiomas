@@ -1,11 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -102,7 +97,7 @@ const MarathonDetails = () => {
         <Button
           variant="outline"
           size="sm"
-          to={user?.role === "teacher" ? "/marathons" : "/my-enrollments"}
+          to={user?.role === "Professor" ? "/marathons" : "/my-enrollments"}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Voltar
@@ -215,7 +210,7 @@ const MarathonDetails = () => {
           </Card>
 
           {/* Botão de Participação */}
-          {marathon.status === "Aberta" && user?.role === "student" && (
+          {marathon.status === "Aberta" && user?.role === "Student" && (
             <Card>
               <CardContent className="pt-6">
                 <Dialog>

@@ -23,7 +23,7 @@ export class PrismaReportRepository implements AbstractReportRepository {
   }
 
   async findByMarathonId(marathonId: string): Promise<Report | null> {
-    return this.prisma.report.findFirst({
+    return this.prisma.report.findUnique({
       where: { marathon_id: marathonId },
       include: {
         report_details: true,

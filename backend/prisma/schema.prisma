@@ -171,10 +171,11 @@ model AiFeedbacks {
 
 // Enrollment
 model Enrollment {
-  id            String @id @default(uuid())
+  id            String   @id @default(uuid())
   user_id       String
   marathon_id   String
   marathon_code String
+  created_at    DateTime @default(now())
 
   user     User             @relation(fields: [user_id], references: [id])
   marathon LanguageMarathon @relation(fields: [marathon_id], references: [id])
@@ -196,11 +197,12 @@ model Leaderboard {
 
 // Report
 model Report {
-  id             String          @id @default(uuid())
-  classroom_name String
-  marathon_id    String          @unique
-  total_errors   Int
-  report_details ReportDetails[]
+  id                String          @id @default(uuid())
+  classroom_name    String
+  marathon_id       String          @unique
+  total_errors      Int
+  created_at        DateTime        @default(now())
+  report_details    ReportDetails[]
 
   marathon LanguageMarathon @relation(fields: [marathon_id], references: [id])
 }

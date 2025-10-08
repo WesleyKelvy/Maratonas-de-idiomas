@@ -35,6 +35,8 @@ import StudentSubmissions from "./pages/StudentSubmissions";
 import SubmissionDetails from "./pages/SubmissionDetails";
 import Submissions from "./pages/Submissions";
 import TeacherSubmissions from "./pages/TeacherSubmissions";
+import Reports from "./pages/Reports";
+// import ReportDetails from "./pages/ReportDetails";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -329,7 +331,19 @@ const AppRoutes = () => (
       }
     />
     <Route
-      path="/marathons/:marathonId/report" // PROFESSOR
+      path="/reports" // PROFESSOR - Lista para seleção
+      element={
+        <ProtectedRoute>
+          <RoleBasedRoute allowedRoles={["Professor", "Admin"]}>
+            <Layout>
+              <Reports />
+            </Layout>
+          </RoleBasedRoute>
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/reports/marathon/:marathonId/details" // PROFESSOR - Detalhes do relatório
       element={
         <ProtectedRoute>
           <RoleBasedRoute allowedRoles={["Professor", "Admin"]}>

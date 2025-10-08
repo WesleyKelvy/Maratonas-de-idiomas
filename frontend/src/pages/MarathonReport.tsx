@@ -372,8 +372,8 @@ export default function MarathonReport() {
         </CardContent>
       </Card>
 
-      {/* Action Buttons */}
-      <Card>
+      {/* Action Buttons -- IGNORE THIS CARD*/}
+      {/* <Card>
         <CardHeader>
           <CardTitle>Ações Recomendadas</CardTitle>
           <CardDescription>
@@ -396,7 +396,7 @@ export default function MarathonReport() {
             </Button>
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   );
 }

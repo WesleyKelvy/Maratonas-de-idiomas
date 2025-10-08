@@ -203,12 +203,12 @@ const Marathons = () => {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Maratonas</h1>
           <p className="text-gray-600 mt-2">
-            {user?.role === "teacher"
+            {user?.role === "Professor"
               ? "Visualize todas as suas maratonas criadas"
               : "Explore maratonas disponíveis"}
           </p>
         </div>
-        {user?.role === "teacher" && (
+        {user?.role === "Professor" && (
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button>
@@ -390,7 +390,7 @@ const Marathons = () => {
             </DialogContent>
           </Dialog>
         )}
-        {user?.role === "student" && (
+        {user?.role === "Student" && (
           <Button onClick={() => navigate("/marathon-enrollment")}>
             <Plus className="mr-2 h-4 w-4" />
             Inscrever em Maratona
@@ -502,7 +502,7 @@ const Marathons = () => {
                   <Eye className="mr-2 h-4 w-4" />
                   Ver Detalhes
                 </Button>
-                {marathon.status === "Aberta" && user?.role === "student" && (
+                {marathon.status === "Aberta" && user?.role === "Student" && (
                   <Button
                     size="sm"
                     onClick={() => navigate("/marathon-enrollment")}
@@ -512,7 +512,7 @@ const Marathons = () => {
                     Abrir
                   </Button>
                 )}
-                {user?.role === "teacher" && (
+                {user?.role === "Student" && (
                   <Button
                     variant="outline"
                     size="sm"
