@@ -1,26 +1,42 @@
-
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '../../contexts/AuthContext';
-import { toast } from '@/hooks/use-toast';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { useAuth } from "../../contexts/AuthContext";
+import { toast } from "@/hooks/use-toast";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  resetPasswordSchema,
+  type ResetPasswordFormData,
+} from "@/schemas/authSchemas";
+import { Loader2 } from "lucide-react";
 
 const ResetPassword = () => {
-  const [step, setStep] = useState<'request' | 'reset'>('request');
-  const [email, setEmail] = useState('');
-  const [code, setCode] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState<"request" | "reset">("request");
+  const [email, setEmail] = useState("");
   const { requestPasswordReset, resetPassword } = useAuth();
   const navigate = useNavigate();
 
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm<ResetPasswordFormData>({
+    resolver: zodResolver(resetPasswordSchema),
+  });
+
   const handleRequestReset = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
 
     try {
       await requestPasswordReset(email);
@@ -28,47 +44,30 @@ const ResetPassword = () => {
         title: "Código enviado!",
         description: "Verifique seu email para o código de recuperação.",
       });
-      setStep('reset');
+      setStep("reset");
     } catch (error) {
       toast({
         title: "Erro",
         description: "Email não encontrado.",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
-  const handleResetPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (newPassword !== confirmPassword) {
-      toast({
-        title: "Erro",
-        description: "As senhas não coincidem.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setLoading(true);
-
+  const onSubmit = async (data: ResetPasswordFormData) => {
     try {
-      await resetPassword(email, code, newPassword);
+      await resetPassword(email, data.code, data.newPassword);
       toast({
         title: "Senha redefinida!",
         description: "Sua senha foi alterada com sucesso.",
       });
-      navigate('/login');
+      navigate("/login");
     } catch (error) {
       toast({
         title: "Erro",
         description: "Código inválido ou expirado.",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -77,17 +76,16 @@ const ResetPassword = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold text-gray-900">
-            {step === 'request' ? 'Recuperar Senha' : 'Redefinir Senha'}
+            {step === "request" ? "Recuperar Senha" : "Redefinir Senha"}
           </CardTitle>
           <CardDescription>
-            {step === 'request' 
-              ? 'Digite seu email para receber o código de recuperação'
-              : 'Digite o código recebido e sua nova senha'
-            }
+            {step === "request"
+              ? "Digite seu email para receber o código de recuperação"
+              : "Digite o código recebido e sua nova senha"}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {step === 'request' ? (
+          {step === "request" ? (
             <form onSubmit={handleRequestReset} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -101,21 +99,22 @@ const ResetPassword = () => {
                 />
               </div>
 
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Enviando...' : 'Enviar código de recuperação'}
+              <Button type="submit" className="w-full">
+                Enviar código de recuperação
               </Button>
             </form>
           ) : (
-            <form onSubmit={handleResetPassword} className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="code">Código recebido</Label>
                 <Input
                   id="code"
                   placeholder="Digite o código"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  required
+                  {...register("code")}
                 />
+                {errors.code && (
+                  <p className="text-sm text-red-600">{errors.code.message}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -124,10 +123,13 @@ const ResetPassword = () => {
                   id="newPassword"
                   type="password"
                   placeholder="Nova senha"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  required
+                  {...register("newPassword")}
                 />
+                {errors.newPassword && (
+                  <p className="text-sm text-red-600">
+                    {errors.newPassword.message}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -136,21 +138,31 @@ const ResetPassword = () => {
                   id="confirmPassword"
                   type="password"
                   placeholder="Confirme a nova senha"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
+                  {...register("confirmPassword")}
                 />
+                {errors.confirmPassword && (
+                  <p className="text-sm text-red-600">
+                    {errors.confirmPassword.message}
+                  </p>
+                )}
               </div>
 
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Redefinindo...' : 'Redefinir senha'}
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Redefinindo...
+                  </>
+                ) : (
+                  "Redefinir senha"
+                )}
               </Button>
             </form>
           )}
 
           <div className="mt-4 text-center">
-            <Link 
-              to="/login" 
+            <Link
+              to="/login"
               className="text-sm text-blue-600 hover:text-blue-800"
             >
               Voltar ao login

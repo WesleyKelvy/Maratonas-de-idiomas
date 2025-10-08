@@ -1,15 +1,14 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: "student" | "teacher" | "admin";
-  city?: string;
-  occupation?: string;
-  birthDate?: string;
-  verified: boolean;
-}
+import React, { createContext, useContext } from "react";
+import {
+  useCurrentUser,
+  useLogin,
+  useRegister,
+  useLogout,
+  useVerifyAccount,
+  useResetPassword,
+  useRequestPasswordReset,
+} from "@/hooks/use-auth";
+import { User } from "@/services/auth.service";
 
 interface AuthContextType {
   user: User | null;
@@ -17,7 +16,7 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (userData: RegisterData) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   verifyAccount: (code: string) => Promise<void>;
   resetPassword: (
     email: string,
@@ -50,76 +49,43 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true);
+  // Usar os hooks do TanStack Query
+  const { data: user, isLoading, error } = useCurrentUser();
+  const loginMutation = useLogin();
+  const registerMutation = useRegister();
+  const logoutMutation = useLogout();
+  const verifyAccountMutation = useVerifyAccount();
+  const resetPasswordMutation = useResetPassword();
+  const requestPasswordResetMutation = useRequestPasswordReset();
 
-  useEffect(() => {
-    // Check for stored auth data
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-      setIsAuthenticated(true);
-    }
-    setLoading(false);
-  }, []);
+  // Log para debugging
+
+  // Considerar autenticado se o usuário existe (remover verificação de verified por enquanto)
+  const isAuthenticated = !!user;
 
   const login = async (email: string, password: string) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    const mockUser: User = {
-      id: "1",
-      name: "João Silva",
-      email: email,
-      role: email.includes("teacher") ? "teacher" : "student",
-      city: "São Paulo",
-      occupation: "Estudante",
-      verified: true,
-    };
-
-    setUser(mockUser);
-    setIsAuthenticated(true);
-    localStorage.setItem("user", JSON.stringify(mockUser));
+    await loginMutation.mutateAsync({ email, password });
   };
 
   const register = async (userData: RegisterData) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    const newUser: User = {
-      id: Date.now().toString(),
+    const registerData = {
       name: userData.name,
       email: userData.email,
-      role: userData.role,
+      password: userData.password,
+      birthDate: userData.birthDate,
       city: userData.city,
       occupation: userData.occupation,
-      birthDate: userData.birthDate,
-      verified: false,
+      role: userData.role,
     };
+    await registerMutation.mutateAsync(registerData);
+  };
 
-    setUser(newUser);
-    localStorage.setItem("pendingUser", JSON.stringify(newUser));
+  const logout = async () => {
+    await logoutMutation.mutateAsync();
   };
 
   const verifyAccount = async (code: string) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    const pendingUser = localStorage.getItem("pendingUser");
-    if (pendingUser) {
-      const user = JSON.parse(pendingUser);
-      user.verified = true;
-      setUser(user);
-      setIsAuthenticated(true);
-      localStorage.setItem("user", JSON.stringify(user));
-      localStorage.removeItem("pendingUser");
-    }
-  };
-
-  const requestPasswordReset = async (email: string) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await verifyAccountMutation.mutateAsync({ code });
   };
 
   const resetPassword = async (
@@ -127,20 +93,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     code: string,
     newPassword: string
   ) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await resetPasswordMutation.mutateAsync({ email, code, newPassword });
   };
 
-  const logout = () => {
-    setUser(null);
-    setIsAuthenticated(false);
-    localStorage.removeItem("user");
+  const requestPasswordReset = async (email: string) => {
+    await requestPasswordResetMutation.mutateAsync({ email });
   };
 
   const value = {
-    user,
+    user: user || null,
     isAuthenticated,
-    loading,
+    loading: isLoading,
     login,
     register,
     logout,

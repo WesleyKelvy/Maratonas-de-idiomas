@@ -33,7 +33,11 @@ export function AppSidebar() {
   const studentItems = [
     { title: "Dashboard", url: "/dashboard", icon: Home },
     { title: "Minhas Maratonas", url: "/my-enrollments", icon: Trophy },
-    { title: "Inscrever em Maratona", url: "/marathon-enrollment", icon: Medal },
+    {
+      title: "Inscrever em Maratona",
+      url: "/marathon-enrollment",
+      icon: Medal,
+    },
     { title: "Minhas Submissões", url: "/my-submissions", icon: FileText },
     { title: "Ranking", url: "/ranking", icon: Medal },
     { title: "Perfil", url: "/profile", icon: User },
@@ -55,8 +59,8 @@ export function AppSidebar() {
   ];
 
   const getItems = () => {
-    if (user?.role === "admin") return adminItems;
-    if (user?.role === "teacher") return teacherItems;
+    if (user?.role === "Admin") return adminItems;
+    if (user?.role === "Professor") return teacherItems;
     return studentItems;
   };
 

@@ -7,6 +7,7 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
+
   return (
     <SidebarProvider>
       <div className="max-h-dvh flex w-full bg-gray-100">

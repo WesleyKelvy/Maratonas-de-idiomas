@@ -10,6 +10,7 @@ import {
   useLocation,
 } from "react-router-dom";
 import Layout from "./components/Layout";
+import RoleBasedRoute from "./components/RoleBasedRoute";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
@@ -38,7 +39,7 @@ import TeacherSubmissions from "./pages/TeacherSubmissions";
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
 
   if (loading) {
     return (
@@ -48,7 +49,11 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+
+  return <>{children}</>;
 };
 
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
@@ -114,9 +119,11 @@ const AppRoutes = () => (
       path="/dashboard" // PROFESSOR AND STUDENT
       element={
         <ProtectedRoute>
-          <Layout>
-            <Dashboard />
-          </Layout>
+          <RoleBasedRoute allowedRoles={["Student", "Professor", "Admin"]}>
+            <Layout>
+              <Dashboard />
+            </Layout>
+          </RoleBasedRoute>
         </ProtectedRoute>
       }
     />
@@ -124,9 +131,11 @@ const AppRoutes = () => (
       path="/marathons" // PROFESSOR
       element={
         <ProtectedRoute>
-          <Layout>
-            <Marathons />
-          </Layout>
+          <RoleBasedRoute allowedRoles={["Professor", "Admin"]}>
+            <Layout>
+              <Marathons />
+            </Layout>
+          </RoleBasedRoute>
         </ProtectedRoute>
       }
     />
@@ -134,9 +143,11 @@ const AppRoutes = () => (
       path="/marathons/:id" // PROFESSOR AND STUDENT
       element={
         <ProtectedRoute>
-          <Layout>
-            <MarathonDetails />
-          </Layout>
+          <RoleBasedRoute allowedRoles={["Student", "Professor", "Admin"]}>
+            <Layout>
+              <MarathonDetails />
+            </Layout>
+          </RoleBasedRoute>
         </ProtectedRoute>
       }
     />
@@ -144,7 +155,9 @@ const AppRoutes = () => (
       path="/marathons/:id/execute" // STUDENT
       element={
         <ProtectedRoute>
-          <MarathonExecution />
+          <RoleBasedRoute allowedRoles={["Student"]}>
+            <MarathonExecution />
+          </RoleBasedRoute>
         </ProtectedRoute>
       }
     />
@@ -152,9 +165,11 @@ const AppRoutes = () => (
       path="/classes" // PROFESSOR
       element={
         <ProtectedRoute>
-          <Layout>
-            <Classes />
-          </Layout>
+          <RoleBasedRoute allowedRoles={["Professor", "Admin"]}>
+            <Layout>
+              <Classes />
+            </Layout>
+          </RoleBasedRoute>
         </ProtectedRoute>
       }
     />
@@ -162,9 +177,11 @@ const AppRoutes = () => (
       path="/classes/:classId" // PROFESSOR
       element={
         <ProtectedRoute>
-          <Layout>
-            <ClassDetails />
-          </Layout>
+          <RoleBasedRoute allowedRoles={["Professor", "Admin"]}>
+            <Layout>
+              <ClassDetails />
+            </Layout>
+          </RoleBasedRoute>
         </ProtectedRoute>
       }
     />
@@ -172,9 +189,11 @@ const AppRoutes = () => (
       path="/classes/:classId/marathons" // PROFESSOR
       element={
         <ProtectedRoute>
-          <Layout>
-            <ClassMarathons />
-          </Layout>
+          <RoleBasedRoute allowedRoles={["Professor", "Admin"]}>
+            <Layout>
+              <ClassMarathons />
+            </Layout>
+          </RoleBasedRoute>
         </ProtectedRoute>
       }
     />
@@ -182,9 +201,11 @@ const AppRoutes = () => (
       path="/classes/:classId/create-marathon" // PROFESSOR
       element={
         <ProtectedRoute>
-          <Layout>
-            <CreateMarathon />
-          </Layout>
+          <RoleBasedRoute allowedRoles={["Professor", "Admin"]}>
+            <Layout>
+              <CreateMarathon />
+            </Layout>
+          </RoleBasedRoute>
         </ProtectedRoute>
       }
     />
@@ -192,9 +213,11 @@ const AppRoutes = () => (
       path="/marathon-enrollment" //STUDENT
       element={
         <ProtectedRoute>
-          <Layout>
-            <MarathonEnrollment />
-          </Layout>
+          <RoleBasedRoute allowedRoles={["Student"]}>
+            <Layout>
+              <MarathonEnrollment />
+            </Layout>
+          </RoleBasedRoute>
         </ProtectedRoute>
       }
     />
@@ -202,9 +225,11 @@ const AppRoutes = () => (
       path="/my-enrollments" // STUDENT
       element={
         <ProtectedRoute>
-          <Layout>
-            <StudentEnrollments />
-          </Layout>
+          <RoleBasedRoute allowedRoles={["Student"]}>
+            <Layout>
+              <StudentEnrollments />
+            </Layout>
+          </RoleBasedRoute>
         </ProtectedRoute>
       }
     />
@@ -212,9 +237,11 @@ const AppRoutes = () => (
       path="/question-management/:marathonId" // PROFESSOR
       element={
         <ProtectedRoute>
-          <Layout>
-            <QuestionManagement />
-          </Layout>
+          <RoleBasedRoute allowedRoles={["Professor", "Admin"]}>
+            <Layout>
+              <QuestionManagement />
+            </Layout>
+          </RoleBasedRoute>
         </ProtectedRoute>
       }
     />
@@ -222,9 +249,11 @@ const AppRoutes = () => (
       path="/marathon-submissions" // PROFESSOR
       element={
         <ProtectedRoute>
-          <Layout>
-            <Submissions />
-          </Layout>
+          <RoleBasedRoute allowedRoles={["Professor", "Admin"]}>
+            <Layout>
+              <Submissions />
+            </Layout>
+          </RoleBasedRoute>
         </ProtectedRoute>
       }
     />
@@ -232,9 +261,11 @@ const AppRoutes = () => (
       path="/my-submissions" //STUDENT
       element={
         <ProtectedRoute>
-          <Layout>
-            <StudentSubmissions />
-          </Layout>
+          <RoleBasedRoute allowedRoles={["Student"]}>
+            <Layout>
+              <StudentSubmissions />
+            </Layout>
+          </RoleBasedRoute>
         </ProtectedRoute>
       }
     />
@@ -242,9 +273,11 @@ const AppRoutes = () => (
       path="/teacher-submissions" // PROFESSOR
       element={
         <ProtectedRoute>
-          <Layout>
-            <TeacherSubmissions />
-          </Layout>
+          <RoleBasedRoute allowedRoles={["Professor", "Admin"]}>
+            <Layout>
+              <TeacherSubmissions />
+            </Layout>
+          </RoleBasedRoute>
         </ProtectedRoute>
       }
     />
@@ -252,9 +285,11 @@ const AppRoutes = () => (
       path="/submissions/:submissionId" // PROFESSOR AND STUDENT
       element={
         <ProtectedRoute>
-          <Layout>
-            <SubmissionDetails />
-          </Layout>
+          <RoleBasedRoute allowedRoles={["Student", "Professor", "Admin"]}>
+            <Layout>
+              <SubmissionDetails />
+            </Layout>
+          </RoleBasedRoute>
         </ProtectedRoute>
       }
     />
@@ -262,9 +297,11 @@ const AppRoutes = () => (
       path="/marathons/:marathonId/dashboard" // PROFESSOR
       element={
         <ProtectedRoute>
-          <Layout>
-            <MarathonDashboard />
-          </Layout>
+          <RoleBasedRoute allowedRoles={["Professor", "Admin"]}>
+            <Layout>
+              <MarathonDashboard />
+            </Layout>
+          </RoleBasedRoute>
         </ProtectedRoute>
       }
     />
@@ -272,9 +309,11 @@ const AppRoutes = () => (
       path="/marathons/:marathonId/report" // PROFESSOR
       element={
         <ProtectedRoute>
-          <Layout>
-            <MarathonReport />
-          </Layout>
+          <RoleBasedRoute allowedRoles={["Professor", "Admin"]}>
+            <Layout>
+              <MarathonReport />
+            </Layout>
+          </RoleBasedRoute>
         </ProtectedRoute>
       }
     />
@@ -282,9 +321,11 @@ const AppRoutes = () => (
       path="/ranking" // PROFESSOR AND STUDENT
       element={
         <ProtectedRoute>
-          <Layout>
-            <Ranking />
-          </Layout>
+          <RoleBasedRoute allowedRoles={["Student", "Professor", "Admin"]}>
+            <Layout>
+              <Ranking />
+            </Layout>
+          </RoleBasedRoute>
         </ProtectedRoute>
       }
     />
@@ -292,9 +333,11 @@ const AppRoutes = () => (
       path="/profile" // PROFESSOR AND STUDENT
       element={
         <ProtectedRoute>
-          <Layout>
-            <Profile />
-          </Layout>
+          <RoleBasedRoute allowedRoles={["Student", "Professor", "Admin"]}>
+            <Layout>
+              <Profile />
+            </Layout>
+          </RoleBasedRoute>
         </ProtectedRoute>
       }
     />
