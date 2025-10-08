@@ -20,7 +20,7 @@ import { CreateReportDto } from 'src/Report/dto/report.create.dto';
 // Replaced by the WebSocket implementation -----------------------//
 @UseGuards(RolesGuard)
 @Roles(Role.Professor)
-@Controller('marathon/:marathonId/report')
+@Controller('/report/marathon/:marathonId')
 export class ReportController {
   constructor(
     @Inject(REPORT_SERVICE_TOKEN)
@@ -37,7 +37,7 @@ export class ReportController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  async getReport(@Param('marathonId') marathonId: string): Promise<Report> {
+  async getReport(@Param('marathonId') marathonId: string) {
     return this.reportService.findByMarathonId(marathonId);
   }
 }
