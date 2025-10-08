@@ -1,76 +1,51 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from "recharts";
-import { Download, RefreshCw, Share2, BookOpen, Users, Target, TrendingUp } from "lucide-react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  ResponsiveContainer,
+} from "recharts";
+import {
+  Download,
+  RefreshCw,
+  Share2,
+  BookOpen,
+  Users,
+  Target,
+  TrendingUp,
+  Loader2,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useReport, useCreateReport } from "@/hooks/use-report";
+import type { Report } from "@/services/report.service";
 
-// Updated data structure based on database schema
-const mockReportData = {
-  id: "rep_123",
-  classroom_code: "TURMA_A_2024",
-  marathon_id: "mar_456",
-  total_errors: 145,
-  marathon: {
-    title: "Maratona de Português - Nível Intermediário",
-    description: "Avaliação completa de gramática e vocabulário"
-  },
-  report_details: [
-    {
-      id: 1,
-      report_id: "rep_123",
-      category_name: "Gramática",
-      occurrences: 52,
-      examples: "Uso incorreto do plural: 'Os menino foram ao parque'; Concordância verbal: 'A gente vamos estudar'; Uso do artigo: 'A água do mar'",
-      targeted_advice: "Reforçar exercícios de concordância nominal e verbal. Praticar regras de plural e uso correto dos artigos definidos e indefinidos."
-    },
-    {
-      id: 2,
-      report_id: "rep_123",
-      category_name: "Ortografia",
-      occurrences: 38,
-      examples: "Acentuação: 'medico' em vez de 'médico'; S/Z: 'analizar' em vez de 'analisar'; C/Ç: 'comeco' em vez de 'começo'",
-      targeted_advice: "Intensificar o estudo das regras de acentuação gráfica e uso de s/z. Criar listas de palavras problemáticas para memorização."
-    },
-    {
-      id: 3,
-      report_id: "rep_123",
-      category_name: "Vocabulário",
-      occurrences: 31,
-      examples: "Uso impreciso: 'fazer uma reunião' em vez de 'realizar uma reunião'; Anglicismo: 'deletar' em vez de 'excluir'; Regionalismo inadequado em contexto formal",
-      targeted_advice: "Ampliar vocabulário formal e técnico. Praticar sinônimos e antônimos. Evitar estrangeirismos desnecessários."
-    },
-    {
-      id: 4,
-      report_id: "rep_123",
-      category_name: "Sintaxe",
-      occurrences: 24,
-      examples: "Ordem inadequada: 'Ontem eu foi ao mercado'; Uso de pronomes: 'Eu vi ele na escola'; Regência verbal: 'Assistir o filme'",
-      targeted_advice: "Estudar estrutura frasal e ordem dos elementos. Praticar colocação pronominal e regência verbal e nominal."
-    }
-  ]
-};
-
-// Calculated data based on database info
-const calculatedData = {
-  classroom: {
-    name: "Turma A - 2024",
-    total_students: 25
-  },
-  participation: {
-    students_participated: 23,
-    total_submissions: 115,
-    participation_rate: 92,
-    class_average: 7.8
-  }
-};
-
-const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--muted))'];
+const COLORS = ["#D5BF86", "#493548", "#7389AE", "#416788", "#171d2f"];
 
 const getSeverityColor = (occurrences: number, total: number) => {
   const percentage = (occurrences / total) * 100;
@@ -87,51 +62,103 @@ const getSeverityLabel = (occurrences: number, total: number) => {
 };
 
 export default function MarathonReport() {
-  const { marathonId } = useParams();
+  const { marathonId } = useParams<{ marathonId: string }>();
   const { toast } = useToast();
-  const [isRegenerating, setIsRegenerating] = useState(false);
-  const [reportData, setReportData] = useState(mockReportData);
-  const [isLoading, setIsLoading] = useState(false);
+
+  // Hooks para buscar e gerenciar dados do relatório
+  const {
+    data: reportData,
+    isLoading,
+    error,
+    refetch,
+  } = useReport(marathonId || "");
+  const createReportMutation = useCreateReport();
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="container mx-auto p-6 flex items-center justify-center min-h-screen">
+        <div className="flex items-center gap-2">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Carregando relatório...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error || !reportData) {
+    return (
+      <div className="container mx-auto p-6 flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-2">
+            Erro ao carregar relatório
+          </h2>
+          <p className="text-muted-foreground mb-4">
+            {error?.message || "Relatório não encontrado"}
+          </p>
+          <Button onClick={() => window.location.reload()}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Tentar novamente
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   // Process examples from string to array for display
-  const processedReportDetails = reportData.report_details.map(detail => ({
-    ...detail,
-    examplesArray: detail.examples.split(';').map(ex => ex.trim())
-  }));
+  const processedReportDetails =
+    reportData.report_details?.map((detail) => {
+      let examplesArray = [];
+      try {
+        examplesArray = JSON.parse(detail.examples);
+      } catch (e) {
+        console.error("Falha ao fazer parse dos exemplos:", e);
+      }
+
+      return {
+        ...detail,
+        examplesArray,
+      };
+    }) || [];
 
   const pieData = processedReportDetails.map((category, index) => ({
     name: category.category_name,
     value: category.occurrences,
-    color: COLORS[index % COLORS.length]
+    color: COLORS[index % COLORS.length],
   }));
 
   const barData = processedReportDetails
     .sort((a, b) => b.occurrences - a.occurrences)
-    .map((category) => ({
+    .map((category, index) => ({
       category: category.category_name,
       occurrences: category.occurrences,
-      percentage: ((category.occurrences / reportData.total_errors) * 100).toFixed(1)
+      percentage: (
+        (category.occurrences / reportData.total_errors) *
+        100
+      ).toFixed(1),
+      color: COLORS[index % COLORS.length],
     }));
 
   const handleRegenerateReport = async () => {
-    setIsRegenerating(true);
-    try {
-      // Mock API call to regenerate report
-      // await fetch(`/api/marathons/${marathonId}/report`, { method: 'POST' });
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      toast({
-        title: "Relatório Atualizado",
-        description: "O relatório foi regenerado com os dados mais recentes.",
-      });
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Falha ao regenerar o relatório. Tente novamente.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsRegenerating(false);
-    }
+    if (!marathonId) return;
+
+    createReportMutation.mutate(marathonId, {
+      onSuccess: () => {
+        toast({
+          title: "Relatório Atualizado",
+          description: "O relatório foi regenerado com os dados mais recentes.",
+        });
+      },
+      onError: (error) => {
+        console.error("Erro ao regenerar relatório:", error);
+        toast({
+          title: "Erro",
+          description: "Falha ao regenerar o relatório. Tente novamente.",
+          variant: "destructive",
+        });
+      },
+    });
   };
 
   const handleExportPDF = () => {
@@ -144,7 +171,8 @@ export default function MarathonReport() {
   const handleShare = () => {
     toast({
       title: "Link Copiado",
-      description: "O link do relatório foi copiado para a área de transferência.",
+      description:
+        "O link do relatório foi copiado para a área de transferência.",
     });
   };
 
@@ -154,29 +182,23 @@ export default function MarathonReport() {
       <div className="flex flex-col md:flex-row justify-between items-start gap-4">
         <div>
           <h1 className="text-3xl font-bold">Relatório da Maratona</h1>
-          <p className="text-muted-foreground mt-2">{reportData.marathon.title}</p>
+          <p className="text-muted-foreground mt-2">
+            Análise detalhada dos resultados
+          </p>
           <p className="text-sm text-muted-foreground">
-            Turma: {calculatedData.classroom.name} • Código: {reportData.classroom_code}
+            Turma: {reportData.classroom_name} • Relatório ID: {reportData.id}
           </p>
         </div>
-        
+
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={handleRegenerateReport}
-            disabled={isRegenerating}
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isRegenerating ? 'animate-spin' : ''}`} />
-            Regenerar
-          </Button>
           <Button variant="outline" onClick={handleExportPDF}>
             <Download className="h-4 w-4 mr-2" />
             PDF
           </Button>
-          <Button variant="outline" onClick={handleShare}>
+          {/* <Button variant="outline" onClick={handleShare}>
             <Share2 className="h-4 w-4 mr-2" />
             Compartilhar
-          </Button>
+          </Button> */}
         </div>
       </div>
 
@@ -184,61 +206,67 @@ export default function MarathonReport() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Participantes</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Categorias de Erro
+            </CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{calculatedData.participation.students_participated}</div>
+            <div className="text-2xl font-bold">
+              {processedReportDetails.length}
+            </div>
             <p className="text-xs text-muted-foreground">
-              de {calculatedData.classroom.total_students} alunos
+              categorias identificadas
             </p>
-            <Progress 
-              value={calculatedData.participation.participation_rate} 
-              className="mt-2"
-            />
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Taxa de Participação</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Data do Relatório
+            </CardTitle>
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{calculatedData.participation.participation_rate}%</div>
-            <p className="text-xs text-muted-foreground">
-              {calculatedData.participation.total_submissions} submissões
-            </p>
+            <div className="text-2xl font-bold">
+              {new Date(reportData.created_at).toLocaleDateString("pt-BR")}
+            </div>
+            <p className="text-xs text-muted-foreground">relatório gerado</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Média da Turma</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Maior Categoria
+            </CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{calculatedData.participation.class_average}</div>
+            <div className="text-2xl font-bold">
+              {processedReportDetails.length > 0
+                ? processedReportDetails.reduce((max, current) =>
+                    current.occurrences > max.occurrences ? current : max
+                  ).category_name
+                : "-"}
+            </div>
             <p className="text-xs text-muted-foreground">
-              de 10.0 pontos
+              categoria com mais erros
             </p>
-            <Progress 
-              value={calculatedData.participation.class_average * 10} 
-              className="mt-2"
-            />
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Erros</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Total de Erros
+            </CardTitle>
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{reportData.total_errors}</div>
-            <p className="text-xs text-muted-foreground">
-              erros identificados
-            </p>
+            <p className="text-xs text-muted-foreground">erros identificados</p>
           </CardContent>
         </Card>
       </div>
@@ -256,10 +284,16 @@ export default function MarathonReport() {
           <CardContent>
             <ChartContainer
               config={{
-                gramática: { label: "Gramática", color: "hsl(var(--primary))" },
-                ortografia: { label: "Ortografia", color: "hsl(var(--secondary))" },
-                vocabulário: { label: "Vocabulário", color: "hsl(var(--accent))" },
-                sintaxe: { label: "Sintaxe", color: "hsl(var(--muted))" },
+                gramática: { label: "Gramática", color: "#D5BF86" },
+                ortografia: {
+                  label: "Ortografia",
+                  color: "#493548",
+                },
+                vocabulário: {
+                  label: "Vocabulário",
+                  color: "#7389AE",
+                },
+                sintaxe: { label: "Sintaxe", color: "#416788" },
               }}
               className="h-[300px]"
             >
@@ -270,7 +304,9 @@ export default function MarathonReport() {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    label={({ name, percent }) =>
+                      `${name} ${(percent * 100).toFixed(0)}%`
+                    }
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="value"
@@ -297,7 +333,9 @@ export default function MarathonReport() {
           <CardContent>
             <ChartContainer
               config={{
-                occurrences: { label: "Ocorrências", color: "hsl(var(--primary))" },
+                occurrences: {
+                  label: "Ocorrências",
+                },
               }}
               className="h-[300px]"
             >
@@ -306,7 +344,14 @@ export default function MarathonReport() {
                   <XAxis dataKey="category" />
                   <YAxis />
                   <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="occurrences" fill="hsl(var(--primary))" />
+
+                  {/* MODIFICAÇÃO AQUI 👇 */}
+                  {/* Remova a propriedade 'fill' e adicione o mapeamento com <Cell> */}
+                  <Bar dataKey="occurrences">
+                    {barData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </ChartContainer>
@@ -319,7 +364,8 @@ export default function MarathonReport() {
         <CardHeader>
           <CardTitle>Detalhes por Categoria</CardTitle>
           <CardDescription>
-            Análise detalhada de cada categoria de erro com exemplos e recomendações
+            Análise detalhada de cada categoria de erro com exemplos e
+            recomendações
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -327,21 +373,34 @@ export default function MarathonReport() {
             {processedReportDetails
               .sort((a, b) => b.occurrences - a.occurrences)
               .map((category) => {
-                const percentage = ((category.occurrences / reportData.total_errors) * 100);
-                const severity = getSeverityColor(category.occurrences, reportData.total_errors);
-                const severityLabel = getSeverityLabel(category.occurrences, reportData.total_errors);
-                
+                const percentage =
+                  (category.occurrences / reportData.total_errors) * 100;
+                const severity = getSeverityColor(
+                  category.occurrences,
+                  reportData.total_errors
+                );
+                const severityLabel = getSeverityLabel(
+                  category.occurrences,
+                  reportData.total_errors
+                );
+
                 return (
-                  <AccordionItem key={category.id} value={category.id.toString()}>
+                  <AccordionItem
+                    key={category.id}
+                    value={category.id.toString()}
+                  >
                     <AccordionTrigger className="hover:no-underline">
                       <div className="flex items-center justify-between w-full pr-4">
                         <div className="flex items-center gap-3">
-                          <h3 className="font-semibold">{category.category_name}</h3>
+                          <h3 className="font-semibold">
+                            {category.category_name}
+                          </h3>
                           <Badge variant={severity}>{severityLabel}</Badge>
                         </div>
                         <div className="flex items-center gap-4">
                           <span className="text-sm text-muted-foreground">
-                            {category.occurrences} ocorrências ({percentage.toFixed(1)}%)
+                            {category.occurrences} ocorrências (
+                            {percentage.toFixed(1)}%)
                           </span>
                         </div>
                       </div>
@@ -351,13 +410,16 @@ export default function MarathonReport() {
                         <h4 className="font-medium mb-2">Exemplos de Erros:</h4>
                         <ul className="space-y-1">
                           {category.examplesArray.map((example, index) => (
-                            <li key={index} className="text-sm text-muted-foreground pl-4 border-l-2 border-muted">
+                            <li
+                              key={index}
+                              className="text-sm pl-4 border-l-2 border-muted"
+                            >
                               {example}
                             </li>
                           ))}
                         </ul>
                       </div>
-                      
+
                       <div>
                         <h4 className="font-medium mb-2">Recomendações:</h4>
                         <p className="text-sm bg-muted/50 p-3 rounded-md">

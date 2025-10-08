@@ -68,7 +68,12 @@ export function AppSidebar() {
 
   const items = getItems();
 
-  const isActive = (path: string) => currentPath === path;
+  const isActive = (path: string) => {
+    if (path === "/dashboard") {
+      return currentPath === path;
+    }
+    return currentPath.startsWith(path);
+  };
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
     isActive ? "bg-primary font-medium" : "hover:bg-muted ";
 
@@ -97,7 +102,6 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink
                       to={item.url}
-                      end
                       className={
                         isActive(item.url)
                           ? "bg-primary text-primary-foreground font-medium [&:hover]:bg-primary [&:hover]:text-primary-foreground"
