@@ -13,18 +13,17 @@ export const reportKeys = {
     [...reportKeys.details(), marathonId] as const,
 } as const;
 
-// Hook para obter relatório de uma maratona
+// Get report
 export const useReport = (marathonId: string) => {
   return useQuery({
     queryKey: reportKeys.detail(marathonId),
     queryFn: () => ReportService.findByMarathonId(marathonId),
     enabled: !!marathonId,
-    staleTime: 2 * 60 * 1000, // 2 minutos (relatórios podem ser mais dinâmicos)
+    staleTime: 2 * 60 * 1000, // 2 minutes
     refetchOnWindowFocus: false,
   });
 };
 
-// Hook para criar relatório
 export const useCreateReport = () => {
   const queryClient = useQueryClient();
 

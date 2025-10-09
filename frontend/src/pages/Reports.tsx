@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -7,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -15,18 +14,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { Loader2, FileText, Calendar } from "lucide-react";
 import { useClassrooms } from "@/hooks/use-classroom";
 import { useMarathons } from "@/hooks/use-marathon";
 import { useReport } from "@/hooks/use-report";
+import type { LanguageMarathon } from "@/services/marathon.service";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Calendar, FileText, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const ReportsPage = () => {
   const navigate = useNavigate();
   const [selectedClassroomId, setSelectedClassroomId] = useState<string>("");
   const [selectedMarathonId, setSelectedMarathonId] = useState<string>("");
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   // Buscar classrooms do professor
   const {
@@ -49,6 +51,15 @@ const ReportsPage = () => {
     error: reportError,
   } = useReport(selectedMarathonId);
 
+  // Atualizar o tempo a cada minuto para mostrar countdown
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000); // Atualiza a cada minuto
+
+    return () => clearInterval(interval);
+  }, []);
+
   const handleClassroomChange = (value: string) => {
     setSelectedClassroomId(value);
     setSelectedMarathonId(""); // Reset marathon selection
@@ -60,7 +71,19 @@ const ReportsPage = () => {
 
   const handleViewReport = () => {
     if (selectedMarathonId) {
-      navigate(`/reports/marathon/${selectedMarathonId}/details`);
+      // Se há erro de relatório (não encontrado) e maratona finalizada, navega com flag de geração
+      if (
+        reportError &&
+        selectedMarathon &&
+        isMarathonFinished(selectedMarathon)
+      ) {
+        navigate(
+          `/reports/marathon/${selectedMarathonId}/details?generate=true`
+        );
+      } else {
+        // Caso normal, apenas visualiza o relatório existente
+        navigate(`/reports/marathon/${selectedMarathonId}/details`);
+      }
     }
   };
 
@@ -68,6 +91,37 @@ const ReportsPage = () => {
     (c) => c.id === selectedClassroomId
   );
   const selectedMarathon = marathons?.find((m) => m.id === selectedMarathonId);
+
+  // Helper function to check if marathon is finished
+  const isMarathonFinished = (marathon: LanguageMarathon) => {
+    if (!marathon?.end_date) return false;
+    const endDate = new Date(marathon.end_date);
+    return currentTime > endDate;
+  };
+
+  // Helper function to get time remaining for marathon
+  const getTimeRemaining = (marathon: LanguageMarathon) => {
+    if (!marathon?.end_date) return null;
+
+    const endDate = new Date(marathon.end_date);
+    const diffInMs = endDate.getTime() - currentTime.getTime();
+
+    if (diffInMs <= 0) return null; // Marathon already finished
+
+    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    const diffInDays = Math.floor(diffInHours / 24);
+
+    if (diffInDays > 0) {
+      return `${diffInDays} dia${diffInDays > 1 ? "s" : ""}`;
+    } else if (diffInHours > 0) {
+      return `${diffInHours} hora${diffInHours > 1 ? "s" : ""}`;
+    } else if (diffInMinutes > 0) {
+      return `${diffInMinutes} minuto${diffInMinutes > 1 ? "s" : ""}`;
+    } else {
+      return "menos de 1 minuto";
+    }
+  };
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -82,7 +136,7 @@ const ReportsPage = () => {
       </div>
 
       <div className="max-w-2xl mx-auto space-y-6">
-        {/* Seletor de Classroom */}
+        {/* Classroom selector */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -136,7 +190,7 @@ const ReportsPage = () => {
           </CardContent>
         </Card>
 
-        {/* Seletor de Maratona */}
+        {/* Marathon selector */}
         {selectedClassroomId && (
           <Card>
             <CardHeader>
@@ -221,22 +275,23 @@ const ReportsPage = () => {
                                 }
                               })()}
                               {(() => {
-                                const now = new Date();
                                 const startDate = new Date(marathon.start_date);
                                 const endDate = marathon.end_date
                                   ? new Date(marathon.end_date)
                                   : null;
 
                                 const isActive =
-                                  now >= startDate &&
-                                  (!endDate || now <= endDate);
+                                  currentTime >= startDate &&
+                                  (!endDate || currentTime <= endDate);
 
-                                return (
-                                  isActive && (
-                                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                      Ativa
-                                    </span>
-                                  )
+                                return isActive ? (
+                                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    Em andamento
+                                  </span>
+                                ) : (
+                                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    Finalizada
+                                  </span>
                                 );
                               })()}
                             </div>
@@ -251,7 +306,7 @@ const ReportsPage = () => {
           </Card>
         )}
 
-        {/* Preview e Botão para Ver Relatório */}
+        {/* Preview and Button to see the report */}
         {selectedMarathonId && (
           <Card>
             <CardHeader>
@@ -267,16 +322,71 @@ const ReportsPage = () => {
                   <div className="flex items-center gap-2 p-3 border rounded-md">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     <span className="text-sm text-muted-foreground">
-                      Carregando preview do relatório...
+                      Carregando informações do relatório...
                     </span>
                   </div>
+                ) : selectedMarathon &&
+                  !isMarathonFinished(selectedMarathon) ? (
+                  <>
+                    <div className="p-3 border rounded-md bg-blue-50 text-blue-700">
+                      <div className="space-y-2">
+                        <span className="font-medium">
+                          Por favor, aguarde a finalização da maratona.
+                        </span>
+                        <div className="text-sm">
+                          {selectedMarathon.end_date ? (
+                            <>
+                              <p>
+                                Ela terminará em:{" "}
+                                <span className="font-medium">
+                                  {format(
+                                    new Date(selectedMarathon.end_date),
+                                    "dd/MM/yyyy 'às' HH:mm",
+                                    { locale: ptBR }
+                                  )}
+                                </span>
+                              </p>
+                              {getTimeRemaining(selectedMarathon) && (
+                                <p className="mt-1">
+                                  Tempo restante:{" "}
+                                  <span className="font-medium text-blue-800">
+                                    {getTimeRemaining(selectedMarathon)}
+                                  </span>
+                                </p>
+                              )}
+                            </>
+                          ) : (
+                            <p>
+                              Esta maratona não possui data de término definida.
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <Button className="w-full" disabled={true}>
+                      <FileText className="h-4 w-4 mr-2" />
+                      Aguarde o término da maratona
+                    </Button>
+                  </>
                 ) : reportError ? (
-                  <div className="p-3 border rounded-md bg-red-50 text-red-700">
-                    Relatório não disponível: {reportError.message}
-                  </div>
+                  <>
+                    <div className="p-3 border rounded-md bg-yellow-50 text-yellow-700">
+                      <span>
+                        Esta maratona não possui relatório ainda. Clique no
+                        botão abaixo para gerar.
+                      </span>
+                    </div>
+                    <Button
+                      onClick={handleViewReport}
+                      className="w-full"
+                      disabled={!selectedMarathonId}
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      Gerar Relatório
+                    </Button>
+                  </>
                 ) : report ? (
-                  (console.log(report),
-                  (
+                  <div className="space-y-4">
                     <div className="p-4 bg-gray-50 rounded-md">
                       <h4 className="font-semibold mb-2">
                         Informações do Relatório
@@ -316,17 +426,21 @@ const ReportsPage = () => {
                         </div>
                       </div>
                     </div>
-                  ))
-                ) : null}
-
-                <Button
-                  onClick={handleViewReport}
-                  className="w-full"
-                  disabled={!selectedMarathonId}
-                >
-                  <FileText className="h-4 w-4 mr-2" />
-                  Ver Relatório Completo
-                </Button>
+                    <Button
+                      onClick={handleViewReport}
+                      className="w-full"
+                      disabled={!selectedMarathonId}
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      Ver Relatório Completo
+                    </Button>
+                  </div>
+                ) : (
+                  /* Caso fallback */
+                  <div className="p-3 border rounded-md bg-red-50 text-red-700">
+                    <span>Erro ao carregar informações da maratona.</span>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

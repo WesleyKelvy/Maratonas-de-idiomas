@@ -1,5 +1,11 @@
-import { useState } from "react";
-import { useParams } from "react-router-dom";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -7,51 +13,55 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { Progress } from "@/components/ui/progress";
+import { useCreateReport, useReport } from "@/hooks/use-report";
+import { useToast } from "@/hooks/use-toast";
 import {
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  ResponsiveContainer,
-} from "recharts";
-import {
-  Download,
-  RefreshCw,
-  Share2,
   BookOpen,
-  Users,
+  Download,
+  Loader2,
+  RefreshCw,
   Target,
   TrendingUp,
-  Loader2,
+  Users,
 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { useReport, useCreateReport } from "@/hooks/use-report";
-import type { Report } from "@/services/report.service";
+import { useEffect, useState } from "react";
+import { useLocation, useParams } from "react-router-dom";
+import {
+  Bar,
+  BarChart,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { io, Socket } from "socket.io-client";
 
-const COLORS = ["#D5BF86", "#493548", "#7389AE", "#416788", "#171d2f"];
+const COLORS = [
+  "#D5BF86",
+  "#493548",
+  "#7389AE",
+  "#416788",
+  "#171d2f",
+  "#297373",
+  "#B4654A",
+  "#8F3985",
+  "#C2BBF0",
+];
 
 const getSeverityColor = (occurrences: number, total: number) => {
   const percentage = (occurrences / total) * 100;
-  if (percentage > 30) return "destructive";
+  if (percentage > 30)
+    return "border-transparent bg-destructive text-destructive-foreground";
   if (percentage > 15) return "secondary";
-  return "default";
+  return "bg-secondary text-secondary-foreground";
 };
 
 const getSeverityLabel = (occurrences: number, total: number) => {
@@ -63,9 +73,21 @@ const getSeverityLabel = (occurrences: number, total: number) => {
 
 export default function MarathonReport() {
   const { marathonId } = useParams<{ marathonId: string }>();
+  const location = useLocation();
   const { toast } = useToast();
 
-  // Hooks para buscar e gerenciar dados do relatório
+  // Status for WebSocket and report generation
+  const [socket, setSocket] = useState<Socket | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState(0);
+  const [generationMessage, setGenerationMessage] = useState("");
+  const [hasGeneratedReport, setHasGeneratedReport] = useState(false);
+
+  // Check whether to start generation automatically
+  const shouldGenerate =
+    new URLSearchParams(location.search).get("generate") === "true";
+
+  // Hooks for fetching and managing report data
   const {
     data: reportData,
     isLoading,
@@ -73,6 +95,179 @@ export default function MarathonReport() {
     refetch,
   } = useReport(marathonId || "");
   const createReportMutation = useCreateReport();
+
+  // Reset the flag when data is loaded successfully
+  useEffect(() => {
+    if (reportData && !isLoading && !error) {
+      // console.log("Report data loaded successfully - stopping generation");
+      setIsGenerating(false);
+      setHasGeneratedReport(true); // Avoid new generation
+    }
+  }, [reportData, isLoading, error]);
+
+  // WebSocket connection and report generation
+  useEffect(() => {
+    if (!marathonId) return;
+
+    // CONDITIONS:
+    // 1. No valid data yet (reportData is null/undefined)
+    // 2. Not loading initial data
+    // 3. (URL has generate=true OR there is an error)
+    // 4. Not yet attempted to generate in this session
+    // 5. Not in the process of generating
+    if (
+      !reportData &&
+      !isLoading &&
+      (shouldGenerate || error) &&
+      !hasGeneratedReport &&
+      !isGenerating
+    ) {
+      console.log("Starting report generation - conditions met");
+      initializeReportGeneration();
+    }
+
+    return () => {
+      if (socket) {
+        console.log("Disconnecting socket...");
+        socket.disconnect();
+      }
+    };
+  }, [
+    marathonId,
+    shouldGenerate,
+    error,
+    isLoading,
+    hasGeneratedReport,
+    isGenerating,
+    reportData,
+  ]);
+
+  const initializeReportGeneration = () => {
+    if (isGenerating || hasGeneratedReport) {
+      console.log("Skipping generation - already generating or generated");
+      return;
+    }
+
+    console.log("Initializing report generation for marathon:", marathonId);
+    setIsGenerating(true);
+    setHasGeneratedReport(true);
+    setGenerationProgress(0);
+    setGenerationMessage("Conectando ao servidor...");
+
+    // Conect to WebSocket
+    const socketConnection = io(
+      `${import.meta.env.VITE_API_BASE_URL || "http://localhost:3000"}/reports`,
+      {
+        transports: ["websocket"],
+      }
+    );
+
+    socketConnection.on("connect", () => {
+      // console.log("Connected to reports WebSocket");
+      setGenerationMessage("Conectado! Iniciando geração do relatório...");
+
+      // Request report generation
+      socketConnection.emit("generate-report", { marathonId });
+    });
+
+    socketConnection.on("report-generation-started", (data) => {
+      // console.log("Report generation started:", data);
+      setGenerationMessage(data.message || "Geração iniciada!");
+    });
+
+    socketConnection.on("report-status", (data) => {
+      console.log("Report status:", data);
+      setGenerationMessage(data.message || "Processando...");
+    });
+
+    socketConnection.on("report-progress", (data) => {
+      // console.log("Report progress:", data);
+      setGenerationProgress(data.progress || 0);
+      setGenerationMessage(data.message || `Processando... ${data.progress}%`);
+    });
+
+    socketConnection.on("report-ready", (data) => {
+      // console.log("Report ready:", data);
+      setGenerationProgress(100);
+      setGenerationMessage("Relatório concluído!");
+      setIsGenerating(false);
+
+      // Update data from report
+      refetch();
+
+      toast({
+        title: "Relatório Gerado",
+        description: "O relatório foi gerado com sucesso!",
+      });
+
+      socketConnection.disconnect();
+    });
+
+    socketConnection.on("report-error", (data) => {
+      console.error("Report generation error:", data);
+      setIsGenerating(false);
+      setHasGeneratedReport(false); // Allows new try on error case
+      setGenerationMessage("Erro na geração do relatório");
+
+      toast({
+        title: "Erro",
+        description: data.message || "Falha ao gerar o relatório",
+        variant: "destructive",
+      });
+
+      socketConnection.disconnect();
+    });
+
+    socketConnection.on("disconnect", () => {
+      console.log("Disconnected from reports WebSocket");
+    });
+
+    socketConnection.on("connect_error", (error) => {
+      console.error("WebSocket connection error:", error);
+      setIsGenerating(false);
+      setHasGeneratedReport(false); // Allows new try on error on reconect
+      setGenerationMessage("Erro de conexão");
+
+      toast({
+        title: "Erro de Conexão",
+        description: "Não foi possível conectar ao servidor",
+        variant: "destructive",
+      });
+    });
+
+    setSocket(socketConnection);
+  };
+
+  // Generating state (WebSocket)
+  if (isGenerating) {
+    return (
+      <div className="container mx-auto p-6 flex items-center justify-center min-h-screen">
+        <div className="text-center max-w-md">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <span className="text-xl font-semibold">Gerando Relatório</span>
+          </div>
+
+          <div className="space-y-4">
+            <Progress
+              value={generationProgress}
+              className="w-full bg-gray-400/30"
+            />
+
+            <div className="text-center">
+              <p className="text-lg font-medium">{generationProgress}%</p>
+              <p className="text-muted-foreground">{generationMessage}</p>
+            </div>
+
+            <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
+              Por favor, aguarde. Este processo pode demorar um pouco, estamos
+              processando todas as submissões.
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Loading state
   if (isLoading) {
@@ -86,8 +281,8 @@ export default function MarathonReport() {
     );
   }
 
-  // Error state
-  if (error || !reportData) {
+  // Error state (only shown if it is not generating and is not an expected error)
+  if (error && !reportData && !shouldGenerate && !isGenerating) {
     return (
       <div className="container mx-auto p-6 flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -96,6 +291,26 @@ export default function MarathonReport() {
           </h2>
           <p className="text-muted-foreground mb-4">
             {error?.message || "Relatório não encontrado"}
+          </p>
+          <Button onClick={() => window.location.reload()}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Tentar novamente
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // If there is no report data yet, do not process
+  if (!reportData) {
+    return (
+      <div className="container mx-auto p-6 flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-muted-foreground mb-2">
+            Relatório não disponível
+          </h2>
+          <p className="text-muted-foreground mb-4">
+            Não foi possível carregar os dados do relatório.
           </p>
           <Button onClick={() => window.location.reload()}>
             <RefreshCw className="h-4 w-4 mr-2" />
@@ -140,27 +355,6 @@ export default function MarathonReport() {
       color: COLORS[index % COLORS.length],
     }));
 
-  const handleRegenerateReport = async () => {
-    if (!marathonId) return;
-
-    createReportMutation.mutate(marathonId, {
-      onSuccess: () => {
-        toast({
-          title: "Relatório Atualizado",
-          description: "O relatório foi regenerado com os dados mais recentes.",
-        });
-      },
-      onError: (error) => {
-        console.error("Erro ao regenerar relatório:", error);
-        toast({
-          title: "Erro",
-          description: "Falha ao regenerar o relatório. Tente novamente.",
-          variant: "destructive",
-        });
-      },
-    });
-  };
-
   const handleExportPDF = () => {
     toast({
       title: "Exportando PDF",
@@ -168,13 +362,13 @@ export default function MarathonReport() {
     });
   };
 
-  const handleShare = () => {
-    toast({
-      title: "Link Copiado",
-      description:
-        "O link do relatório foi copiado para a área de transferência.",
-    });
-  };
+  // const handleShare = () => {
+  //   toast({
+  //     title: "Link Copiado",
+  //     description:
+  //       "O link do relatório foi copiado para a área de transferência.",
+  //   });
+  // };
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -295,19 +489,19 @@ export default function MarathonReport() {
                 },
                 sintaxe: { label: "Sintaxe", color: "#416788" },
               }}
-              className="h-[300px]"
+              className="h-full w-full"
             >
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={pieData}
-                    cx="50%"
+                    cx="53%"
                     cy="50%"
                     labelLine={false}
                     label={({ name, percent }) =>
                       `${name} ${(percent * 100).toFixed(0)}%`
                     }
-                    outerRadius={80}
+                    outerRadius="60%"
                     fill="#8884d8"
                     dataKey="value"
                   >
@@ -337,16 +531,20 @@ export default function MarathonReport() {
                   label: "Ocorrências",
                 },
               }}
-              className="h-[300px]"
+              className="h-[300px] w-full"
             >
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={barData}>
-                  <XAxis dataKey="category" />
-                  <YAxis />
+                  <XAxis
+                    dataKey="category"
+                    tick={{ fontSize: 12 }}
+                    interval={0}
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
+                  />
+                  <YAxis tick={{ fontSize: 12 }} />
                   <ChartTooltip content={<ChartTooltipContent />} />
-
-                  {/* MODIFICAÇÃO AQUI 👇 */}
-                  {/* Remova a propriedade 'fill' e adicione o mapeamento com <Cell> */}
                   <Bar dataKey="occurrences">
                     {barData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
@@ -395,7 +593,7 @@ export default function MarathonReport() {
                           <h3 className="font-semibold">
                             {category.category_name}
                           </h3>
-                          <Badge variant={severity}>{severityLabel}</Badge>
+                          <Badge className={severity}>{severityLabel}</Badge>
                         </div>
                         <div className="flex items-center gap-4">
                           <span className="text-sm text-muted-foreground">
