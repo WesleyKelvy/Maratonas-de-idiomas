@@ -9,6 +9,10 @@ import {
   AbstractClassroomService,
   CLASSROOM_SERVICE_TOKEN,
 } from 'src/Classroom/abstract-services/abstract-classrom.service';
+import {
+  AbstractLanguageMarathonService,
+  LANGUAGE_MARATHON_SERVICE_TOKEN,
+} from 'src/LanguageMarathon/abstract-services/abstract-language-marathon.service';
 import { AbstractReportService } from 'src/Report/abstract-services/abstract-report.service';
 import { createReportGenerationPrompt } from 'src/Report/ai/createReportGenerationPrompt';
 import { ReportGateway } from 'src/Report/gateway/report.gateway';
@@ -31,6 +35,8 @@ export class ReportService implements AbstractReportService {
   private reportGateway: ReportGateway;
 
   constructor(
+    @Inject(LANGUAGE_MARATHON_SERVICE_TOKEN)
+    private readonly marathonService: AbstractLanguageMarathonService,
     @Inject(CLASSROOM_SERVICE_TOKEN)
     private readonly classroomService: AbstractClassroomService,
     @Inject(AI_FEEDBACK_SERVICE_TOKEN)
@@ -57,6 +63,29 @@ export class ReportService implements AbstractReportService {
 
   async createReport(marathonId: string): Promise<Report> {
     try {
+      const marathon = await this.marathonService.findOneById(marathonId);
+
+      if (!marathon) {
+        throw new HttpException('Marathon not found.', HttpStatus.NOT_FOUND);
+      }
+
+      const now = new Date();
+      const endDate = new Date(marathon.end_date);
+
+      if (isNaN(endDate.getTime())) {
+        throw new HttpException(
+          'Invalid marathon end date.',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      if (now < endDate) {
+        throw new HttpException(
+          'Wait until the marathon finishes.',
+          HttpStatus.NOT_ACCEPTABLE,
+        );
+      }
+
       const reportOnDb = this.findByMarathonId(marathonId);
 
       if (reportOnDb) {
@@ -112,11 +141,7 @@ export class ReportService implements AbstractReportService {
       );
 
       // Progress: 90%
-      this._emitProgress(
-        marathonId,
-        90,
-        'Salvando relatório no banco de dados...',
-      );
+      this._emitProgress(marathonId, 90, 'Salvando relatório...');
 
       const reportData: CreateReport = {
         classroom_name: classroom.name,

@@ -4,22 +4,30 @@ import { AiFeedbackModule } from 'src/AiFeedback/aiFeedback.module';
 import { AuthModule } from 'src/auth/auth.module';
 import { ProfessorGuard } from 'src/auth/guards/professor.guard';
 import { ClassroomModule } from 'src/Classroom/classroom.module';
-import { REPORT_SERVICE_TOKEN } from 'src/Report/abstract-services/abstract-report.service';
-import { ReportGateway } from 'src/Report/gateway/report.gateway';
-import { ReportController } from 'src/Report/report.controller';
-import { ReportService } from 'src/Report/report.service';
 import { REPORT_REPOSITORY_TOKEN } from 'src/repositories/abstract/report.repository';
 import { PrismaReportRepository } from 'src/repositories/prisma/prisma-report.repository';
+import {
+  AbstractReportService,
+  REPORT_SERVICE_TOKEN,
+} from './abstract-services/abstract-report.service';
+import { ReportGateway } from './gateway/report.gateway';
+import { MockReportService } from './mock-report.service';
+import { ReportController } from './report.controller';
+import { ReportService } from './report.service';
+
+// 2. Criado um provider condicional para alternar entre o serviço real e o mock
+const reportServiceProvider = {
+  provide: REPORT_SERVICE_TOKEN,
+  useClass:
+    process.env.NODE_ENV === 'development' ? MockReportService : ReportService,
+};
 
 @Module({
   imports: [ClassroomModule, AiFeedbackModule, AuthModule],
   controllers: [ReportController],
   providers: [
     ReportGateway,
-    {
-      provide: REPORT_SERVICE_TOKEN,
-      useClass: ReportService,
-    },
+    reportServiceProvider,
     {
       provide: REPORT_REPOSITORY_TOKEN,
       useClass: PrismaReportRepository,
@@ -40,10 +48,12 @@ import { PrismaReportRepository } from 'src/repositories/prisma/prisma-report.re
 })
 export class ReportModule {
   constructor(
-    @Inject(REPORT_SERVICE_TOKEN) private readonly reportService: ReportService,
+    // 3. O tipo injetado agora é a classe abstrata para permitir a flexibilidade
+    @Inject(REPORT_SERVICE_TOKEN)
+    private readonly reportService: AbstractReportService,
     private readonly reportGateway: ReportGateway,
   ) {
-    // Inject the gateway to avoid circular dependetion
+    // A injeção do gateway funciona para ambas as implementações (real e mock)
     this.reportService.setReportGateway(this.reportGateway);
   }
 }
