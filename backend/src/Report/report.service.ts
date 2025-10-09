@@ -48,11 +48,24 @@ export class ReportService implements AbstractReportService {
   }
 
   async findByMarathonId(marathonId: string): Promise<Report> {
-    return await this.reportRepository.findByMarathonId(marathonId);
+    const report = await this.reportRepository.findByMarathonId(marathonId);
+    if (!report) {
+      throw new HttpException('Report not found.', HttpStatus.NOT_FOUND);
+    }
+    return report;
   }
 
   async createReport(marathonId: string): Promise<Report> {
     try {
+      const reportOnDb = this.findByMarathonId(marathonId);
+
+      if (reportOnDb) {
+        throw new HttpException(
+          'This marathon already has a report.',
+          HttpStatus.NOT_ACCEPTABLE,
+        );
+      }
+
       // Progress: 10%
       this._emitProgress(
         marathonId,
