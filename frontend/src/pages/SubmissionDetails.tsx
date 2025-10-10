@@ -18,147 +18,117 @@ import {
   AlertCircle,
   Trophy,
   MessageSquare,
+  Loader2,
+  FileX,
 } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useSubmissionDetails } from "@/hooks/use-submission-details";
+import { DetailedSubmission } from "@/services/submission.service";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
-interface AiFeedbacks {
-  id: number;
-  explanation: string;
-  points_deducted: number;
-  category: string;
-  marathon_id: string;
-}
+// Constants
+const MAX_SCORE = 100;
+const SCORE_THRESHOLDS = {
+  HIGH: 80,
+  MEDIUM: 50,
+} as const;
 
-interface SubmissionDetail {
-  id: string;
-  user: {
-    name: string;
-    email: string;
-    avatar?: string;
-  };
-  question: {
-    id: number;
-    title: string;
-    prompt: string;
-    maxScore: number;
-  };
-  answer: string;
-  score?: number;
-  submitted_at: string;
-  corrected_by_ai: boolean;
-  corrected_answer?: string;
-  aiEvaluation: string;
-  marathon: {
-    id: string;
-    title: string;
-    difficulty: string;
-  };
-  aiFeedbacks: AiFeedbacks[];
-}
+const EVALUATION_TYPES = {
+  POSITIVE: "Positiva",
+  NEUTRAL: "Neutra",
+  NEGATIVE: "Negativa",
+  PENDING: "Pendente",
+} as const;
 
 const SubmissionDetails = () => {
   const navigate = useNavigate();
-  const { submissionId } = useParams();
+  const location = useLocation();
+  const { submissionId } = useParams<{ submissionId: string }>();
 
-  // Mock data - replace with API call based on submissionId
-  const submission: SubmissionDetail = {
-    id: submissionId || "1",
-    user: {
-      name: "João Silva",
-      email: "joao@email.com",
-      avatar: "/placeholder.svg",
-    },
-    marathon: {
-      id: "marathon1",
-      title: "Maratona de JavaScript",
-      difficulty: "Intermediário",
-    },
-    question: {
-      id: 1,
-      title: "Diferenças entre let, const e var",
-      prompt:
-        'Explique a diferença entre "let", "const" e "var" em JavaScript e demonstre com exemplos práticos quando usar cada um. Discuta também sobre escopo, hoisting e redeclaração.',
-      maxScore: 10,
-    },
-    answer: `let é usado para variáveis que podem ser reatribuídas dentro de um escopo de bloco. Ela não permite redeclaração na mesma scope e tem temporal dead zone.
+  // Fetch submission details from API
+  const {
+    data: submission,
+    isLoading,
+    error,
+  } = useSubmissionDetails(submissionId || "");
 
-const é usado para constantes que não podem ser reatribuídas após a inicialização. Também tem escopo de bloco e não permite redeclaração.
-
-var tem escopo de função (ou global), pode ser redeclarada e sofre hoisting, sendo inicializada com undefined.
-
-Exemplos:
-- Use let para variáveis que mudam de valor
-- Use const para valores que não mudam (objetos, arrays, funções)
-- Evite var por causa de problemas de escopo
-
-O hoisting acontece com todas, mas let e const ficam em temporal dead zone até serem declaradas.`,
-    score: 9,
-    submitted_at: "2024-12-05T14:30:00",
-    corrected_by_ai: true,
-    corrected_answer: undefined,
-    aiEvaluation: "Positiva",
-    aiFeedbacks: [
-      {
-        id: 1,
-        explanation: "Ótima explicação sobre escopo de bloco vs função",
-        points_deducted: 0,
-        category: "Conceitos Fundamentais",
-        marathon_id: "marathon1",
-      },
-      {
-        id: 2,
-        explanation: "Exemplos práticos bem aplicados",
-        points_deducted: 0,
-        category: "Exemplos Práticos",
-        marathon_id: "marathon1",
-      },
-      {
-        id: 3,
-        explanation:
-          "Poderia ter mencionado temporal dead zone com mais detalhes",
-        points_deducted: 1,
-        category: "Detalhes Avançados",
-        marathon_id: "marathon1",
-      },
-    ],
+  // Clean code: Extract utility functions
+  const calculateAiEvaluation = (score: number | null): string => {
+    if (score === null || score === undefined) return EVALUATION_TYPES.PENDING;
+    const percentage = (score / MAX_SCORE) * 100;
+    if (percentage >= SCORE_THRESHOLDS.HIGH) return EVALUATION_TYPES.POSITIVE;
+    if (percentage >= SCORE_THRESHOLDS.MEDIUM) return EVALUATION_TYPES.NEUTRAL;
+    return EVALUATION_TYPES.NEGATIVE;
   };
 
-  const getScoreColor = (score: number | undefined, maxScore: number) => {
-    if (!score) return "text-gray-600";
-    const percentage = (score / maxScore) * 100;
-    if (percentage >= 80) return "text-green-600";
-    if (percentage >= 50) return "text-yellow-600";
+  const getScoreColor = (score: number | null): string => {
+    if (score === null) return "text-gray-600";
+    const percentage = (score / MAX_SCORE) * 100;
+    if (percentage >= SCORE_THRESHOLDS.HIGH) return "text-green-600";
+    if (percentage >= SCORE_THRESHOLDS.MEDIUM) return "text-yellow-600";
     return "text-red-600";
   };
 
-  const getEvaluationColor = (evaluation: string) => {
-    switch (evaluation) {
-      case "Positiva":
-        return "bg-green-100 text-green-800";
-      case "Neutra":
-        return "bg-yellow-100 text-yellow-800";
-      case "Negativa":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
+  const getEvaluationColor = (evaluation: string): string => {
+    const colorMap: Record<string, string> = {
+      [EVALUATION_TYPES.POSITIVE]: "bg-green-100 text-green-800",
+      [EVALUATION_TYPES.NEUTRAL]: "bg-yellow-100 text-yellow-800",
+      [EVALUATION_TYPES.NEGATIVE]: "bg-red-100 text-red-800",
+      [EVALUATION_TYPES.PENDING]: "bg-gray-100 text-gray-800",
+    };
+
+    return colorMap[evaluation] || "bg-gray-100 text-gray-800";
+  };
+
+  // Handle back navigation with preserved filters
+  const handleBackNavigation = () => {
+    const returnUrl = location.state?.returnUrl;
+    if (returnUrl) {
+      navigate(returnUrl);
+    } else {
+      // Fallback to teacher submissions page
+      navigate("/submissions");
     }
   };
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case "Fácil":
-        return "bg-green-100 text-green-800";
-      case "Intermediário":
-        return "bg-yellow-100 text-yellow-800";
-      case "Difícil":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex items-center gap-2">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Carregando detalhes da submissão...</span>
+        </div>
+      </div>
+    );
+  }
 
+  // Error state
+  if (error || !submission) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center space-y-4">
+          <FileX className="h-12 w-12 text-muted-foreground mx-auto" />
+          <div>
+            <h3 className="text-lg font-medium">Submissão não encontrada</h3>
+            <p className="text-muted-foreground">
+              Não foi possível carregar os detalhes desta submissão.
+            </p>
+          </div>
+          <Button variant="outline" onClick={handleBackNavigation}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Calculate derived data
+  const aiEvaluation = calculateAiEvaluation(submission.score);
   const scorePercentage = submission.score
-    ? (submission.score / submission.question.maxScore) * 100
+    ? (submission.score / MAX_SCORE) * 100
     : 0;
 
   return (
@@ -166,7 +136,7 @@ O hoisting acontece com todas, mas let e const ficam em temporal dead zone até 
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex  gap-4">
-          <Button variant="outline" onClick={() => navigate(-1)}>
+          <Button variant="outline" onClick={handleBackNavigation}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Voltar
           </Button>
@@ -197,7 +167,7 @@ O hoisting acontece com todas, mas let e const ficam em temporal dead zone até 
                 </h3>
                 <div className="bg-muted/50 p-4 rounded-lg">
                   <p className="text-muted-foreground whitespace-pre-line">
-                    {submission.question.prompt}
+                    {submission.question.prompt_text}
                   </p>
                 </div>
               </div>
@@ -228,7 +198,7 @@ O hoisting acontece com todas, mas let e const ficam em temporal dead zone até 
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {submission.aiFeedbacks.map((feedback, index) => (
+                {submission.AiFeedbacks.map((feedback, index) => (
                   <Card
                     key={feedback.id}
                     className={`${
@@ -301,31 +271,23 @@ O hoisting acontece com todas, mas let e const ficam em temporal dead zone até 
             </CardContent>
           </Card>
 
-          {/* Marathon Info */}
+          {/* Submission Info */}
           <Card>
             <CardHeader>
-              <CardTitle>Maratona</CardTitle>
+              <CardTitle>Informações da Submissão</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div>
-                <p className="font-medium">{submission.marathon.title}</p>
-                <Badge
-                  className={getDifficultyColor(submission.marathon.difficulty)}
-                >
-                  {submission.marathon.difficulty}
-                </Badge>
-              </div>
-              <Separator />
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Calendar className="h-4 w-4" />
                 Enviado em{" "}
-                {new Date(submission.submitted_at).toLocaleDateString("pt-BR")}
+                {format(new Date(submission.submitted_at), "dd/MM/yyyy", {
+                  locale: ptBR,
+                })}
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Clock className="h-4 w-4" />
-                {new Date(submission.submitted_at).toLocaleTimeString("pt-BR", {
-                  hour: "2-digit",
-                  minute: "2-digit",
+                {format(new Date(submission.submitted_at), "HH:mm", {
+                  locale: ptBR,
                 })}
               </div>
             </CardContent>
@@ -343,11 +305,10 @@ O hoisting acontece com todas, mas let e const ficam em temporal dead zone até 
               <div className="text-center">
                 <div
                   className={`text-4xl font-bold ${getScoreColor(
-                    submission.score,
-                    submission.question.maxScore
+                    submission.score
                   )}`}
                 >
-                  {submission.score ?? "-"} / {submission.question.maxScore}
+                  {submission.score ?? "-"} / {MAX_SCORE}
                 </div>
                 <p className="text-muted-foreground">
                   {scorePercentage.toFixed(0)}% de acerto
@@ -364,10 +325,8 @@ O hoisting acontece com todas, mas let e const ficam em temporal dead zone até 
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-sm">Avaliação da IA:</span>
-                  <Badge
-                    className={getEvaluationColor(submission.aiEvaluation)}
-                  >
-                    {submission.aiEvaluation}
+                  <Badge className={getEvaluationColor(aiEvaluation)}>
+                    {aiEvaluation}
                   </Badge>
                 </div>
                 <div className="flex justify-between items-center">

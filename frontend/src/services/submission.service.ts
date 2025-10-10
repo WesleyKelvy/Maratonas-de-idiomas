@@ -5,6 +5,16 @@ export interface User {
   name: string;
 }
 
+export interface Question {
+  title: string | null;
+  prompt_text: string;
+}
+
+export interface DetailedUser {
+  name: string;
+  email: string;
+}
+
 export interface Submission {
   id: string;
   marathon_id: string;
@@ -17,6 +27,28 @@ export interface Submission {
   score: number | null;
   user: User; // Included from Prisma query
   AiFeedbacks: AiFeedback[];
+}
+
+export interface DetailedSubmission {
+  id: string;
+  marathon_id: string;
+  question_id: number;
+  user_id: string;
+  answer: string;
+  submitted_at: Date;
+  corrected_by_ai: boolean;
+  corrected_answer: string | null;
+  score: number | null;
+  question: Question;
+  user: DetailedUser;
+  AiFeedbacks: DetailedAiFeedback[];
+}
+
+export interface DetailedAiFeedback {
+  id: number;
+  category: string;
+  explanation: string;
+  points_deducted: number;
 }
 
 export interface AiFeedback {
@@ -41,8 +73,10 @@ export class SubmissionService {
     return response;
   }
 
-  static async findOne(id: string): Promise<Submission> {
-    const response = await apiClient.get<Submission>(`/submission/${id}`);
+  static async findOne(id: string): Promise<DetailedSubmission> {
+    const response = await apiClient.get<DetailedSubmission>(
+      `/submission/${id}`
+    );
     return response;
   }
 }

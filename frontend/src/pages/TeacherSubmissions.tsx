@@ -33,8 +33,8 @@ import {
   Users,
   Loader2,
 } from "lucide-react";
-import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useMemo, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useMarathons } from "@/hooks/use-marathon";
 import { useClassrooms } from "@/hooks/use-classroom";
 import { useSubmissionsByMarathon } from "@/hooks/useSubmissions";
@@ -90,12 +90,27 @@ const FILTER_VALUES = {
 
 const TeacherSubmissions = () => {
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [marathonFilter, setMarathonFilter] = useState("all");
-  const [studentFilter, setStudentFilter] = useState("all");
-  const [scoreFilter, setScoreFilter] = useState("all");
-  const [evaluationFilter, setEvaluationFilter] = useState("all");
-  const [showFilters, setShowFilters] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Initialize state from URL parameters
+  const [searchTerm, setSearchTerm] = useState(
+    searchParams.get("search") || ""
+  );
+  const [marathonFilter, setMarathonFilter] = useState(
+    searchParams.get("marathon") || "all"
+  );
+  const [studentFilter, setStudentFilter] = useState(
+    searchParams.get("student") || "all"
+  );
+  const [scoreFilter, setScoreFilter] = useState(
+    searchParams.get("score") || "all"
+  );
+  const [evaluationFilter, setEvaluationFilter] = useState(
+    searchParams.get("evaluation") || "all"
+  );
+  const [showFilters, setShowFilters] = useState(
+    searchParams.get("showFilters") === "true"
+  );
 
   // Fetch classrooms (assuming teacher role)
   const { data: classrooms, isLoading: loadingClassrooms } = useClassrooms();
@@ -125,6 +140,32 @@ const TeacherSubmissions = () => {
     useSubmissionsByMarathon(shouldFetchSubmissions ? marathonFilter : "");
 
   // User data is now included in submissions from backend
+
+  // Update URL when filters change
+  useEffect(() => {
+    const newParams = new URLSearchParams();
+
+    if (searchTerm && searchTerm !== "") newParams.set("search", searchTerm);
+    if (marathonFilter && marathonFilter !== "all")
+      newParams.set("marathon", marathonFilter);
+    if (studentFilter && studentFilter !== "all")
+      newParams.set("student", studentFilter);
+    if (scoreFilter && scoreFilter !== "all")
+      newParams.set("score", scoreFilter);
+    if (evaluationFilter && evaluationFilter !== "all")
+      newParams.set("evaluation", evaluationFilter);
+    if (showFilters) newParams.set("showFilters", "true");
+
+    setSearchParams(newParams, { replace: true });
+  }, [
+    searchTerm,
+    marathonFilter,
+    studentFilter,
+    scoreFilter,
+    evaluationFilter,
+    showFilters,
+    setSearchParams,
+  ]);
 
   // Clean code: Extract utility functions
   const calculateAiEvaluation = (score: number | null): string => {
@@ -327,7 +368,11 @@ const TeacherSubmissions = () => {
   };
 
   const handleViewDetails = (submissionId: string) => {
-    navigate(`/submissions/${submissionId}`);
+    // Preserve current URL parameters for when user returns
+    const currentUrl = `/submissions?${searchParams.toString()}`;
+    navigate(`/submissions/${submissionId}`, {
+      state: { returnUrl: currentUrl },
+    });
   };
 
   const handleExportSubmissions = () => {
