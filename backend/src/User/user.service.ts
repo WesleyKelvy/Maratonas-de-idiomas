@@ -77,7 +77,10 @@ export class UserService implements AbstractUserService {
       throw new BadRequestException(ERROR_MESSAGES.INVALID_CODE);
     }
 
-    await this.update(id, { accountVerified: true, confirmationCode: null });
+    await this.userRepository.manageUserAccount(id, {
+      accountVerified: true,
+      confirmationCode: null,
+    });
   }
 
   async findByEmail(email: string): Promise<SanitedUser> {
@@ -165,7 +168,7 @@ export class UserService implements AbstractUserService {
     // Token is valid for 20 minutes
     const tokenExpiration = new Date(Date.now() + 1000 * 60 * 20);
 
-    await this.userRepository.updateById(user.id, {
+    await this.userRepository.manageUserAccount(user.id, {
       resetToken,
       resetTokenExpiration: tokenExpiration,
       resetRequestedAt: new Date(),
@@ -189,8 +192,8 @@ export class UserService implements AbstractUserService {
     if (user.resetTokenExpiration < new Date())
       throw new BadRequestException('Token expired');
 
-    await this.userRepository.updateById(user.id, {
-      password: await bcrypt.hash(newPassword, 10),
+    await this.userRepository.manageUserAccount(user.id, {
+      newPassword: await bcrypt.hash(newPassword, 10),
       resetToken: null,
       resetTokenExpiration: null,
       resetRequestedAt: null,

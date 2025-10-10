@@ -38,11 +38,12 @@ export class UserController {
       message: MESSAGES.USER_CREATED,
     };
   }
+
   @IsPublic()
   @HttpCode(200)
   @Post('confirm-account')
-  async confirmAccount(@Body() code: string) {
-    await this.userService.confirmAccount(code);
+  async confirmAccount(@Body() { confirmationCode }: UpdateUserDto) {
+    await this.userService.confirmAccount(confirmationCode);
 
     return {
       message: MESSAGES.ACCOUNT_CONFIRMED_SUCCESSFULLY,
@@ -84,7 +85,7 @@ export class UserController {
 
   @IsPublic()
   @Post('send-email-password-reset')
-  async requestPasswordReset(@Body('email') email: string) {
+  async requestPasswordReset(@Body() { email }: UpdateUserDto) {
     const url = await this.userService.sendResetPasswordByEmail(email);
     return { url, message: 'Password reset email sent.' };
   }
@@ -93,7 +94,7 @@ export class UserController {
   @Post('reset-password')
   async resetPassword(
     @Query('token') token: string,
-    @Body('newPassword') newPassword: string,
+    @Body() { newPassword }: UpdateUserDto,
   ) {
     await this.userService.resetPassword(token, newPassword);
     return { message: MESSAGES.PASSWORD_CHANGED };

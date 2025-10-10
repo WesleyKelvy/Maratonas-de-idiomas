@@ -1,6 +1,7 @@
 import { Prisma, User } from '@prisma/client';
 import { UserBasicInfoDto } from 'src/User/dto/get-users.dto';
 import { UpdateUserDto } from 'src/User/dto/update-user.dto';
+import { userAccountManagement } from 'src/User/types/userAccountManagement';
 
 export abstract class AbstractUserRepository {
   abstract create(createUserDto: Prisma.UserCreateInput): Promise<User>;
@@ -16,6 +17,10 @@ export abstract class AbstractUserRepository {
   abstract remove(id: string): Promise<void>;
   abstract resetPassword(token: string, newPassword: string): Promise<void>;
   abstract findManyByIds(userIds: string[]): Promise<UserBasicInfoDto[]>;
+  abstract manageUserAccount(
+    id: string,
+    data: userAccountManagement,
+  ): Promise<void>;
 }
 
 export const USER_REPOSITORY_TOKEN = 'AbstractUserRepository';

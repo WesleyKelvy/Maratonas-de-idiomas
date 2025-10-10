@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { User, Prisma } from '@prisma/client';
+import { Prisma, User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AbstractUserRepository } from 'src/repositories/abstract/user.repository';
 import { UserBasicInfoDto } from 'src/User/dto/get-users.dto';
+import { userAccountManagement } from 'src/User/types/userAccountManagement';
 
 @Injectable()
 export class PrismaAbstractUserRepository implements AbstractUserRepository {
@@ -60,15 +61,24 @@ export class PrismaAbstractUserRepository implements AbstractUserRepository {
     });
   }
 
-  // async updateByEmail(
-  //   email: string,
-  //   updateUserDto: Prisma.UserUpdateInput,
-  // ): Promise<User> {
-  //   return await this.prisma.user.update({
-  //     where: { email },
-  //     data: updateUserDto,
-  //   });
-  // }
+  async manageUserAccount(
+    id: string,
+    data: userAccountManagement,
+  ): Promise<void> {
+    await this.prisma.user.update({
+      where: { id },
+      data: data,
+      omit: {
+        passwordHash: true,
+        accountDeactivated: true,
+        accountVerified: true,
+        confirmationCode: true,
+        resetRequestedAt: true,
+        resetToken: true,
+        resetTokenExpiration: true,
+      },
+    });
+  }
 
   async resetPassword(token: string, newPasswordHash: string): Promise<void> {
     await this.prisma.user.update({
