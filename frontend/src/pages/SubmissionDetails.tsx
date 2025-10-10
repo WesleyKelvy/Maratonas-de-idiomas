@@ -209,12 +209,12 @@ const SubmissionDetails = () => {
                     }`}
                   >
                     <CardHeader className="pb-3 pt-3">
-                      <div className="flex items-start justify-between">
-                        <div className="w-full">
+                      <div className="flex justify-between space-x-6 items-center">
+                        <div className="">
                           <CardTitle className="text-base">
                             {feedback.category}
                           </CardTitle>
-                          <CardDescription className="w-[95%]">
+                          <CardDescription className="w-full">
                             {feedback.explanation}
                           </CardDescription>
                         </div>
@@ -222,7 +222,7 @@ const SubmissionDetails = () => {
                           {feedback.points_deducted > 0 ? (
                             <div className="flex items-center text-yellow-600">
                               <AlertCircle className="h-4 w-4 mr-1" />
-                              <span className="text-sm font-medium">
+                              <span className="text-sm font-medium text-nowrap">
                                 -{feedback.points_deducted} ponto
                                 {feedback.points_deducted > 1 ? "s" : ""}
                               </span>
