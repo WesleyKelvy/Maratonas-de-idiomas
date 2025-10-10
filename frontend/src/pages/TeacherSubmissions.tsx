@@ -590,7 +590,7 @@ const TeacherSubmissions = () => {
           </CardHeader>
           <CardContent className="p-3 pt-1">
             <div className="text-2xl font-bold">
-              {(averageScore * 100).toFixed(1)}%
+              {(averageScore * 10).toFixed(2)}%
             </div>
             <p className="text-xs text-muted-foreground">
               {marathonFilter !== FILTER_VALUES.ALL
@@ -707,7 +707,7 @@ const TeacherSubmissions = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Estudante</TableHead>
-                  <TableHead>Maratona</TableHead>
+                  {/* <TableHead>Maratona</TableHead> */}
                   <TableHead>Questão</TableHead>
                   <TableHead>Pontuação</TableHead>
                   <TableHead>Avaliação da IA</TableHead>
@@ -728,9 +728,9 @@ const TeacherSubmissions = () => {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="font-medium">
+                    {/* <TableCell className="font-medium">
                       {submission.marathonName}
-                    </TableCell>
+                    </TableCell> */}
                     <TableCell>
                       <div>
                         <div className="font-medium">

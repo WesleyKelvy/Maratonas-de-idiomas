@@ -127,6 +127,7 @@ const SubmissionDetails = () => {
 
   // Calculate derived data
   const aiEvaluation = calculateAiEvaluation(submission.score);
+  console.log(submission.score);
   const scorePercentage = submission.score
     ? (submission.score / MAX_SCORE) * 100
     : 0;
@@ -207,13 +208,13 @@ const SubmissionDetails = () => {
                         : "border-green-200"
                     }`}
                   >
-                    <CardHeader className="pb-3">
+                    <CardHeader className="pb-3 pt-3">
                       <div className="flex items-start justify-between">
-                        <div>
+                        <div className="w-full">
                           <CardTitle className="text-base">
                             {feedback.category}
                           </CardTitle>
-                          <CardDescription>
+                          <CardDescription className="w-[95%]">
                             {feedback.explanation}
                           </CardDescription>
                         </div>

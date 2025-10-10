@@ -193,26 +193,47 @@ async function main() {
     },
   });
 
+  // ========== MODIFIED BLOCK START ==========
   const submission1_q2 = await prisma.submission.create({
     data: {
       marathon_id: marathon.id,
       question_id: question2.id,
       user_id: student1.id,
       answer:
-        'Communication and trust are vital. Without good communication, misunderstandings happen.',
-      score: 9.0,
+        'Communication and trust are vital. Without good comunication, misuderstandings can happening.',
+      score: 93,
+    },
+  });
+  // Create multiple feedback entries based on the detailed JSON
+  await prisma.aiFeedbacks.create({
+    data: {
+      submissionId: submission1_q2.id,
+      explanation: "Misspelled 'communication' as 'comunication'.",
+      points_deducted: 2,
+      marathon_id: marathon.id,
+      category: 'Spelling',
+    },
+  });
+  await prisma.aiFeedbacks.create({
+    data: {
+      submissionId: submission1_q2.id,
+      explanation: "Misspelled 'misunderstandings' as 'misuderstandings'.",
+      points_deducted: 2,
+      marathon_id: marathon.id,
+      category: 'Spelling',
     },
   });
   await prisma.aiFeedbacks.create({
     data: {
       submissionId: submission1_q2.id,
       explanation:
-        'Punctuation: A comma is needed before "Without" in the second sentence for better flow.',
-      points_deducted: 0.5,
+        "Incorrect verb form. The modal verb 'can' must be followed by the base form of the verb ('happen'), not the present participle ('happening').",
+      points_deducted: 3,
       marathon_id: marathon.id,
-      category: 'Punctuation',
+      category: 'Verb Tense and Form',
     },
   });
+  // ========== MODIFIED BLOCK END ==========
 
   const submission1_q3 = await prisma.submission.create({
     data: {
