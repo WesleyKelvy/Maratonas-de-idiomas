@@ -1,4 +1,6 @@
+import { useLogout } from "@/hooks/use-auth";
 import {
+  BarChart3,
   FileText,
   Home,
   LogOut,
@@ -7,11 +9,9 @@ import {
   Trophy,
   User,
   Users,
-  BarChart3,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { useLogout } from "@/hooks/use-auth";
 
 import {
   Sidebar,
@@ -40,7 +40,7 @@ export function AppSidebar() {
       url: "/marathon-enrollment",
       icon: Medal,
     },
-    { title: "Minhas Submissões", url: "/my-submissions", icon: FileText },
+    { title: "Minhas Submissões", url: "/submission", icon: FileText },
     { title: "Ranking", url: "/ranking", icon: Medal },
     { title: "Perfil", url: "/profile", icon: User },
   ];
@@ -49,7 +49,7 @@ export function AppSidebar() {
     { title: "Dashboard", url: "/dashboard", icon: Home },
     { title: "Turmas", url: "/classes", icon: Users },
     { title: "Maratonas", url: "/marathons", icon: Trophy },
-    { title: "Submissões", url: "/teacher-submissions", icon: FileText },
+    { title: "Submissões", url: "/submissions", icon: FileText },
     { title: "Relatórios", url: "/reports", icon: BarChart3 },
     { title: "Ranking", url: "/ranking", icon: Medal },
     { title: "Perfil", url: "/profile", icon: User },

@@ -34,7 +34,7 @@ import StudentEnrollments from "./pages/StudentEnrollments";
 import StudentSubmissions from "./pages/StudentSubmissions";
 import SubmissionDetails from "./pages/SubmissionDetails";
 import Submissions from "./pages/Submissions";
-import TeacherSubmissions from "./pages/TeacherSubmissions";
+import TeacherSubmissions from "./pages/TeacherSubmissions.tsx";
 import Reports from "./pages/Reports";
 // import ReportDetails from "./pages/ReportDetails";
 
@@ -295,7 +295,7 @@ const AppRoutes = () => (
       }
     />
     <Route
-      path="/teacher-submissions" // PROFESSOR
+      path="/submissions" // PROFESSOR
       element={
         <ProtectedRoute>
           <RoleBasedRoute allowedRoles={["Professor", "Admin"]}>

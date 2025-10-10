@@ -50,7 +50,7 @@ const Dashboard = () => {
       description: "Maratonas disponíveis",
     },
     {
-      title: "Alunos Impactados",
+      title: "Alunos Alcançados",
       value: "124",
       icon: Users,
       description: "Total de alunos",
