@@ -60,6 +60,7 @@ export class FeedbackProcessor {
         ),
         this.submissionService.update(
           { correctedAnswer: corrected_answer, score: final_score },
+          // corrected_by_ai is gonna be true in adapter
           submissionId,
         ),
       ]);
