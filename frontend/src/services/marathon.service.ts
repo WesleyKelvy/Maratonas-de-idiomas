@@ -32,54 +32,60 @@ export interface UpdateMarathonRequest {
 }
 
 export class MarathonService {
+  private static readonly BASE_URL = "/marathon";
+
+  // GET /marathon/classroom/:id - findAllByClassroomId
   static async findAllByClassroom(
     classroomId: string
   ): Promise<LanguageMarathon[]> {
     return apiClient.get<LanguageMarathon[]>(
-      `/classrooms/${classroomId}/marathon`
+      `${MarathonService.BASE_URL}/classroom/${classroomId}`
     );
   }
 
-  static async findOne(
-    classroomId: string,
-    marathonId: string
-  ): Promise<LanguageMarathon> {
+  // GET /marathon/user/:id - findAllByUserId
+  static async findAllByUserId(userId: string): Promise<LanguageMarathon[]> {
+    return apiClient.get<LanguageMarathon[]>(
+      `${MarathonService.BASE_URL}/user/${userId}`
+    );
+  }
+
+  // GET /marathon/:id - findOne
+  static async findOne(marathonId: string): Promise<LanguageMarathon> {
     return apiClient.get<LanguageMarathon>(
-      `/classrooms/${classroomId}/marathon/${marathonId}`
+      `${MarathonService.BASE_URL}/${marathonId}`
     );
   }
 
-  // Método alternativo se precisarmos buscar apenas por marathon ID
+  // Alias for findOne to maintain backward compatibility
   static async findById(marathonId: string): Promise<LanguageMarathon> {
-    // Assumindo que existe um endpoint direto para buscar maratona por ID
-    // Se não existir, precisará ser implementado no backend
-    return apiClient.get<LanguageMarathon>(`/marathon/${marathonId}`);
+    return this.findOne(marathonId);
   }
 
+  // POST /marathon/classroom/:id - create
   static async create(
     classroomId: string,
     data: CreateMarathonRequest
   ): Promise<LanguageMarathon> {
     return apiClient.post<LanguageMarathon>(
-      `/classrooms/${classroomId}/marathon`,
+      `${MarathonService.BASE_URL}/classroom/${classroomId}`,
       data
     );
   }
 
+  // PATCH /marathon/:id - update
   static async update(
-    classroomId: string,
     marathonId: string,
     data: UpdateMarathonRequest
   ): Promise<LanguageMarathon> {
     return apiClient.patch<LanguageMarathon>(
-      `/classrooms/${classroomId}/marathon/${marathonId}`,
+      `${MarathonService.BASE_URL}/${marathonId}`,
       data
     );
   }
 
-  static async remove(classroomId: string, marathonId: string): Promise<void> {
-    return apiClient.delete<void>(
-      `/classrooms/${classroomId}/marathon/${marathonId}`
-    );
+  // DELETE /marathon/:id - remove
+  static async remove(marathonId: string): Promise<void> {
+    return apiClient.delete<void>(`${MarathonService.BASE_URL}/${marathonId}`);
   }
 }
