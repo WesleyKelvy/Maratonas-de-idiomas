@@ -29,6 +29,7 @@ import { sanitazeUser, SanitedUser } from 'utils/sanitazeUser';
 import { EmailService } from '../Mailer/emailService.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ERROR_MESSAGES } from './error/user-service.error';
+import { UserBasicInfoDto } from 'src/User/dto/get-users.dto';
 
 @Injectable()
 export class UserService implements AbstractUserService {
@@ -194,5 +195,16 @@ export class UserService implements AbstractUserService {
       resetTokenExpiration: null,
       resetRequestedAt: null,
     });
+  }
+
+  async getUsersByIds(userIds: string[]): Promise<UserBasicInfoDto[]> {
+    if (!userIds || userIds.length === 0) {
+      throw new HttpException(
+        ERROR_MESSAGES.USER_NOT_FOUND,
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    return await this.userRepository.findManyByIds(userIds);
   }
 }

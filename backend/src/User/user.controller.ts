@@ -13,6 +13,7 @@ import {
   AbstractUserService,
   USER_SERVICE_TOKEN,
 } from 'src/User/abstract-services/abstract-user.service';
+import { GetUsersByIdsDto, UserBasicInfoDto } from 'src/User/dto/get-users.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { IsPublic } from '../auth/decorators/is-public.decorator';
 import { MESSAGES } from './constants/user-controller-messages.message';
@@ -96,6 +97,14 @@ export class UserController {
   ) {
     await this.userService.resetPassword(token, newPassword);
     return { message: MESSAGES.PASSWORD_CHANGED };
+  }
+
+  @Post('get-users-by-ids')
+  @HttpCode(200)
+  async getUsersByIds(
+    @Body() getUsersByIdsDto: GetUsersByIdsDto,
+  ): Promise<UserBasicInfoDto[]> {
+    return await this.userService.getUsersByIds(getUsersByIdsDto.userIds);
   }
 }
 

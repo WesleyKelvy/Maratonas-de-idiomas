@@ -1,4 +1,5 @@
 import { CreateUserDto } from 'src/User/dto/create-user.dto';
+import { UserBasicInfoDto } from 'src/User/dto/get-users.dto';
 import { UpdateUserDto } from 'src/User/dto/update-user.dto';
 import { SanitedUser } from 'utils/sanitazeUser';
 
@@ -14,6 +15,7 @@ export abstract class AbstractUserService {
   abstract remove(id: string): Promise<void>;
   abstract sendResetPasswordByEmail(email: string): Promise<string>;
   abstract resetPassword(token: string, newPassword: string): Promise<void>;
+  abstract getUsersByIds(userIds: string[]): Promise<UserBasicInfoDto[]>;
 }
 
 export const USER_SERVICE_TOKEN = 'USER_SERVICE_TOKEN';

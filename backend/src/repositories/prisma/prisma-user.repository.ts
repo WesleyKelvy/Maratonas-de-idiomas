@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { User, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AbstractUserRepository } from 'src/repositories/abstract/user.repository';
+import { UserBasicInfoDto } from 'src/User/dto/get-users.dto';
 
 @Injectable()
 export class PrismaAbstractUserRepository implements AbstractUserRepository {
@@ -80,5 +81,22 @@ export class PrismaAbstractUserRepository implements AbstractUserRepository {
         resetTokenExpiration: null,
       },
     });
+  }
+
+  async findManyByIds(userIds: string[]): Promise<UserBasicInfoDto[]> {
+    const users = await this.prisma.user.findMany({
+      where: {
+        id: {
+          in: userIds,
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+    });
+
+    return users;
   }
 }
