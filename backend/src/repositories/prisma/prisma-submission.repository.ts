@@ -36,6 +36,23 @@ export class PrismaSubmissionRepository
   async findOne(id: string): Promise<Submission | null> {
     return this.prisma.submission.findUnique({
       where: { id },
+      include: {
+        question: { select: { title: true, prompt_text: true } },
+        user: {
+          select: {
+            email: true,
+            name: true,
+          },
+        },
+        AiFeedbacks: {
+          select: {
+            category: true,
+            explanation: true,
+            id: true,
+            points_deducted: true,
+          },
+        },
+      },
     });
   }
 
