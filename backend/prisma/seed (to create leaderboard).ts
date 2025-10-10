@@ -138,6 +138,7 @@ async function main() {
   // 8) Create submissions from each student for the questions
   await prisma.submission.create({
     data: {
+      marathon_id: marathon.id,
       question_id: question1.id,
       user_id: student1.id,
       answer: 'My favorite activity is brainstorming ideas together.',
@@ -147,6 +148,7 @@ async function main() {
 
   await prisma.submission.create({
     data: {
+      marathon_id: marathon.id,
       question_id: question2.id,
       user_id: student1.id,
       answer: 'A common challenge is coordinating schedules.',
@@ -156,6 +158,7 @@ async function main() {
 
   await prisma.submission.create({
     data: {
+      marathon_id: marathon.id,
       question_id: question1.id,
       user_id: student2.id,
       answer: 'I enjoy building the final presentation.',

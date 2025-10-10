@@ -170,6 +170,7 @@ async function main() {
   // 8) Create submissions and AI feedback from student1 for all 5 questions
   const submission1_q1 = await prisma.submission.create({
     data: {
+      marathon_id: marathon.id,
       question_id: question1.id,
       user_id: student1.id,
       answer:
@@ -190,6 +191,7 @@ async function main() {
 
   const submission1_q2 = await prisma.submission.create({
     data: {
+      marathon_id: marathon.id,
       question_id: question2.id,
       user_id: student1.id,
       answer:
@@ -210,6 +212,7 @@ async function main() {
 
   const submission1_q3 = await prisma.submission.create({
     data: {
+      marathon_id: marathon.id,
       question_id: question3.id,
       user_id: student1.id,
       answer:
@@ -230,6 +233,7 @@ async function main() {
 
   const submission1_q4 = await prisma.submission.create({
     data: {
+      marathon_id: marathon.id,
       question_id: question4.id,
       user_id: student1.id,
       answer: `'Once, a presentation failed because we didn't practice enough. We should have done more mock runs.'`,
@@ -249,6 +253,7 @@ async function main() {
 
   const submission1_q5 = await prisma.submission.create({
     data: {
+      marathon_id: marathon.id,
       question_id: question5.id,
       user_id: student1.id,
       answer:
@@ -270,6 +275,7 @@ async function main() {
   // Create some submissions for student2 as well (without feedback for this test)
   await prisma.submission.create({
     data: {
+      marathon_id: marathon.id,
       question_id: question1.id,
       user_id: student2.id,
       answer:
@@ -281,6 +287,7 @@ async function main() {
   await prisma.submission.create({
     data: {
       question_id: question2.id,
+      marathon_id: marathon.id,
       user_id: student2.id,
       answer:
         'Respect and clear objectives are key. Without them, teams can become disorganized and inefficient.',
@@ -290,6 +297,7 @@ async function main() {
 
   await prisma.submission.create({
     data: {
+      marathon_id: marathon.id,
       question_id: question3.id,
       user_id: student2.id,
       answer:
@@ -300,6 +308,7 @@ async function main() {
 
   await prisma.submission.create({
     data: {
+      marathon_id: marathon.id,
       question_id: question4.id,
       user_id: student2.id,
       answer:
@@ -310,6 +319,7 @@ async function main() {
 
   await prisma.submission.create({
     data: {
+      marathon_id: marathon.id,
       question_id: question5.id,
       user_id: student2.id,
       answer:

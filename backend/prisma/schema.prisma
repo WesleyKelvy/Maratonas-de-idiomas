@@ -26,31 +26,31 @@ enum Difficulty {
 
 // User model
 model User {
-  id                 String  @id @default(uuid())
-  name               String
-  email              String  @unique
-  passwordHash       String
-  birthdate          String
-  city               String
-  occupation         String
-  role               Role    @default(Student)
-  accountDeactivated Boolean @default(false)
+  id                   String  @id @default(uuid())
+  name                 String
+  email                String  @unique
+  passwordHash         String
+  birthdate            String
+  city                 String
+  occupation           String
+  role                 Role    @default(Student)
+  accountDeactivated   Boolean @default(false)
 
   resetToken           String?   @unique
   resetTokenExpiration DateTime?
   resetRequestedAt     DateTime?
 
-  confirmationCode String?
-  accountVerified  Boolean @default(false)
+  confirmationCode     String?
+  accountVerified      Boolean @default(false)
 
-  studentStats   StudentStats?
-  ProfessorStats ProfessorStats?
+  studentStats         StudentStats?
+  ProfessorStats       ProfessorStats?
 
-  classroomsCreated Classroom[]        @relation("UserClassrooms")
-  enrollments       Enrollment[]
-  submissions       Submission[]
-  leaderboard       Leaderboard[]
-  marathonProgress  MarathonProgress[]
+  classroomsCreated    Classroom[]        @relation("UserClassrooms")
+  enrollments          Enrollment[]
+  submissions          Submission[]
+  leaderboard          Leaderboard[]
+  marathonProgress     MarathonProgress[]
 }
 
 // Student-specific stats
@@ -103,6 +103,7 @@ model LanguageMarathon {
   created_by   String
 
   questions   Question[]
+  submissions Submission[]
   enrollments Enrollment[]
   leaderboard Leaderboard[]
   AiFeedbacks AiFeedbacks[]
@@ -143,6 +144,7 @@ model Question {
 // Submission
 model Submission {
   id               String   @id @default(cuid())
+  marathon_id      String
   question_id      Int
   user_id          String
   answer           String
@@ -151,8 +153,9 @@ model Submission {
   corrected_answer String?
   score            Float?
 
-  question Question @relation(fields: [question_id], references: [id])
-  user     User     @relation(fields: [user_id], references: [id])
+  marathon LanguageMarathon @relation(fields: [marathon_id], references: [id])
+  question Question         @relation(fields: [question_id], references: [id])
+  user     User             @relation(fields: [user_id], references: [id])
 
   AiFeedbacks AiFeedbacks[]
 }
@@ -197,12 +200,12 @@ model Leaderboard {
 
 // Report
 model Report {
-  id                String          @id @default(uuid())
-  classroom_name    String
-  marathon_id       String          @unique
-  total_errors      Int
-  created_at        DateTime        @default(now())
-  report_details    ReportDetails[]
+  id             String          @id @default(uuid())
+  classroom_name String
+  marathon_id    String          @unique
+  total_errors   Int
+  created_at     DateTime        @default(now())
+  report_details ReportDetails[]
 
   marathon LanguageMarathon @relation(fields: [marathon_id], references: [id])
 }

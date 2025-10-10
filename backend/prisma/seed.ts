@@ -86,15 +86,19 @@ async function main() {
   });
   console.log(`Created classroom: ${classroom.name} (${classroom.id})`);
 
+  // =================================================================
+  // MARATHON 1: Team Work
+  // =================================================================
+
   // 5) Create LanguageMarathon with a 5-minute duration
-  const marathonEndDate = new Date(Date.now() + 1000 * 60 * 1000); // 1 minutes from now
+  const marathonEndDate = new Date(Date.now() + 1000 * 60 * 1); // 1 minute from now
   const marathon = await prisma.languageMarathon.create({
     data: {
       code: 'TEST-01',
       title: 'Maratona de Teste de Relatório',
       context: 'Team work',
       difficulty: Difficulty.Intermediate, // Changed to Intermediate
-      timeLimit: 1000, // minutes
+      timeLimit: 1, // minutes
       start_date: new Date(),
       end_date: marathonEndDate,
       number_of_questions: 5, // Updated to 5 questions
@@ -164,12 +168,13 @@ async function main() {
     ],
   });
   console.log(
-    `Enrolled ${student1.name} and ${student2.name} in the marathon.`,
+    `Enrolled ${student1.name} and ${student2.name} in the first marathon.`,
   );
 
   // 8) Create submissions and AI feedback from student1 for all 5 questions
   const submission1_q1 = await prisma.submission.create({
     data: {
+      marathon_id: marathon.id,
       question_id: question1.id,
       user_id: student1.id,
       answer:
@@ -190,6 +195,7 @@ async function main() {
 
   const submission1_q2 = await prisma.submission.create({
     data: {
+      marathon_id: marathon.id,
       question_id: question2.id,
       user_id: student1.id,
       answer:
@@ -210,6 +216,7 @@ async function main() {
 
   const submission1_q3 = await prisma.submission.create({
     data: {
+      marathon_id: marathon.id,
       question_id: question3.id,
       user_id: student1.id,
       answer:
@@ -230,9 +237,10 @@ async function main() {
 
   const submission1_q4 = await prisma.submission.create({
     data: {
+      marathon_id: marathon.id,
       question_id: question4.id,
       user_id: student1.id,
-      answer: `'Once, a presentation failed because we didn't practice enough. We should have done more mock runs.'`,
+      answer: `Once, a presentation failed because we didn't practice enough. We should have done more mock runs.`,
       score: 7.5,
     },
   });
@@ -249,6 +257,7 @@ async function main() {
 
   const submission1_q5 = await prisma.submission.create({
     data: {
+      marathon_id: marathon.id,
       question_id: question5.id,
       user_id: student1.id,
       answer:
@@ -273,6 +282,7 @@ async function main() {
   // 9) Create submissions for student2
   await prisma.submission.create({
     data: {
+      marathon_id: marathon.id,
       question_id: question1.id,
       user_id: student2.id,
       answer:
@@ -283,6 +293,7 @@ async function main() {
 
   await prisma.submission.create({
     data: {
+      marathon_id: marathon.id,
       question_id: question2.id,
       user_id: student2.id,
       answer:
@@ -293,6 +304,7 @@ async function main() {
 
   await prisma.submission.create({
     data: {
+      marathon_id: marathon.id,
       question_id: question3.id,
       user_id: student2.id,
       answer:
@@ -303,6 +315,7 @@ async function main() {
 
   await prisma.submission.create({
     data: {
+      marathon_id: marathon.id,
       question_id: question4.id,
       user_id: student2.id,
       answer:
@@ -313,6 +326,7 @@ async function main() {
 
   await prisma.submission.create({
     data: {
+      marathon_id: marathon.id,
       question_id: question5.id,
       user_id: student2.id,
       answer:
@@ -322,56 +336,155 @@ async function main() {
   });
   console.log(`Created submissions for student ${student2.name}.`);
 
-  // 10) Create Report for Student 1 based on their submissions
-  await prisma.report.create({
+  // =================================================================
+  // MARATHON 2: Comunicação Profissional
+  // =================================================================
+
+  // 10) Create a second LanguageMarathon
+  const marathon2EndDate = new Date(Date.now() + 1000 * 60 * 10); // 10 minutes from now
+  const marathon2 = await prisma.languageMarathon.create({
     data: {
-      id: '93a27753-743a-43d9-bdf1-ab2e3b8484e6',
-      marathon_id: marathon.id,
-      total_errors: 5,
-      classroom_name: classroom.id,
-      report_details: {
-        create: [
-          {
-            occurrences: 1,
-            category_name: 'Grammar',
-            examples: `["Grammar: The sentence \\"My role was checking the logs\\" could be improved for formality. Consider \\"My role was to check the logs.\\""]`,
-            targeted_advice:
-              'To improve your grammar, focus on distinguishing when to use infinitives (to + verb) versus gerunds (-ing) to describe roles or purposes, often favoring infinitives for formality and precision.',
-          },
-          {
-            occurrences: 1,
-            category_name: 'Punctuation',
-            examples: `["Punctuation: A comma is needed before \\"Without\\" in the second sentence for better flow."]`,
-            targeted_advice:
-              'To improve your punctuation, focus on using commas to separate introductory phrases or clauses that precede the main sentence, as this significantly enhances readability and flow.',
-          },
-          {
-            occurrences: 1,
-            category_name: 'Vocabulary',
-            examples: `["Vocabulary: \\"Have regular meetings\\" could be more formal. Consider \\"conduct regular meetings.\\""]`,
-            targeted_advice:
-              'To improve your vocabulary, focus on selecting more formal and precise verbs and nouns, especially for professional or academic contexts. Practice by identifying informal terms and finding their more appropriate formal equivalents.',
-          },
-          {
-            occurrences: 1,
-            category_name: 'Clarity',
-            examples: `["Clarity: \\"Done more mock runs\\" is a bit informal. Consider \\"conducted more practice sessions.\\""]`,
-            targeted_advice:
-              'To enhance clarity, replace informal or vague verbs and nouns with more precise and professional alternatives that clearly communicate your intended meaning.',
-          },
-          {
-            occurrences: 1,
-            category_name: 'Cohesion',
-            examples: `["Cohesion: The connection between the two sentences could be stronger. Consider using a transition word like \\"For example,\\" or \\"Indeed,\\"."]`,
-            targeted_advice:
-              "To improve cohesion, consciously use transition words and phrases (e.g., 'however,' 'therefore,' 'for example') to clearly link your sentences and ideas, ensuring a smooth logical flow for the reader.",
-          },
-        ],
-      },
+      code: 'PROF-02',
+      title: 'Comunicação Profissional',
+      context: 'Cenários profissionais e comunicação no trabalho',
+      difficulty: Difficulty.Advanced,
+      timeLimit: 10, // minutes
+      start_date: new Date(),
+      end_date: marathon2EndDate,
+      number_of_questions: 3,
+      classroom: { connect: { id: classroom.id } },
+      created_by: professor.id,
     },
   });
-  console.log(`Created report for marathon ID ${marathon.id} in marathon .`);
+  console.log(
+    `Created marathon: "${marathon2.title}" ending at ${marathon2EndDate.toLocaleTimeString()}`,
+  );
 
+  // 11) Create Questions for the second marathon
+  const m2_question1 = await prisma.question.create({
+    data: {
+      prompt_text:
+        'Como você redigiria um e-mail para solicitar um feedback sobre um projeto importante para seu gerente?',
+      marathon: { connect: { id: marathon2.id } },
+    },
+  });
+
+  const m2_question2 = await prisma.question.create({
+    data: {
+      prompt_text:
+        'Descreva uma situação em que você teve que dar um feedback construtivo a um colega. Qual foi sua abordagem e qual foi o resultado?',
+      marathon: { connect: { id: marathon2.id } },
+    },
+  });
+
+  const m2_question3 = await prisma.question.create({
+    data: {
+      prompt_text:
+        'Em uma reunião de equipe, como você apresentaria uma ideia que discorda da opinião da maioria, garantindo que sua sugestão seja ouvida de forma respeitosa?',
+      marathon: { connect: { id: marathon2.id } },
+    },
+  });
+  console.log(`Created 3 questions for marathon: ${marathon2.title}`);
+
+  // 12) Enroll both students in the second marathon
+  await prisma.enrollment.createMany({
+    data: [
+      {
+        user_id: student1.id,
+        marathon_id: marathon2.id,
+        marathon_code: 'PROF-02',
+      },
+      {
+        user_id: student2.id,
+        marathon_id: marathon2.id,
+        marathon_code: 'PROF-02',
+      },
+    ],
+  });
+  console.log(
+    `Enrolled ${student1.name} and ${student2.name} in the second marathon.`,
+  );
+
+  // 13) Create submissions and AI feedback for student1 in the second marathon
+  const submission2_q1 = await prisma.submission.create({
+    data: {
+      marathon_id: marathon2.id,
+      question_id: m2_question1.id,
+      user_id: student1.id,
+      answer:
+        'Assunto: Pedido de Feedback - Projeto X. Prezado Gerente, eu gostaria de solicitar seu feedback sobre o andamento do Projeto X. Sua opinião seria muito valiosa. Att, Alice.',
+      score: 9.1,
+    },
+  });
+  await prisma.aiFeedbacks.create({
+    data: {
+      submissionId: submission2_q1.id,
+      explanation:
+        'Clarity: A resposta é boa, mas poderia ser mais específica sobre quais pontos do projeto precisam de feedback para guiar melhor o gerente.',
+      points_deducted: 0.4,
+      marathon_id: marathon2.id,
+      category: 'Clarity',
+    },
+  });
+
+  const submission2_q2 = await prisma.submission.create({
+    data: {
+      marathon_id: marathon2.id,
+      question_id: m2_question2.id,
+      user_id: student1.id,
+      answer:
+        'Eu chamei meu colega para uma conversa privada e usei a técnica do "sanduíche": comecei com um elogio, depois a crítica construtiva, e finalizei com um incentivo. Ele recebeu bem.',
+      score: 9.5,
+    },
+  });
+
+  const submission2_q3 = await prisma.submission.create({
+    data: {
+      marathon_id: marathon2.id,
+      question_id: m2_question3.id,
+      user_id: student1.id,
+      answer:
+        'Eu esperaria um momento apropriado, reconheceria o valor da ideia da maioria, e então apresentaria minha perspectiva como uma alternativa a ser considerada, focando nos dados que suportam minha sugestão.',
+      score: 9.8,
+    },
+  });
+  console.log(
+    `Created submissions for student ${student1.name} in the second marathon.`,
+  );
+
+  // 14) Create submissions for student2 in the second marathon
+  await prisma.submission.create({
+    data: {
+      marathon_id: marathon2.id,
+      question_id: m2_question1.id,
+      user_id: student2.id,
+      answer:
+        'Oi, chefe. Pode dar uma olhada no projeto? Quero saber o que você acha. Valeu!',
+      score: 6.0,
+    },
+  });
+
+  await prisma.submission.create({
+    data: {
+      marathon_id: marathon2.id,
+      question_id: m2_question2.id,
+      user_id: student2.id,
+      answer:
+        'Uma vez, eu precisei falar com um colega sobre a qualidade do código dele. Eu mostrei exemplos específicos e sugeri algumas ferramentas que poderiam ajudar. O resultado foi positivo e ele melhorou nas entregas seguintes.',
+      score: 8.9,
+    },
+  });
+
+  await prisma.submission.create({
+    data: {
+      marathon_id: marathon2.id,
+      question_id: m2_question3.id,
+      user_id: student2.id,
+      answer:
+        'Eu levantaria a mão e diria: "Pessoal, entendo o ponto de vocês, mas já pensaram nesta outra possibilidade?" e explicaria minha ideia com calma.',
+      score: 8.5,
+    },
+  });
   console.log(
     'Seed process finished successfully. The leaderboard generation job should be scheduled in Redis.',
   );
