@@ -36,6 +36,22 @@ export class EnrollmentService implements AbstractEnrollmentService {
     private readonly enrollmentRepository: AbstractEnrollmentRepository,
   ) {}
 
+  async findAllEnrollmentsByMarathonId(
+    marathonId: string,
+  ): Promise<Enrollment[]> {
+    const enrollment =
+      await this.enrollmentRepository.findAllEnrollmentsByMarathonId(
+        marathonId,
+      );
+    if (!enrollment) {
+      throw new NotFoundException(
+        'Enrollments for this marathon does not exist.',
+      );
+    }
+
+    return enrollment;
+  }
+
   async findAllByUserId(id: string): Promise<Enrollment[]> {
     const enrollment = await this.enrollmentRepository.findAllByUserId(id);
     if (!enrollment) {

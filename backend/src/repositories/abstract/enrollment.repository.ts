@@ -11,6 +11,9 @@ export abstract class AbstractEnrollmentRepository {
     marathonId: string,
     userId: string,
   ): Promise<Enrollment | null>;
+  abstract findAllEnrollmentsByMarathonId(
+    marathonId: string,
+  ): Promise<Enrollment[] | null>;
 }
 
 export const ENROLLMENT_REPOSITORY_TOKEN = 'ENROLLMENT_REPOSITORY_TOKEN';

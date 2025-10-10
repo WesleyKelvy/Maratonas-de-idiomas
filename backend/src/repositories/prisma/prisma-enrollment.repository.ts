@@ -17,6 +17,17 @@ export class PrismaEnrollmentRepository
     });
   }
 
+  async findAllEnrollmentsByMarathonId(
+    marathonId: string,
+  ): Promise<Enrollment[]> {
+    return await this.prisma.enrollment.findMany({
+      where: { marathon_id: marathonId },
+      include: {
+        marathon: true,
+      },
+    });
+  }
+
   async findAllByUserId(userId: string): Promise<Enrollment[]> {
     return await this.prisma.enrollment.findMany({
       where: { user_id: userId },
