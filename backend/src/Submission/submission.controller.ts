@@ -7,12 +7,9 @@ import {
   Inject,
   Param,
   Post,
-  UseGuards,
 } from '@nestjs/common';
-import { Role, Submission } from '@prisma/client';
+import { Submission } from '@prisma/client';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
-import { Roles } from 'src/auth/decorators/roles.decorator';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { UserFromJwt } from 'src/auth/models/UserFromJwt';
 import {
   AbstractSubmissionService,
@@ -20,35 +17,40 @@ import {
 } from 'src/Submission/abstract-services/abstract-submission.service';
 import { CreateSubmissionDto } from 'src/Submission/dto/submission.create.dto';
 
-@Controller('marathon/:marathonId/question/:questionId/submission')
+@Controller('submission/')
 export class SubmissionController {
   constructor(
     @Inject(SUBMISSION_SERVICE_TOKEN)
     private readonly submissionService: AbstractSubmissionService,
   ) {}
 
-  @UseGuards(RolesGuard)
-  @Roles(Role.Student)
-  @Post()
+  @Post('marathon/:marathonId/question/:questionId')
   @HttpCode(HttpStatus.CREATED)
   create(
-    @Body() dto: CreateSubmissionDto,
+    @Body() { answer }: CreateSubmissionDto,
     @Param('questionId') questionId: string,
     @Param('marathonId') marathonId: string,
     @CurrentUser()
     user: UserFromJwt,
   ): Promise<void> {
     return this.submissionService.create(
-      dto,
+      answer,
       parseInt(questionId),
       user.id,
       marathonId,
     );
   }
 
-  @Get()
+  @Get('user')
   findAllByUserId(@CurrentUser() user: UserFromJwt): Promise<Submission[]> {
     return this.submissionService.findAllByUserId(user.id);
+  }
+
+  @Get('marathon/:marathonId')
+  findAllByMarathonId(
+    @Param('marathonId') marathonId: string,
+  ): Promise<Submission[]> {
+    return this.submissionService.findAllByMarathonId(marathonId);
   }
 
   @Get(':id')

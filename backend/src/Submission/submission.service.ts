@@ -16,7 +16,6 @@ import {
   SUBMISSION_REPOSITORY_TOKEN,
 } from 'src/repositories/abstract/submission.repository';
 import { AbstractSubmissionService } from 'src/Submission/abstract-services/abstract-submission.service';
-import { CreateSubmissionDto } from 'src/Submission/dto/submission.create.dto';
 import { UpdateSubmissionDto } from 'src/Submission/dto/submission.update.dto';
 
 @Injectable()
@@ -30,7 +29,7 @@ export class SubmissionService implements AbstractSubmissionService {
   ) {}
 
   async create(
-    dto: CreateSubmissionDto,
+    answer: string,
     questionId: number,
     userId: string,
     marathonId: string,
@@ -39,10 +38,11 @@ export class SubmissionService implements AbstractSubmissionService {
 
     if (end_date < new Date()) throw new BadRequestException();
 
-    const { id, answer } = await this.submissionRepository.create(
-      dto,
+    const { id } = await this.submissionRepository.create(
+      answer,
       questionId,
       userId,
+      marathonId,
     );
 
     await this.feedbackQueue.add(
@@ -69,6 +69,18 @@ export class SubmissionService implements AbstractSubmissionService {
     const submissions = await this.submissionRepository.findAllByUserId(id);
     if (!submissions) {
       throw new NotFoundException(`Submissions for this user does not exist.`);
+    }
+
+    return submissions;
+  }
+
+  async findAllByMarathonId(marathonId: string): Promise<Submission[]> {
+    const submissions =
+      await this.submissionRepository.findAllByMarathonId(marathonId);
+    if (!submissions) {
+      throw new NotFoundException(
+        `Submissions for this marathon does not exist.`,
+      );
     }
 
     return submissions;

@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { Prisma, Submission } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AbstractSubmissionRepository } from 'src/repositories/abstract/submission.repository';
-import { CreateSubmissionDto } from 'src/Submission/dto/submission.create.dto';
 import { UpdateSubmissionDto } from 'src/Submission/dto/submission.update.dto';
 
 @Injectable()
@@ -12,18 +11,20 @@ export class PrismaSubmissionRepository
   constructor(private readonly prisma: PrismaService) {}
 
   async create(
-    dto: CreateSubmissionDto,
+    answer: string,
     questionId: number,
     userId: string,
+    marathonId: string,
   ): Promise<Submission> {
     const data: Prisma.SubmissionCreateInput = {
-      answer: dto.answer,
+      answer,
       question: {
         connect: { id: questionId },
       },
       user: {
         connect: { id: userId },
       },
+      marathon: { connect: { id: marathonId } },
     };
 
     const createdSubmission = await this.prisma.submission.create({
@@ -41,6 +42,20 @@ export class PrismaSubmissionRepository
   async findAllByUserId(userId: string): Promise<Submission[]> {
     return this.prisma.submission.findMany({
       where: { user_id: userId },
+    });
+  }
+
+  async findAllByMarathonId(marathonId: string): Promise<Submission[]> {
+    return this.prisma.submission.findMany({
+      where: { marathon_id: marathonId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
     });
   }
 

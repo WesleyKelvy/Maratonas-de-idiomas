@@ -1,10 +1,9 @@
 import { Submission } from '@prisma/client';
-import { CreateSubmissionDto } from 'src/Submission/dto/submission.create.dto';
 import { UpdateSubmissionDto } from 'src/Submission/dto/submission.update.dto';
 
 export abstract class AbstractSubmissionService {
   abstract create(
-    dto: CreateSubmissionDto,
+    answer: string,
     questionId: number,
     userId: string,
     marathonId: string,
@@ -15,6 +14,7 @@ export abstract class AbstractSubmissionService {
     dto: UpdateSubmissionDto,
     submissionId: string,
   ): Promise<void>;
+  abstract findAllByMarathonId(marathonI: string): Promise<Submission[]>;
 }
 
 export const SUBMISSION_SERVICE_TOKEN = 'SUBMISSION_SERVICE_TOKEN';

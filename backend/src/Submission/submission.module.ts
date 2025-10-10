@@ -1,7 +1,6 @@
 import { BullModule } from '@nestjs/bull';
 import { forwardRef, Module } from '@nestjs/common';
 import { AiFeedbackModule } from 'src/AiFeedback/aiFeedback.module';
-import { ProfessorGuard } from 'src/auth/guards/professor.guard';
 import { LanguageMarathonModule } from 'src/LanguageMarathon/language-marathon.module';
 import { QuestionModule } from 'src/Question/question.module';
 import { SUBMISSION_REPOSITORY_TOKEN } from 'src/repositories/abstract/submission.repository';
@@ -29,7 +28,6 @@ import { SubmissionService } from 'src/Submission/submission.service';
       provide: SUBMISSION_REPOSITORY_TOKEN,
       useClass: PrismaSubmissionRepository,
     },
-    ProfessorGuard,
   ],
   exports: [SUBMISSION_SERVICE_TOKEN],
 })
