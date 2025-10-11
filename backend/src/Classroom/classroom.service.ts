@@ -36,7 +36,7 @@ export class ClassroomService implements AbstractClassroomService {
   }
 
   async findAllByUserId(id: string): Promise<Classroom[]> {
-    return await this.classroomRepository.findAll(id);
+    return await this.classroomRepository.findAllByUserId(id);
   }
 
   async create(dto: CreateClassroomDto, userId: string): Promise<Classroom> {

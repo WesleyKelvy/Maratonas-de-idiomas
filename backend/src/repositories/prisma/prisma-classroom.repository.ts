@@ -21,7 +21,7 @@ export class PrismaClassroomRepository implements AbstractClassroomRepository {
   /**
    * Returns all classrooms created by a specific user
    */
-  async findAll(userId: string): Promise<Classroom[]> {
+  async findAllByUserId(userId: string): Promise<Classroom[]> {
     return await this.prisma.classroom.findMany({
       where: { created_by: userId },
     });

@@ -6,7 +6,7 @@ export abstract class AbstractClassroomRepository {
   abstract create(dto: CreateClassroomDto, userId: string): Promise<Classroom>;
   abstract findById(id: string): Promise<Classroom | null>;
   abstract findOneByMarathonId(id: string): Promise<Classroom | null>;
-  abstract findAll(userId: string): Promise<Classroom[]>;
+  abstract findAllByUserId(userId: string): Promise<Classroom[]>;
   abstract update(
     code: string,
     updateStatDto: UpdateClassroomDto,

@@ -23,8 +23,6 @@ import {
 import { CreateClassroomDto } from 'src/Classroom/dto/classroom.create.dto';
 import { UpdateClassroomDto } from 'src/Classroom/dto/classroom.update.dto';
 
-@UseGuards(RolesGuard)
-@Roles(Role.Professor)
 @Controller('classroom')
 export class ClassroomController {
   constructor(
@@ -32,6 +30,8 @@ export class ClassroomController {
     private readonly classroomService: AbstractClassroomService,
   ) {}
 
+  @UseGuards(RolesGuard)
+  @Roles(Role.Professor)
   @Post()
   @HttpCode(HttpStatus.CREATED)
   create(
@@ -50,7 +50,8 @@ export class ClassroomController {
   findOne(@Param('id') code: string): Promise<Classroom> {
     return this.classroomService.findOne(code);
   }
-
+  @UseGuards(RolesGuard)
+  @Roles(Role.Professor)
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
   update(
@@ -60,7 +61,8 @@ export class ClassroomController {
   ): Promise<Classroom> {
     return this.classroomService.update(code, updateDto, user.id);
   }
-
+  @UseGuards(RolesGuard)
+  @Roles(Role.Professor)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(
