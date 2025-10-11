@@ -28,8 +28,7 @@ import {
   QuestionArrayDto,
 } from 'src/Question/interfaces/geminiResponse';
 
-@UseGuards(RolesGuard)
-@Controller('/marathon/:marathonId')
+@Controller('questions')
 export class QuestionController {
   constructor(
     @Inject(QUESTION_SERVICE_TOKEN)
@@ -43,15 +42,16 @@ export class QuestionController {
     return this.questionService.findOne(id);
   }
 
-  @Get('questions')
+  @Get('marathon/:marathonId')
   findAllByMarathonId(
     @Param('marathonId') marathonId: string,
   ): Promise<Question[]> {
     return this.questionService.findAllByMarathonId(marathonId);
   }
 
+  @UseGuards(RolesGuard)
   @Roles(Role.Professor)
-  @Post('/create-questions')
+  @Post('create-questions')
   @HttpCode(HttpStatus.CREATED)
   async getGeminiQuestions(
     @Param('marathonId') marathonId: string,
@@ -65,6 +65,7 @@ export class QuestionController {
     });
   }
 
+  @UseGuards(RolesGuard)
   @Roles(Role.Professor)
   @Post('save-questions')
   @HttpCode(HttpStatus.CREATED)
@@ -75,6 +76,7 @@ export class QuestionController {
     return this.questionService.create(dto.questions, marathonId);
   }
 
+  @UseGuards(RolesGuard)
   @Roles(Role.Professor)
   @Patch(':id')
   update(
@@ -84,6 +86,7 @@ export class QuestionController {
     return this.questionService.update(id, updateDto);
   }
 
+  @UseGuards(RolesGuard)
   @Roles(Role.Professor)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
