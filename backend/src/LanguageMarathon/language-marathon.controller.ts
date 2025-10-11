@@ -22,16 +22,16 @@ import {
 import { CreateLanguageMarathonDto } from 'src/LanguageMarathon/dto/language-marathon.create.dto';
 import { UpdateLanguageMarathonDto } from 'src/LanguageMarathon/dto/language-marathon.update.dto';
 
-@UseGuards(RolesGuard)
-@Roles(Role.Professor)
-@Controller('/classrooms/:id/marathon')
+@Controller('marathon')
 export class LanguageMarathonController {
   constructor(
     @Inject(LANGUAGE_MARATHON_SERVICE_TOKEN)
     private readonly marathonService: AbstractLanguageMarathonService,
   ) {}
 
-  @Post()
+  @UseGuards(RolesGuard)
+  @Roles(Role.Professor)
+  @Post('classroom/:id')
   @HttpCode(HttpStatus.CREATED)
   create(
     @Body() dto: CreateLanguageMarathonDto,
@@ -41,9 +41,14 @@ export class LanguageMarathonController {
     return this.marathonService.create(dto, id, userId);
   }
 
-  @Get()
+  @Get('/classroom/:id')
   findAllByClassroomId(@Param('id') id: string): Promise<LanguageMarathon[]> {
     return this.marathonService.findAllByClassroomId(id);
+  }
+
+  @Get('/user/:id')
+  findAllByUserId(@Param('id') id: string): Promise<LanguageMarathon[]> {
+    return this.marathonService.findAllByUserId(id);
   }
 
   @Get(':id')
@@ -51,6 +56,8 @@ export class LanguageMarathonController {
     return this.marathonService.findOneById(id);
   }
 
+  @UseGuards(RolesGuard)
+  @Roles(Role.Professor)
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
   update(

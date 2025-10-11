@@ -17,6 +17,7 @@ export class PrismaLanguageMarathonRepository
   async findAllByClassroom(id: string): Promise<LanguageMarathon[]> {
     return this.prisma.languageMarathon.findMany({
       where: { classroom_id: id },
+      include: { enrollments: { select: { user_id: true } } },
     });
   }
 
@@ -52,6 +53,11 @@ export class PrismaLanguageMarathonRepository
   async findOneById(id: string): Promise<LanguageMarathon | null> {
     return this.prisma.languageMarathon.findUnique({
       where: { id },
+      include: {
+        classroom: {
+          select: { creator: { select: { name: true } } },
+        },
+      },
     });
   }
 
@@ -95,9 +101,9 @@ export class PrismaLanguageMarathonRepository
     });
   }
 
-  // async findAllById(id: string): Promise<LanguageMarathon[]> {
-  //   return this.prisma.languageMarathon.findMany({
-  //     where: { id },
-  //   });
-  // }
+  async findAllByUserId(id: string): Promise<LanguageMarathon[]> {
+    return this.prisma.languageMarathon.findMany({
+      where: { created_by: id },
+    });
+  }
 }

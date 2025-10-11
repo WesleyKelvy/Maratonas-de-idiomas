@@ -11,6 +11,7 @@ export abstract class AbstractLanguageMarathonService {
   abstract findOneById(id: string): Promise<LanguageMarathon>;
   abstract findOneByCode(code: string): Promise<LanguageMarathon>;
   abstract findAllByClassroomId(id: string): Promise<LanguageMarathon[]>;
+  abstract findAllByUserId(id: string): Promise<LanguageMarathon[]>;
   abstract update(
     code: string,
     updateStatsDto: UpdateLanguageMarathonDto,

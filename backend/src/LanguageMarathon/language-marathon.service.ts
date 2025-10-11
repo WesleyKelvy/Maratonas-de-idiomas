@@ -53,6 +53,17 @@ export class LanguageMarathonService
     return marathons;
   }
 
+  async findAllByUserId(id: string): Promise<LanguageMarathon[]> {
+    const classroom = await this.classroomService.findAllByUserId(id);
+
+    if (!classroom)
+      throw new NotFoundException(`No found classroom for code: ${id}.`);
+
+    const marathons = await this.marathonRepository.findAllByClassroom(id);
+
+    return marathons;
+  }
+
   async create(
     dto: CreateLanguageMarathonDto,
     classroomId: string,

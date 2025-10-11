@@ -1,4 +1,5 @@
 import { Difficulty } from '@prisma/client';
+import { Transform } from 'class-transformer';
 import {
   IsDate,
   IsEnum,
@@ -14,8 +15,8 @@ export class CreateLanguageMarathonDto {
   @IsNotEmpty()
   title: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   description: string;
 
   @IsString()
@@ -28,12 +29,13 @@ export class CreateLanguageMarathonDto {
   @IsInt()
   timeLimit: number;
 
-  @IsDate()
   @IsOptional()
+  @Transform(({ value }) => (value ? new Date(value) : value))
+  @IsDate()
   startDate: Date;
 
-  @IsDate()
   @IsOptional()
+  @IsDate()
   endDate: Date;
 
   @IsNumber()

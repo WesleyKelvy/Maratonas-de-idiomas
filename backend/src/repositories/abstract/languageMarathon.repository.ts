@@ -4,6 +4,7 @@ import { UpdateLanguageMarathonDto } from 'src/LanguageMarathon/dto/language-mar
 
 export abstract class AbstractLanguageMarathonRepository {
   abstract findAllByClassroom(id: string): Promise<LanguageMarathon[]>;
+  abstract findAllByUserId(id: string): Promise<LanguageMarathon[]>;
   abstract create(
     dto: CreateLanguageMarathonDto,
     id: string,
