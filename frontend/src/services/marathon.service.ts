@@ -14,21 +14,34 @@ export interface LanguageMarathon {
   leaderboard_generated: boolean;
   classroom_id: string;
   created_by: string;
+  enrollments?: Array<{ user_id: string }>;
+  classroom?: {
+    creator: {
+      name: string;
+    };
+  };
 }
 
 export interface CreateMarathonRequest {
-  name: string;
+  title: string;
   description?: string;
-  startDate: string;
-  endDate: string;
+  context: string;
+  difficulty: "Beginner" | "Intermediate" | "Advanced";
+  timeLimit: number;
+  startDate?: Date;
+  endDate?: Date;
+  number_of_questions: number;
 }
 
 export interface UpdateMarathonRequest {
-  name?: string;
+  title?: string;
   description?: string;
-  startDate?: string;
-  endDate?: string;
-  isActive?: boolean;
+  context?: string;
+  difficulty?: "Beginner" | "Intermediate" | "Advanced";
+  timeLimit?: number;
+  startDate?: Date;
+  endDate?: Date;
+  number_of_questions?: number;
 }
 
 export class MarathonService {
@@ -57,7 +70,6 @@ export class MarathonService {
     );
   }
 
-  // Alias for findOne to maintain backward compatibility
   static async findById(marathonId: string): Promise<LanguageMarathon> {
     return this.findOne(marathonId);
   }

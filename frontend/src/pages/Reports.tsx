@@ -219,7 +219,7 @@ const ReportsPage = () => {
                   </div>
                 ) : marathons?.length === 0 ? (
                   <div className="p-3 border rounded-md bg-yellow-50 text-yellow-700">
-                    Nenhuma maratona encontrada para esta classroom
+                    Nenhuma maratona encontrada para esta classroom.
                   </div>
                 ) : (
                   <Select

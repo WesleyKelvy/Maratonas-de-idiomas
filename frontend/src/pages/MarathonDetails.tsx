@@ -9,53 +9,181 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useMarathon } from "@/hooks/use-marathon";
 import { toast } from "@/hooks/use-toast";
+import { LanguageMarathon } from "@/services/marathon.service";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import {
   AlertCircle,
   ArrowLeft,
+  BookText,
   Calendar,
   Clock,
+  Loader2,
   Play,
-  Trophy,
+  TableOfContents,
   User,
   Users,
 } from "lucide-react";
-import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
-const MarathonDetails = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const [showRulesModal, setShowRulesModal] = useState(false);
+// Navigation state interface
+interface NavigationState {
+  marathon?: LanguageMarathon;
+  returnFilters?: {
+    searchTerm: string;
+    statusFilter: string;
+    difficultyFilter: string;
+    selectedClassroomId: string;
+  };
+}
 
-  // Mock data - In real app, fetch by ID
-  const marathon = {
-    id: parseInt(id || "1"),
-    title: "Maratona de JavaScript",
-    description:
-      "Teste seus conhecimentos em JavaScript com questões práticas e teóricas que cobrem desde conceitos básicos até tópicos avançados da linguagem.",
-    context:
-      "Esta maratona foi desenvolvida para avaliar o conhecimento em JavaScript moderno, incluindo ES6+, manipulação do DOM, programação assíncrona e frameworks modernos.",
-    difficulty: "Intermediário",
-    status: "Aberta",
-    participants: 45,
-    duration: "2 horas",
-    questions: 10,
-    teacher: "Prof. Ana Silva",
-    startDate: "2024-07-15",
-    endDate: "2024-07-20",
-    timeLimit: 120, // minutes
-    rules: [
-      "Cada questão tem um tempo limite individual",
+const MarathonDetails = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth();
+  // const [showRulesModal, setShowRulesModal] = useState(false);
+
+  // Get navigation state
+  const navigationState = location.state as NavigationState | null;
+  const passedMarathon = navigationState?.marathon;
+  const returnFilters = navigationState?.returnFilters;
+
+  // Fetch marathon data from backend (fallback if no state passed)
+  const { data: fetchedMarathon, isLoading, error } = useMarathon(id || "");
+
+  // Fetch classrooms for teacher name lookup
+  // const { data: classrooms = [] } = useClassrooms();
+
+  // Utility functions
+  const getMarathonStatus = (marathon: LanguageMarathon): string => {
+    const now = new Date();
+    const startDate = marathon.start_date
+      ? new Date(marathon.start_date)
+      : null;
+    const endDate = marathon.end_date ? new Date(marathon.end_date) : null;
+
+    if (endDate && now > endDate) return "Finalizada";
+    if (startDate && now < startDate) return "Aguardando início";
+    return "Aberta";
+  };
+
+  const getDifficultyDisplay = (difficulty: string): string => {
+    const DIFFICULTY_DISPLAY = {
+      Beginner: "Iniciante",
+      Intermediate: "Intermediário",
+      Advanced: "Avançado",
+    } as const;
+    return (
+      DIFFICULTY_DISPLAY[difficulty as keyof typeof DIFFICULTY_DISPLAY] ||
+      difficulty
+    );
+  };
+
+  const formatDateTime = (date: string): string => {
+    return format(new Date(date), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
+  };
+
+  const getTeacherName = (marathon: LanguageMarathon): string => {
+    return marathon.classroom?.creator?.name || "Professor";
+  };
+
+  const getRules = (): string[] => {
+    return [
       "Não é permitido consultar materiais externos",
       "As respostas são avaliadas automaticamente por IA",
-      "Você pode revisar suas respostas antes do envio final",
-      "A pontuação é baseada na precisão e velocidade",
       "Não é possível pausar a maratona uma vez iniciada",
-    ],
+      "Respeite o tempo limite estabelecido",
+    ];
   };
+
+  // Handle back navigation with filter preservation
+  const handleBackNavigation = () => {
+    if (returnFilters) {
+      const params = new URLSearchParams();
+      if (returnFilters.searchTerm) {
+        params.set("search", returnFilters.searchTerm);
+      }
+      if (returnFilters.statusFilter !== "all") {
+        params.set("status", returnFilters.statusFilter);
+      }
+      if (returnFilters.difficultyFilter !== "all") {
+        params.set("difficulty", returnFilters.difficultyFilter);
+      }
+      if (returnFilters.selectedClassroomId) {
+        params.set("classroom", returnFilters.selectedClassroomId);
+      }
+
+      const queryString = params.toString();
+      navigate(`/marathons${queryString ? `?${queryString}` : ""}`);
+    } else {
+      navigate("/marathons");
+    }
+  };
+
+  // Loading state
+  if (isLoading && !passedMarathon) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex items-center gap-2">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Carregando detalhes da maratona...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error && !passedMarathon) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Voltar
+          </Button>
+        </div>
+        <Card>
+          <CardContent className="text-center py-8">
+            <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Erro ao carregar maratona
+            </h3>
+            <p className="text-gray-600">
+              Não foi possível carregar os detalhes da maratona.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Marathon not found
+  if (!fetchedMarathon) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Voltar
+          </Button>
+        </div>
+        <Card>
+          <CardContent className="text-center py-8">
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Maratona não encontrada
+            </h3>
+            <p className="text-gray-600">
+              A maratona solicitada não foi encontrada.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -88,22 +216,20 @@ const MarathonDetails = () => {
       title: "Maratona iniciada!",
       description: "Boa sorte na sua participação.",
     });
-    navigate(`/marathons/${marathon.id}/execute`);
+    navigate(`/marathons/${fetchedMarathon.id}/execute`);
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Button
-          variant="outline"
-          size="sm"
-          to={user?.role === "Professor" ? "/marathons" : "/my-enrollments"}
-        >
+        <Button variant="outline" size="sm" onClick={handleBackNavigation}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Voltar
         </Button>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">{marathon.title}</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            {fetchedMarathon.title}
+          </h1>
         </div>
       </div>
 
@@ -114,75 +240,102 @@ const MarathonDetails = () => {
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="space-y-2">
-                  <CardTitle className="text-2xl">{marathon.title}</CardTitle>
+                  <CardTitle className="text-2xl">
+                    {fetchedMarathon.title}
+                  </CardTitle>
                   <div className="flex gap-2">
-                    <Badge className={getStatusColor(marathon.status)}>
-                      {marathon.status}
+                    <Badge variant="outline">
+                      Código: {fetchedMarathon.code}
                     </Badge>
-                    <Badge className={getDifficultyColor(marathon.difficulty)}>
-                      {marathon.difficulty}
+                    <Badge
+                      className={getStatusColor(
+                        getMarathonStatus(fetchedMarathon)
+                      )}
+                    >
+                      {getMarathonStatus(fetchedMarathon)}
+                    </Badge>
+                    <Badge
+                      className={getDifficultyColor(
+                        getDifficultyDisplay(fetchedMarathon.difficulty)
+                      )}
+                    >
+                      {getDifficultyDisplay(fetchedMarathon.difficulty)}
                     </Badge>
                   </div>
                 </div>
-                <Trophy className="h-8 w-8 text-yellow-500" />
+                <BookText className="h-8 w-8 text-gray-500" />
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
                 <h3 className="font-semibold mb-2">Descrição</h3>
-                <p className="text-gray-700">{marathon.description}</p>
+                <p className="text-gray-700">{fetchedMarathon.description}</p>
               </div>
 
               <div>
                 <h3 className="font-semibold mb-2">Contexto</h3>
-                <p className="text-gray-700">{marathon.context}</p>
+                <p className="text-gray-700">{fetchedMarathon.context}</p>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4">
                 <div className="text-center p-3 border rounded-lg">
                   <Users className="h-6 w-6 text-gray-500 mx-auto mb-2" />
                   <div className="text-2xl font-bold">
-                    {marathon.participants}
+                    {fetchedMarathon.enrollments?.length || 0}
                   </div>
                   <div className="text-sm text-gray-600">Participantes</div>
                 </div>
                 <div className="text-center p-3 border rounded-lg">
                   <Clock className="h-6 w-6 text-gray-500 mx-auto mb-2" />
-                  <div className="text-2xl font-bold">{marathon.duration}</div>
-                  <div className="text-sm text-gray-600">Duração</div>
+                  <div className="text-2xl font-bold">
+                    {fetchedMarathon.timeLimit} min
+                  </div>
+                  <div className="text-sm text-gray-600">Tempo Limite</div>
                 </div>
                 <div className="text-center p-3 border rounded-lg">
-                  <Trophy className="h-6 w-6 text-gray-500 mx-auto mb-2" />
-                  <div className="text-2xl font-bold">{marathon.questions}</div>
+                  <TableOfContents className="h-6 w-6 text-gray-500 mx-auto mb-2" />
+                  <div className="text-2xl font-bold">
+                    {fetchedMarathon.number_of_questions}
+                  </div>
                   <div className="text-sm text-gray-600">Questões</div>
                 </div>
                 <div className="text-center p-3 border rounded-lg">
                   <User className="h-6 w-6 text-gray-500 mx-auto mb-2" />
-                  <div className="text-sm font-medium">{marathon.teacher}</div>
-                  <div className="text-sm text-gray-600">Professor</div>
+                  <div className="text-sm font-medium">
+                    {getTeacherName(fetchedMarathon)}
+                  </div>
+                  <div className="text-sm text-gray-600">Criador</div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-gray-500" />
-                  <div>
-                    <div className="text-sm font-medium">Data de início</div>
-                    <div className="text-sm text-gray-600">
-                      {new Date(marathon.startDate).toLocaleDateString("pt-BR")}
+              {(fetchedMarathon.start_date || fetchedMarathon.end_date) && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+                  {fetchedMarathon.start_date && (
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-gray-500" />
+                      <div>
+                        <div className="text-sm font-medium">
+                          Data de início
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {formatDateTime(fetchedMarathon.start_date)}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-gray-500" />
-                  <div>
-                    <div className="text-sm font-medium">Data de fim</div>
-                    <div className="text-sm text-gray-600">
-                      {new Date(marathon.endDate).toLocaleDateString("pt-BR")}
+                  )}
+                  {fetchedMarathon.end_date && (
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-gray-500" />
+                      <div>
+                        <div className="text-sm font-medium">Data de fim</div>
+                        <div className="text-sm text-gray-600">
+                          {formatDateTime(fetchedMarathon.end_date)}
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -199,7 +352,7 @@ const MarathonDetails = () => {
             </CardHeader>
             <CardContent>
               <ul className="space-y-2 text-sm">
-                {marathon.rules.map((rule, index) => (
+                {getRules().map((rule, index) => (
                   <li key={index} className="flex items-start gap-2">
                     <span className="text-primary font-bold">•</span>
                     <span>{rule}</span>
@@ -210,61 +363,64 @@ const MarathonDetails = () => {
           </Card>
 
           {/* Botão de Participação */}
-          {marathon.status === "Aberta" && user?.role === "Student" && (
-            <Card>
-              <CardContent className="pt-6">
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button size="lg" className="w-full">
-                      <Play className="mr-2 h-5 w-5" />
-                      Participar da Maratona
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Confirmar Participação</DialogTitle>
-                      <DialogDescription className="space-y-4">
-                        <p>
-                          Você está prestes a iniciar a maratona "
-                          {marathon.title}".
-                        </p>
-                        <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
-                          <h4 className="font-semibold text-yellow-800 mb-2">
-                            Importante:
-                          </h4>
-                          <ul className="text-sm text-yellow-700 space-y-1">
-                            <li>
-                              • A maratona tem duração de {marathon.duration}
-                            </li>
-                            <li>• Você não poderá pausar uma vez iniciada</li>
-                            <li>
-                              • São {marathon.questions} questões no total
-                            </li>
-                            <li>• Leia todas as regras antes de começar</li>
-                          </ul>
-                        </div>
-                        <p>Deseja continuar?</p>
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="flex gap-3 mt-4">
-                      <Button variant="outline" className="flex-1">
-                        Cancelar
+          {getMarathonStatus(fetchedMarathon) === "Aberta" &&
+            user?.role === "Student" && (
+              <Card>
+                <CardContent className="pt-6">
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button size="lg" className="w-full">
+                        <Play className="mr-2 h-5 w-5" />
+                        Participar da Maratona
                       </Button>
-                      <Button onClick={handleParticipate} className="flex-1">
-                        Iniciar Maratona
-                      </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </CardContent>
-            </Card>
-          )}
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Confirmar Participação</DialogTitle>
+                        <DialogDescription className="space-y-4">
+                          <p>
+                            Você está prestes a iniciar a maratona "
+                            {fetchedMarathon.title}".
+                          </p>
+                          <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                            <h4 className="font-semibold text-yellow-800 mb-2">
+                              Importante:
+                            </h4>
+                            <ul className="text-sm text-yellow-700 space-y-1">
+                              <li>
+                                • A maratona tem tempo limite de{" "}
+                                {fetchedMarathon.timeLimit} minutos
+                              </li>
+                              <li>• Você não poderá pausar uma vez iniciada</li>
+                              <li>
+                                • São {fetchedMarathon.number_of_questions}{" "}
+                                questões no total
+                              </li>
+                              <li>• Leia todas as regras antes de começar</li>
+                            </ul>
+                          </div>
+                          <p>Deseja continuar?</p>
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="flex gap-3 mt-4">
+                        <Button variant="outline" className="flex-1">
+                          Cancelar
+                        </Button>
+                        <Button onClick={handleParticipate} className="flex-1">
+                          Iniciar Maratona
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </CardContent>
+              </Card>
+            )}
 
-          {marathon.status !== "Aberta" && (
+          {getMarathonStatus(fetchedMarathon) !== "Aberta" && (
             <Card>
               <CardContent className="pt-6 text-center">
                 <div className="text-gray-500 mb-2">
-                  {marathon.status === "Finalizada"
+                  {getMarathonStatus(fetchedMarathon) === "Finalizada"
                     ? "Esta maratona já foi finalizada"
                     : "Esta maratona ainda não começou"}
                 </div>

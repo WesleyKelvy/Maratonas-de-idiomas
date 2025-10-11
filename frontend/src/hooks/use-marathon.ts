@@ -1,10 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   MarathonService,
-  type LanguageMarathon,
   type CreateMarathonRequest,
-  type UpdateMarathonRequest,
+  type UpdateMarathonRequest
 } from "@/services/marathon.service";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // Query Keys
 export const marathonKeys = {
@@ -45,7 +44,7 @@ export const useMarathonByClassroom = (
 ) => {
   return useQuery({
     queryKey: [...marathonKeys.detail(marathonId), "classroom", classroomId],
-    queryFn: () => MarathonService.findOne(classroomId, marathonId),
+    queryFn: () => MarathonService.findOne(marathonId),
     enabled: !!classroomId && !!marathonId,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
@@ -85,7 +84,7 @@ export const useUpdateMarathon = () => {
       classroomId: string;
       marathonId: string;
       data: UpdateMarathonRequest;
-    }) => MarathonService.update(classroomId, marathonId, data),
+    }) => MarathonService.update(marathonId, data),
     onSuccess: (_, { classroomId, marathonId }) => {
       queryClient.invalidateQueries({
         queryKey: marathonKeys.detail(marathonId),
@@ -108,7 +107,7 @@ export const useDeleteMarathon = () => {
     }: {
       classroomId: string;
       marathonId: string;
-    }) => MarathonService.remove(classroomId, marathonId),
+    }) => MarathonService.remove(marathonId),
     onSuccess: (_, { classroomId }) => {
       queryClient.invalidateQueries({
         queryKey: marathonKeys.list(classroomId),

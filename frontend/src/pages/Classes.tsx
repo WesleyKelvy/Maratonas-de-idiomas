@@ -232,8 +232,8 @@ const Classes = () => {
                 <div className="space-y-2">
                   <CardTitle className="text-xl">{classItem.name}</CardTitle>
                   <div className="flex gap-2">
-                    <Badge variant="outline">Código: {classItem.code}</Badge>
-                    <Badge
+                    {/* <Badge variant="outline">Código: {classItem.code}</Badge> */}
+                    {/* <Badge
                       className={
                         classItem.isActive
                           ? "bg-green-100 text-green-800"
@@ -241,7 +241,7 @@ const Classes = () => {
                       }
                     >
                       {classItem.isActive ? "Ativa" : "Inativa"}
-                    </Badge>
+                    </Badge> */}
                   </div>
                 </div>
                 <Users className="h-6 w-6 text-blue-500" />

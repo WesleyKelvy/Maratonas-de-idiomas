@@ -30,13 +30,12 @@ import MarathonDashboard from "./pages/MarathonStudentDashboard";
 import Profile from "./pages/Profile";
 import QuestionManagement from "./pages/QuestionManagement";
 import Ranking from "./pages/Ranking";
+import Reports from "./pages/Reports";
 import StudentEnrollments from "./pages/StudentEnrollments";
 import StudentSubmissions from "./pages/StudentSubmissions";
 import SubmissionDetails from "./pages/SubmissionDetails";
 import Submissions from "./pages/Submissions";
 import TeacherSubmissions from "./pages/TeacherSubmissions.tsx";
-import Reports from "./pages/Reports";
-// import ReportDetails from "./pages/ReportDetails";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -259,7 +258,7 @@ const AppRoutes = () => (
       }
     />
     <Route
-      path="/question-management/:marathonId" // PROFESSOR
+      path="marathons/question-management/:marathonId" // PROFESSOR
       element={
         <ProtectedRoute>
           <RoleBasedRoute allowedRoles={["Professor", "Admin"]}>
