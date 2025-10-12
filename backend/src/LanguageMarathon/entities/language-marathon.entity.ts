@@ -8,6 +8,11 @@ import {
   Report,
 } from '@prisma/client';
 
+export class CustomLanguageMarathon {
+  id: string;
+  title: string;
+}
+
 export class LanguageMarathon {
   id: string;
   code: string;

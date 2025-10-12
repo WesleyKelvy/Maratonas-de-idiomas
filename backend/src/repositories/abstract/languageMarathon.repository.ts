@@ -1,10 +1,14 @@
 import { LanguageMarathon } from '@prisma/client';
 import { CreateLanguageMarathonDto } from 'src/LanguageMarathon/dto/language-marathon.create.dto';
 import { UpdateLanguageMarathonDto } from 'src/LanguageMarathon/dto/language-marathon.update.dto';
+import { CustomLanguageMarathon } from 'src/LanguageMarathon/entities/language-marathon.entity';
 
 export abstract class AbstractLanguageMarathonRepository {
   abstract findAllByClassroom(id: string): Promise<LanguageMarathon[]>;
   abstract findAllByUserId(id: string): Promise<LanguageMarathon[]>;
+  abstract findAllIdsAndTitle(
+    userId: string,
+  ): Promise<CustomLanguageMarathon[]>;
   abstract create(
     dto: CreateLanguageMarathonDto,
     id: string,

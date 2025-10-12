@@ -21,6 +21,7 @@ import {
 } from 'src/LanguageMarathon/abstract-services/abstract-language-marathon.service';
 import { CreateLanguageMarathonDto } from 'src/LanguageMarathon/dto/language-marathon.create.dto';
 import { UpdateLanguageMarathonDto } from 'src/LanguageMarathon/dto/language-marathon.update.dto';
+import { CustomLanguageMarathon } from 'src/LanguageMarathon/entities/language-marathon.entity';
 
 @Controller('marathon')
 export class LanguageMarathonController {
@@ -49,6 +50,13 @@ export class LanguageMarathonController {
   @Get('/user/:id')
   findAllByUserId(@Param('id') id: string): Promise<LanguageMarathon[]> {
     return this.marathonService.findAllByUserId(id);
+  }
+
+  @Get('/ids-and-titles/user/:id') // Only gets finished marathons for displaing ranking.
+  findAllIdsAndTitle(
+    @Param('id') id: string,
+  ): Promise<CustomLanguageMarathon[]> {
+    return this.marathonService.findAllIdsAndTitle(id);
   }
 
   @Get(':id')

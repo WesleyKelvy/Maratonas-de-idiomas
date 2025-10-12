@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { LanguageMarathon } from '@prisma/client';
 import { CreateLanguageMarathonDto } from 'src/LanguageMarathon/dto/language-marathon.create.dto';
 import { UpdateLanguageMarathonDto } from 'src/LanguageMarathon/dto/language-marathon.update.dto';
+import { CustomLanguageMarathon } from 'src/LanguageMarathon/entities/language-marathon.entity';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AbstractLanguageMarathonRepository } from 'src/repositories/abstract/languageMarathon.repository';
 
@@ -10,6 +11,15 @@ export class PrismaLanguageMarathonRepository
   implements AbstractLanguageMarathonRepository
 {
   constructor(private readonly prisma: PrismaService) {}
+  async findAllIdsAndTitle(userId: string): Promise<CustomLanguageMarathon[]> {
+    return this.prisma.languageMarathon.findMany({
+      where: { created_by: userId, end_date: { lt: new Date() } },
+      select: {
+        id: true,
+        title: true,
+      },
+    });
+  }
 
   /**
    * Finds all marathons for a given classroom code

@@ -14,6 +14,7 @@ import {
 import { AbstractLanguageMarathonService } from 'src/LanguageMarathon/abstract-services/abstract-language-marathon.service';
 import { CreateLanguageMarathonDto } from 'src/LanguageMarathon/dto/language-marathon.create.dto';
 import { UpdateLanguageMarathonDto } from 'src/LanguageMarathon/dto/language-marathon.update.dto';
+import { CustomLanguageMarathon } from 'src/LanguageMarathon/entities/language-marathon.entity';
 import {
   AbstractLeaderboardService,
   LEADERBOARD_SERVICE_TOKEN,
@@ -42,6 +43,15 @@ export class LanguageMarathonService
     private readonly classroomService: AbstractClassroomService,
   ) {}
 
+  async findAllIdsAndTitle(userId: string): Promise<CustomLanguageMarathon[]> {
+    const marathons = await this.marathonRepository.findAllIdsAndTitle(userId);
+
+    if (!marathons)
+      throw new NotFoundException(`No found classroom for user id: ${userId}.`);
+
+    return marathons;
+  }
+
   async findAllByClassroomId(id: string): Promise<LanguageMarathon[]> {
     const classroom = await this.classroomService.findOne(id);
 
@@ -54,12 +64,10 @@ export class LanguageMarathonService
   }
 
   async findAllByUserId(id: string): Promise<LanguageMarathon[]> {
-    const classroom = await this.classroomService.findAllByUserId(id);
+    const marathons = await this.marathonRepository.findAllByUserId(id);
 
-    if (!classroom)
-      throw new NotFoundException(`No found classroom for code: ${id}.`);
-
-    const marathons = await this.marathonRepository.findAllByClassroom(id);
+    if (!marathons)
+      throw new NotFoundException(`No found classroom for user id: ${id}.`);
 
     return marathons;
   }
