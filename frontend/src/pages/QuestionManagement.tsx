@@ -369,7 +369,7 @@ const QuestionManagement = () => {
               <AlertTriangle className="h-5 w-5 text-orange-600 flex-shrink-0" />
               <div className="flex-1">
                 <p className="text-orange-800 font-medium">
-                  Maratona em Andamento
+                  Maratona em Andamento ou Finalizada
                 </p>
                 <p className="text-orange-700 text-sm">
                   A maratona já foi iniciada em{" "}
