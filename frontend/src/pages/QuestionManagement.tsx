@@ -8,27 +8,50 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useMarathonWithQuestions } from "@/hooks/use-marathon";
+import {
+  useDeleteQuestion,
+  useGenerateQuestionsWithGemini,
+  useSaveQuestions,
+  useUpdateQuestion,
+} from "@/hooks/use-question";
 import { useToast } from "@/hooks/use-toast";
+import { GeminiQuestionResponse, Question } from "@/services/question.service";
+import {
+  editQuestionFormSchema,
+  type EditQuestionFormData,
+} from "@/schemas/question.schema";
 import {
   ArrowLeft,
   Brain,
   Clock,
   Edit3,
   FileText,
+  Loader2,
   Plus,
   Save,
   Sparkles,
   Trash2,
   Users,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-interface Question {
-  id: string;
+interface EditQuestion {
+  id?: number;
   title: string;
   prompt_text: string;
   isNew?: boolean;
@@ -39,80 +62,50 @@ const QuestionManagement = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
+  const [editingQuestion, setEditingQuestion] = useState<EditQuestion | null>(
+    null
+  );
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+
+  // Form validation with Zod
+  const form = useForm<EditQuestionFormData>({
+    resolver: zodResolver(editQuestionFormSchema),
+    defaultValues: {
+      title: "",
+      prompt_text: "",
+    },
+  });
   const [showMarathonInfo, setShowMarathonInfo] = useState(false);
+  const [generatedQuestions, setGeneratedQuestions] = useState<
+    GeminiQuestionResponse[]
+  >([]);
 
-  // Mock marathon data - in real app this would come from backend
-  const marathonData = {
-    title: "Maratona de JavaScript",
-    description: "Teste seus conhecimentos em JavaScript",
-    difficulty: "Intermediate",
-    timeLimit: 120,
-    number_of_questions: 10,
-    context:
-      "JavaScript ES6+, programação funcional, async/await, DOM manipulation",
-  };
+  // Fetch marathon data with questions (optimized single request)
+  const {
+    data: marathon,
+    isLoading: marathonLoading,
+    refetch: refetchMarathon,
+  } = useMarathonWithQuestions(marathonId || "");
 
-  useEffect(() => {
-    // Initialize with empty questions array
-    setQuestions([]);
-  }, [marathonId]);
+  // Extract questions from marathon data
+  const questions = marathon?.questions || [];
+
+  // Mutations
+  const generateMutation = useGenerateQuestionsWithGemini();
+  const saveMutation = useSaveQuestions();
+  const updateMutation = useUpdateQuestion();
+  const deleteMutation = useDeleteQuestion();
 
   const generateQuestionsWithAI = async () => {
-    setIsGenerating(true);
+    if (!marathonId) return;
 
     try {
-      // Simulate AI generation delay
-      // await new Promise((resolve) => setTimeout(resolve, 3000));
-
-      // Mock generated questions
-      const generatedQuestions: Question[] = [
-        {
-          id: `temp_${Date.now()}_1`,
-          title: "Manipulação de Arrays",
-          prompt_text:
-            "Implemente uma função que receba um array de números e retorne apenas os números pares, ordenados de forma crescente. Utilize métodos de array do JavaScript ES6+.",
-          isNew: true,
-        },
-        {
-          id: `temp_${Date.now()}_2`,
-          title: "Programação Assíncrona",
-          prompt_text:
-            "Crie uma função async que faça três requisições HTTP paralelas usando Promise.all() e trate possíveis erros adequadamente.",
-          isNew: true,
-        },
-        {
-          id: `temp_${Date.now()}_3`,
-          title: "DOM e Eventos",
-          prompt_text:
-            "Desenvolva um sistema de to-do list que permita adicionar, remover e marcar tarefas como concluídas, usando apenas JavaScript vanilla.",
-          isNew: true,
-        },
-        {
-          id: `temp_${Date.now()}_4`,
-          title: "Closures e Escopo",
-          prompt_text:
-            "Explique o conceito de closure em JavaScript e implemente um contador privado usando esse padrão.",
-          isNew: true,
-        },
-        {
-          id: `temp_${Date.now()}_5`,
-          title: "Destructuring e Spread",
-          prompt_text:
-            "Demonstre o uso de destructuring assignment e spread operator em diferentes cenários práticos.",
-          isNew: true,
-        },
-      ];
-
-      setQuestions(generatedQuestions);
+      const result = await generateMutation.mutateAsync(marathonId);
+      setGeneratedQuestions(result);
 
       toast({
         title: "Questões Geradas!",
-        description: `${generatedQuestions.length} questões foram geradas com sucesso.`,
+        description: `${result.length} questões foram geradas com sucesso.`,
       });
     } catch (error) {
       toast({
@@ -120,90 +113,210 @@ const QuestionManagement = () => {
         description: "Erro ao gerar questões. Tente novamente.",
         variant: "destructive",
       });
-    } finally {
-      setIsGenerating(false);
     }
   };
 
-  const handleEditQuestion = (question: Question) => {
-    setEditingQuestion({ ...question });
+  const handleEditQuestion = (question: any) => {
+    setEditingQuestion({
+      id: question.id,
+      title: question.title,
+      prompt_text: question.prompt_text,
+    });
+
+    // Reset and populate form
+    form.reset({
+      title: question.title,
+      prompt_text: question.prompt_text,
+    });
+
     setEditDialogOpen(true);
   };
 
-  const handleSaveQuestion = () => {
-    if (!editingQuestion) return;
-
-    setQuestions((prev) =>
-      prev.map((q) =>
-        q.id === editingQuestion.id ? { ...editingQuestion, isNew: q.isNew } : q
-      )
-    );
-
-    setEditDialogOpen(false);
-    setEditingQuestion(null);
-
-    toast({
-      title: "Questão Atualizada",
-      description: "As alterações foram salvas localmente.",
+  const handleEditGeneratedQuestion = (
+    question: GeminiQuestionResponse,
+    index: number
+  ) => {
+    setEditingQuestion({
+      title: `Questão ${index + 1}`,
+      prompt_text: question.question_text,
+      isNew: true,
     });
+
+    // Reset and populate form
+    form.reset({
+      title: `Questão ${index + 1}`,
+      prompt_text: question.question_text,
+    });
+
+    setEditDialogOpen(true);
   };
 
-  const handleDeleteQuestion = (id: string) => {
-    setQuestions((prev) => prev.filter((q) => q.id !== id));
-    toast({
-      title: "Questão Removida",
-      description: "A questão foi removida da lista.",
-    });
+  const handleSaveQuestion = async (data: EditQuestionFormData) => {
+    if (!editingQuestion || !marathonId) return;
+
+    try {
+      if (editingQuestion.id) {
+        // Update existing question
+        await updateMutation.mutateAsync({
+          id: editingQuestion.id,
+          marathonId,
+          data: {
+            title: data.title,
+            prompt_text: data.prompt_text,
+          },
+        });
+
+        toast({
+          title: "Questão Atualizada",
+          description: "A questão foi atualizada com sucesso.",
+        });
+      } else {
+        // Create new question - send as array of QuestionDto
+        const newQuestion = {
+          title: data.title,
+          prompt_text: data.prompt_text,
+        };
+
+        // Use saveMutation to save single question
+        await saveMutation.mutateAsync({
+          marathonId,
+          data: [newQuestion],
+        });
+
+        toast({
+          title: "Questão Adicionada",
+          description: "A nova questão foi adicionada com sucesso.",
+        });
+      }
+
+      handleCloseDialog();
+      refetchMarathon(); // Refetch to get updated question list
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao salvar questão.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteQuestion = async (id: number) => {
+    try {
+      await deleteMutation.mutateAsync({ id, marathonId });
+      toast({
+        title: "Questão Removida",
+        description: "A questão foi removida com sucesso.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao remover questão.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleAddNewQuestion = () => {
-    const newQuestion: Question = {
-      id: `temp_${Date.now()}_new`,
-      title: "Nova Questão",
-      prompt_text: "Descreva o enunciado da questão aqui...",
+    setEditingQuestion({
+      title: "",
+      prompt_text: "",
       isNew: true,
-    };
+    });
 
-    setQuestions((prev) => [...prev, newQuestion]);
-    handleEditQuestion(newQuestion);
+    // Reset form for new question
+    form.reset({
+      title: "",
+      prompt_text: "",
+    });
+
+    setEditDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setEditDialogOpen(false);
+    setEditingQuestion(null);
+    form.reset();
   };
 
   const handleSaveAllQuestions = async () => {
-    if (questions.length === 0) {
+    if (!marathonId || generatedQuestions.length === 0) {
       toast({
         title: "Nenhuma Questão",
-        description: "Adicione pelo menos uma questão antes de salvar.",
+        description: "Gere questões com IA antes de salvar.",
         variant: "destructive",
       });
       return;
     }
 
-    setIsSaving(true);
-
     try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Validate questions before saving
+      const questionsToSave = generatedQuestions.map((q, index) => ({
+        title: `Questão ${index + 1}`,
+        prompt_text: q.question_text,
+      }));
 
-      // In real app, would send to: POST /classrooms/:code/marathon/:marathonId/save-questions
-      console.log("Saving questions:", questions);
+      // Validate each question
+      const validationErrors = [];
+      questionsToSave.forEach((question, index) => {
+        try {
+          editQuestionFormSchema.parse(question);
+        } catch (error) {
+          validationErrors.push(
+            `Questão ${index + 1}: ${
+              error.issues[0]?.message || "Erro de validação"
+            }`
+          );
+        }
+      });
+
+      if (validationErrors.length > 0) {
+        toast({
+          title: "Erro de Validação",
+          description: `Algumas questões contêm erros: ${validationErrors.join(
+            ", "
+          )}`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      await saveMutation.mutateAsync({
+        marathonId,
+        data: questionsToSave,
+      });
 
       toast({
         title: "Questões Salvas!",
-        description: `${questions.length} questões foram salvas com sucesso.`,
+        description: `${generatedQuestions.length} questões foram salvas com sucesso.`,
       });
 
-      // Navigate back to marathons or class details
-      navigate("/marathons");
+      // Clear generated questions and refetch saved ones
+      setGeneratedQuestions([]);
+      refetchMarathon();
     } catch (error) {
       toast({
         title: "Erro ao Salvar",
         description: "Erro ao salvar questões. Tente novamente.",
         variant: "destructive",
       });
-    } finally {
-      setIsSaving(false);
     }
   };
+
+  if (!marathonId) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-gray-500">Marathon ID not found</p>
+      </div>
+    );
+  }
+
+  if (marathonLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -222,7 +335,9 @@ const QuestionManagement = () => {
             <h1 className="text-3xl font-bold text-gray-900">
               Gerenciar Questões
             </h1>
-            <p className="text-gray-600 mt-2">{marathonData.title}</p>
+            <p className="text-gray-600 mt-2">
+              {marathon?.title || "Maratona"}
+            </p>
           </div>
         </div>
         <Badge variant="outline" className="text-sm text-neutral-200">
@@ -282,24 +397,29 @@ const QuestionManagement = () => {
               <div className="pt-4">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
                   <div className="flex items-center gap-2">
-                    <Badge variant="secondary">{marathonData.difficulty}</Badge>
+                    <Badge variant="secondary">
+                      {marathon?.difficulty || "N/A"}
+                    </Badge>
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-gray-500" />
-                    <span>{marathonData.timeLimit} minutos</span>
+                    <span>{marathon?.timeLimit || 0} minutos</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Brain className="h-4 w-4 text-gray-500" />
-                    <span>{marathonData.number_of_questions} questões</span>
+                    <span>{marathon?.number_of_questions || 0} questões</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4 text-gray-500" />
-                    <span>JavaScript, ES6+</span>
+                    <span>
+                      {marathon?.classroom?.creator?.name || "Professor"}
+                    </span>
                   </div>
                 </div>
                 <div className="mt-4 p-3 bg-gray-50 rounded-lg">
                   <p className="text-sm text-gray-700">
-                    <strong>Contexto:</strong> {marathonData.context}
+                    <strong>Descrição:</strong>{" "}
+                    {marathon?.description || "Sem descrição disponível"}
                   </p>
                 </div>
               </div>
@@ -313,11 +433,15 @@ const QuestionManagement = () => {
         <div className="flex gap-3">
           <Button
             onClick={generateQuestionsWithAI}
-            disabled={isGenerating}
+            disabled={generateMutation.isPending}
             className="bg-purple-600 hover:bg-purple-700"
           >
-            <Sparkles className="mr-2 h-4 w-4" />
-            {isGenerating ? "Gerando..." : "Gerar com IA"}
+            {generateMutation.isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Sparkles className="mr-2 h-4 w-4" />
+            )}
+            {generateMutation.isPending ? "Gerando..." : "Gerar com IA"}
           </Button>
           <Button variant="outline" onClick={handleAddNewQuestion}>
             <Plus className="mr-2 h-4 w-4" />
@@ -325,38 +449,42 @@ const QuestionManagement = () => {
           </Button>
         </div>
 
-        {questions.length > 0 && (
+        {generatedQuestions.length > 0 && (
           <Button
             onClick={handleSaveAllQuestions}
-            disabled={isSaving}
+            disabled={saveMutation.isPending}
             className="bg-green-600 hover:bg-green-700"
           >
-            <Save className="mr-2 h-4 w-4" />
-            {isSaving ? "Salvando..." : `Salvar Todas (${questions.length})`}
+            {saveMutation.isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="mr-2 h-4 w-4" />
+            )}
+            {saveMutation.isPending
+              ? "Salvando..."
+              : `Salvar Geradas (${generatedQuestions.length})`}
           </Button>
         )}
       </div>
 
-      {/* Questions List */}
-      {questions.length > 0 ? (
+      {/* Saved Questions */}
+      {questions.length > 0 && (
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-gray-900">
-            Questões {questions[0]?.isNew ? "(Preview)" : ""}
+            Questões Salvas ({questions.length})
           </h2>
 
           <div className="overflow-y-auto space-y-4 max-h-[50vh] pb-2">
             {questions.map((question, index) => (
               <Card key={question.id} className="relative">
-                <CardHeader className="">
+                <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
                         <Badge variant="outline">Questão {index + 1}</Badge>
-                        {question.isNew && (
-                          <Badge variant="secondary" className="text-xs">
-                            Preview
-                          </Badge>
-                        )}
+                        <Badge variant="default" className="text-xs">
+                          Salva
+                        </Badge>
                       </div>
                       <CardTitle className="text-lg">
                         {question.title}
@@ -367,6 +495,7 @@ const QuestionManagement = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => handleEditQuestion(question)}
+                        disabled={updateMutation.isPending}
                       >
                         <Edit3 className="h-4 w-4" />
                       </Button>
@@ -374,6 +503,7 @@ const QuestionManagement = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => handleDeleteQuestion(question.id)}
+                        disabled={deleteMutation.isPending}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -382,7 +512,7 @@ const QuestionManagement = () => {
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="prose prose-sm max-w-none">
-                    <p className="whitespace-pre-wrap text-gray-700">
+                    <p className="whitespace-pre-wrap text-gray-700 max-w-[90%]">
                       {question.prompt_text}
                     </p>
                   </div>
@@ -391,7 +521,59 @@ const QuestionManagement = () => {
             ))}
           </div>
         </div>
-      ) : (
+      )}
+
+      {/* Generated Questions Preview */}
+      {generatedQuestions.length > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold text-gray-900">
+            Questões Geradas - Preview ({generatedQuestions.length})
+          </h2>
+
+          <div className="overflow-y-auto space-y-4 max-h-[50vh] pb-2">
+            {generatedQuestions.map((question, index) => (
+              <Card key={index} className="relative">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline">Questão {index + 1}</Badge>
+                        <Badge variant="secondary" className="text-xs">
+                          Preview
+                        </Badge>
+                      </div>
+                      <CardTitle className="text-lg">
+                        Questão Gerada {index + 1}
+                      </CardTitle>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          handleEditGeneratedQuestion(question, index)
+                        }
+                      >
+                        <Edit3 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="prose prose-sm max-w-none">
+                    <p className="whitespace-pre-wrap text-gray-700">
+                      {question.question_text}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {questions.length === 0 && generatedQuestions.length === 0 && (
         <Card>
           <CardContent className="text-center py-12">
             <Brain className="h-12 w-12 text-gray-300 mx-auto mb-4" />
@@ -402,60 +584,96 @@ const QuestionManagement = () => {
               Use a IA para gerar questões automaticamente ou adicione
               manualmente.
             </p>
-            <div className="flex justify-center gap-3"></div>
           </CardContent>
         </Card>
       )}
 
       {/* Edit Question Dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+      <Dialog open={editDialogOpen} onOpenChange={handleCloseDialog}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Editar Questão</DialogTitle>
+            <DialogTitle>
+              {editingQuestion?.isNew
+                ? "Adicionar uma questão"
+                : "Editar Questão"}
+            </DialogTitle>
             <DialogDescription>
-              Faça as alterações necessárias na questão.
+              {editingQuestion?.isNew
+                ? "Adicione uma nova questão à maratona."
+                : "Faça as alterações necessárias na questão."}
             </DialogDescription>
           </DialogHeader>
           {editingQuestion && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="questionTitle">Título da Questão</Label>
-                <Input
-                  id="questionTitle"
-                  value={editingQuestion.title}
-                  onChange={(e) =>
-                    setEditingQuestion((prev) =>
-                      prev ? { ...prev, title: e.target.value } : null
-                    )
-                  }
-                  placeholder="Ex: Manipulação de Arrays"
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(handleSaveQuestion)}
+                className="space-y-4"
+              >
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Título da Questão</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Ex: Como seria o mundo sem tarefas de casa?"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Título identificador da questão (3-100 caracteres)
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="questionPrompt">Enunciado</Label>
-                <Textarea
-                  id="questionPrompt"
-                  value={editingQuestion.prompt_text}
-                  onChange={(e) =>
-                    setEditingQuestion((prev) =>
-                      prev ? { ...prev, prompt_text: e.target.value } : null
-                    )
-                  }
-                  placeholder="Descreva o enunciado completo da questão..."
-                  rows={8}
+
+                <FormField
+                  control={form.control}
+                  name="prompt_text"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Enunciado</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Descreva o enunciado completo da questão..."
+                          rows={8}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Descrição detalhada da questão (10-2000 caracteres)
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-              <div className="flex justify-end gap-2 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setEditDialogOpen(false)}
-                >
-                  Cancelar
-                </Button>
-                <Button onClick={handleSaveQuestion}>Salvar Alterações</Button>
-              </div>
-            </div>
+
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCloseDialog}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={
+                      updateMutation.isPending || saveMutation.isPending
+                    }
+                  >
+                    {updateMutation.isPending || saveMutation.isPending ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : null}
+                    {editingQuestion?.isNew
+                      ? "Adicionar Questão"
+                      : "Salvar Alterações"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
           )}
         </DialogContent>
       </Dialog>
