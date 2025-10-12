@@ -445,14 +445,18 @@ const MarathonDetails = () => {
           {getMarathonStatus(fetchedMarathon) !== "Aberta" && (
             <Card>
               <CardContent className="pt-6 text-center">
-                <div className="text-gray-500 mb-2">
-                  {getMarathonStatus(fetchedMarathon) === "Finalizada"
-                    ? "Esta maratona já foi finalizada"
-                    : "Esta maratona ainda não começou"}
+                <div className="text-gray-700">
+                  {getMarathonStatus(fetchedMarathon) === "Finalizada" ? (
+                    <button
+                      disabled
+                      className="w-full text-gray-700 border border-gray-300 border-input bg-background hover:bg-accent rounded-md h-10 px-4 py-2"
+                    >
+                      Esta maratona já foi finalizada
+                    </button>
+                  ) : (
+                    "Esta maratona ainda não começou"
+                  )}
                 </div>
-                <Button disabled className="w-full">
-                  Não Disponível
-                </Button>
               </CardContent>
             </Card>
           )}
