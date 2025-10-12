@@ -70,11 +70,11 @@ export class EnrollmentService implements AbstractEnrollmentService {
 
     if (data) throw new ConflictException('Enrollment already done!');
 
-    const { id: marathonId, code: marathonCode } =
-      await this.marathonService.findOneByCode(code);
-
-    const { created_by } =
-      await this.classroomService.findOneByMarathonId(code);
+    const {
+      id: marathonId,
+      code: marathonCode,
+      created_by,
+    } = await this.marathonService.findOneByCode(code);
 
     await this.professorStatsService.incrementTotalStudentsProfessorStats(
       created_by,

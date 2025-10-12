@@ -10,8 +10,9 @@ import { CreateClassroomDto } from 'src/Classroom/dto/classroom.create.dto';
 import { UpdateClassroomDto } from 'src/Classroom/dto/classroom.update.dto';
 import {
   Classroom,
+  ClassroomWithLanguageMarathon,
   ClassroomWithMarathonIds,
-  ClassroomWithMarathons,
+  ClassroomWithMarathonsAndEnrollments,
 } from 'src/Classroom/entities/classroom.entity';
 import {
   AbstractClassroomRepository,
@@ -31,27 +32,24 @@ export class ClassroomService implements AbstractClassroomService {
     private readonly classroomRepository: AbstractClassroomRepository,
   ) {}
 
-  async findOneByMarathonId(id: string): Promise<ClassroomWithMarathons> {
-    const classroom = await this.classroomRepository.findOneByMarathonId(id);
-    if (!classroom) {
-      throw new NotFoundException(`No classroom found for marathon ID ${id}.`);
-    }
-
-    return classroom;
-  }
-
   async findAllByUserId(id: string): Promise<ClassroomWithMarathonIds[]> {
     return await this.classroomRepository.findAllByUserId(id);
   }
 
-  async create(dto: CreateClassroomDto, userId: string): Promise<Classroom> {
+  async create(
+    dto: CreateClassroomDto,
+    userId: string,
+  ): Promise<ClassroomWithLanguageMarathon> {
     await this.professorStatsService.incrementClassesProfessorStats(userId);
 
     return this.classroomRepository.create(dto, userId);
   }
 
-  async findOne(id: string): Promise<ClassroomWithMarathonIds> {
-    const classroom = await this.classroomRepository.findById(id);
+  async findOne(id: string): Promise<ClassroomWithMarathonsAndEnrollments> {
+    const classroom =
+      await this.classroomRepository.findClassroomWithMarathonsAndEnrollments(
+        id,
+      );
     if (!classroom) {
       throw new NotFoundException(`No classroom found with Id ${id}`);
     }
@@ -63,8 +61,8 @@ export class ClassroomService implements AbstractClassroomService {
     id: string,
     dto: UpdateClassroomDto,
     userId: string,
-  ): Promise<Classroom> {
-    const classroom = await this.classroomRepository.findById(id);
+  ): Promise<ClassroomWithLanguageMarathon> {
+    const classroom = await this.classroomRepository.findClassroom(id);
     if (!classroom) {
       throw new NotFoundException(`No classroom found with Id ${id}`);
     }
@@ -76,7 +74,8 @@ export class ClassroomService implements AbstractClassroomService {
   }
 
   async remove(id: string, userId: string): Promise<void> {
-    const classroom = await this.classroomRepository.findById(id);
+    const classroom =
+      await this.classroomRepository.findClassroomWithMarathonsIds(id);
     if (!classroom) {
       throw new NotFoundException(`No classroom found with code ${id}`);
     }
@@ -90,5 +89,18 @@ export class ClassroomService implements AbstractClassroomService {
       );
 
     this.classroomRepository.remove(id, userId);
+  }
+
+  //Used in report module.
+  async findClassroomByMarathonId(marathonId: string): Promise<Classroom> {
+    const classroom =
+      await this.classroomRepository.findClassroomByMarathonId(marathonId);
+    if (!classroom) {
+      throw new NotFoundException(
+        `No classroom found for marathon ID ${marathonId}.`,
+      );
+    }
+
+    return classroom;
   }
 }

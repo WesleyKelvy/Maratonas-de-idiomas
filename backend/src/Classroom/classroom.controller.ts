@@ -23,8 +23,9 @@ import {
 import { CreateClassroomDto } from 'src/Classroom/dto/classroom.create.dto';
 import { UpdateClassroomDto } from 'src/Classroom/dto/classroom.update.dto';
 import {
-  Classroom,
+  ClassroomWithLanguageMarathon,
   ClassroomWithMarathonIds,
+  ClassroomWithMarathonsAndEnrollments,
 } from 'src/Classroom/entities/classroom.entity';
 
 @Controller('classroom')
@@ -41,7 +42,7 @@ export class ClassroomController {
   create(
     @Body() dto: CreateClassroomDto,
     @CurrentUser() user: UserFromJwt,
-  ): Promise<Classroom> {
+  ): Promise<ClassroomWithLanguageMarathon> {
     return this.classroomService.create(dto, user.id);
   }
 
@@ -53,7 +54,9 @@ export class ClassroomController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<ClassroomWithMarathonIds> {
+  findOne(
+    @Param('id') id: string,
+  ): Promise<ClassroomWithMarathonsAndEnrollments> {
     return this.classroomService.findOne(id);
   }
 
@@ -65,7 +68,7 @@ export class ClassroomController {
     @Param('id') classroomId: string,
     @Body() updateDto: UpdateClassroomDto,
     @CurrentUser() user: UserFromJwt,
-  ): Promise<Classroom> {
+  ): Promise<ClassroomWithLanguageMarathon> {
     return this.classroomService.update(classroomId, updateDto, user.id);
   }
 

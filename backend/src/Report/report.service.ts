@@ -103,7 +103,7 @@ export class ReportService implements AbstractReportService {
       );
 
       const [classroom, aiFeedbacks] = await Promise.all([
-        this.classroomService.findOneByMarathonId(marathonId),
+        this.classroomService.findClassroomByMarathonId(marathonId),
         this.aiFeedbackService.findAllByMarathonId(marathonId),
       ]);
 

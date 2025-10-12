@@ -1,12 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { AbstractClassroomRepository } from 'src/repositories/abstract/classroom.repository';
+import { Injectable } from '@nestjs/common';
 import { CreateClassroomDto } from 'src/Classroom/dto/classroom.create.dto';
 import { UpdateClassroomDto } from 'src/Classroom/dto/classroom.update.dto';
 import {
   Classroom,
   ClassroomWithMarathonIds,
+  ClassroomWithMarathonsAndEnrollments,
 } from 'src/Classroom/entities/classroom.entity';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { AbstractClassroomRepository } from 'src/repositories/abstract/classroom.repository';
 
 @Injectable()
 export class PrismaClassroomRepository implements AbstractClassroomRepository {
@@ -15,9 +16,11 @@ export class PrismaClassroomRepository implements AbstractClassroomRepository {
   /**
    * Find a single classroom by its marathonId
    */
-  async findOneByMarathonId(id: string): Promise<Classroom | null> {
+  async findClassroomByMarathonId(
+    marathonId: string,
+  ): Promise<Classroom | null> {
     return await this.prisma.classroom.findFirst({
-      where: { marathons: { every: { id } } },
+      where: { marathons: { every: { id: marathonId } } },
     });
   }
 
@@ -48,13 +51,41 @@ export class PrismaClassroomRepository implements AbstractClassroomRepository {
     });
   }
 
+  async findClassroom(
+    id: string,
+  ): Promise<ClassroomWithMarathonsAndEnrollments | null> {
+    return await this.prisma.classroom.findUnique({
+      where: { id },
+    });
+  }
+
+  async findClassroomWithMarathonsIds(
+    id: string,
+  ): Promise<ClassroomWithMarathonIds | null> {
+    return await this.prisma.classroom.findUnique({
+      where: { id },
+      include: {
+        marathons: {
+          omit: { classroom_id: true },
+        },
+      },
+    });
+  }
+
   /**
    * Finds a single classroom by its code
    */
-  async findById(id: string): Promise<ClassroomWithMarathonIds | null> {
+  async findClassroomWithMarathonsAndEnrollments(
+    id: string,
+  ): Promise<ClassroomWithMarathonsAndEnrollments | null> {
     return await this.prisma.classroom.findUnique({
       where: { id },
-      include: { marathons: { select: { id: true } } },
+      include: {
+        marathons: {
+          include: { enrollments: { select: { id: true } } },
+          omit: { classroom_id: true },
+        },
+      },
     });
   }
 
@@ -76,16 +107,9 @@ export class PrismaClassroomRepository implements AbstractClassroomRepository {
   }
 
   /**
-   * Removes a classroom by code
+   * Removes a classroom by id
    */
-  async remove(id: string, userId: string): Promise<void> {
-    const existing = await this.prisma.classroom.findUnique({
-      where: { id, created_by: userId },
-    });
-    if (!existing) {
-      throw new NotFoundException(`Classroom with code ${id} not found.`);
-    }
-
+  async remove(id: string): Promise<void> {
     await this.prisma.classroom.delete({ where: { id } });
   }
 }
