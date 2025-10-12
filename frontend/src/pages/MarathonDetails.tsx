@@ -20,6 +20,7 @@ import {
   BookText,
   Calendar,
   Clock,
+  FileText,
   Loader2,
   Play,
   TableOfContents,
@@ -415,6 +416,31 @@ const MarathonDetails = () => {
                 </CardContent>
               </Card>
             )}
+
+          {/* Professor Management Buttons */}
+          {user?.role === "Professor" && (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-gray-900">
+                    Gerenciar Maratona
+                  </h3>
+                  <Button
+                    size="lg"
+                    className="w-full bg-purple-600 hover:bg-purple-700"
+                    onClick={() =>
+                      navigate(
+                        `/marathons/question-management/${fetchedMarathon.id}`
+                      )
+                    }
+                  >
+                    <FileText className="mr-2 h-5 w-5" />
+                    Gerenciar Questões
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {getMarathonStatus(fetchedMarathon) !== "Aberta" && (
             <Card>

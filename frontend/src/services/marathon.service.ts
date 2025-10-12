@@ -1,5 +1,12 @@
 import { apiClient } from "@/lib/api-client";
 
+export interface MarathonQuestion {
+  id: number;
+  title: string;
+  prompt_text: string;
+  orderNumber: number;
+}
+
 export interface LanguageMarathon {
   id: string;
   code: string;
@@ -20,6 +27,7 @@ export interface LanguageMarathon {
       name: string;
     };
   };
+  questions?: MarathonQuestion[];
 }
 
 export interface CreateMarathonRequest {
@@ -67,6 +75,15 @@ export class MarathonService {
   static async findOne(marathonId: string): Promise<LanguageMarathon> {
     return apiClient.get<LanguageMarathon>(
       `${MarathonService.BASE_URL}/${marathonId}`
+    );
+  }
+
+  // GET /marathon/:id/with-questions - findOneWithQuestions
+  static async findOneWithQuestions(
+    marathonId: string
+  ): Promise<LanguageMarathon> {
+    return apiClient.get<LanguageMarathon>(
+      `${MarathonService.BASE_URL}/${marathonId}/with-questions`
     );
   }
 

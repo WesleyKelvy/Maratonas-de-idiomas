@@ -1,7 +1,7 @@
 import {
   MarathonService,
   type CreateMarathonRequest,
-  type UpdateMarathonRequest
+  type UpdateMarathonRequest,
 } from "@/services/marathon.service";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -13,9 +13,10 @@ export const marathonKeys = {
     [...marathonKeys.lists(), { classroomId }] as const,
   details: () => [...marathonKeys.all, "detail"] as const,
   detail: (id: string) => [...marathonKeys.details(), id] as const,
+  withQuestions: (id: string) =>
+    [...marathonKeys.details(), id, "with-questions"] as const,
 } as const;
 
-// Hook para obter maratonas de uma classroom
 export const useMarathons = (classroomId: string) => {
   return useQuery({
     queryKey: marathonKeys.list(classroomId),
@@ -26,7 +27,6 @@ export const useMarathons = (classroomId: string) => {
   });
 };
 
-// Hook para obter uma maratona específica por ID
 export const useMarathon = (marathonId: string) => {
   return useQuery({
     queryKey: marathonKeys.detail(marathonId),
@@ -37,7 +37,6 @@ export const useMarathon = (marathonId: string) => {
   });
 };
 
-// Hook para obter uma maratona específica por classroom e marathon ID
 export const useMarathonByClassroom = (
   classroomId: string,
   marathonId: string
@@ -51,7 +50,16 @@ export const useMarathonByClassroom = (
   });
 };
 
-// Hook para criar maratona
+export const useMarathonWithQuestions = (marathonId: string) => {
+  return useQuery({
+    queryKey: marathonKeys.withQuestions(marathonId),
+    queryFn: () => MarathonService.findOneWithQuestions(marathonId),
+    enabled: !!marathonId,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+};
+
 export const useCreateMarathon = () => {
   const queryClient = useQueryClient();
 
@@ -71,7 +79,6 @@ export const useCreateMarathon = () => {
   });
 };
 
-// Hook para atualizar maratona
 export const useUpdateMarathon = () => {
   const queryClient = useQueryClient();
 
@@ -96,7 +103,6 @@ export const useUpdateMarathon = () => {
   });
 };
 
-// Hook para deletar maratona
 export const useDeleteMarathon = () => {
   const queryClient = useQueryClient();
 
