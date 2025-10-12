@@ -1,147 +1,215 @@
+import React from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Users,
+  ArrowLeft,
+  Copy,
+  Trophy,
+  Eye,
+  Plus,
+  Loader2,
+} from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { useClassroom } from "@/hooks/use-classroom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  createMarathonFormSchema,
+  CreateMarathonFormData,
+} from "@/schemas/marathon.schema";
+import { useCreateMarathon } from "@/hooks/use-marathon";
+import { CreateMarathonRequest } from "@/services/marathon.service";
+import { useState } from "react";
 
-import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Users, Calendar, ArrowLeft, Copy, UserPlus, Trophy, Eye, Trash2, Mail, Plus } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+const DIFFICULTY_LEVELS = {
+  BEGINNER: "Beginner",
+  INTERMEDIATE: "Intermediate",
+  ADVANCED: "Advanced",
+} as const;
+
+const DIFFICULTY_DISPLAY = {
+  [DIFFICULTY_LEVELS.BEGINNER]: "Iniciante",
+  [DIFFICULTY_LEVELS.INTERMEDIATE]: "Intermediário",
+  [DIFFICULTY_LEVELS.ADVANCED]: "Avançado",
+} as const;
 
 const ClassDetails = () => {
-  const { id } = useParams();
+  const { classId } = useParams();
   const navigate = useNavigate();
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
-  // Mock data
-  const classData = {
-    id: parseInt(id || '1'),
-    name: "Turma de JavaScript - 2024.1",
-    code: "JS2024A",
-    description: "Turma focada em desenvolvimento web com JavaScript moderno",
-    studentCount: 25,
-    maxStudents: 30,
-    expirationDate: "2024-12-31",
-    creator: "Prof. Ana Silva",
-    isActive: true,
-    inviteLink: `${window.location.origin}/join-class/JS2024A`
-  };
+  // Fetch classroom data from backend
+  const { data: classData, isLoading, error } = useClassroom(classId!);
 
-  const students = [
-    {
-      id: 1,
-      name: "João Silva",
-      email: "joao@email.com",
-      joinDate: "2024-01-15",
-      totalScore: 850,
-      marathonsCompleted: 8
+  // Marathon creation form
+  const createMarathonMutation = useCreateMarathon();
+
+  const form = useForm<CreateMarathonFormData>({
+    resolver: zodResolver(createMarathonFormSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      context: "",
+      difficulty: "",
+      timeLimit: "",
+      startDate: "",
+      endDate: "",
+      number_of_questions: 1,
+      classroom_id: classId,
     },
-    {
-      id: 2,
-      name: "Maria Santos",
-      email: "maria@email.com",
-      joinDate: "2024-01-16",
-      totalScore: 920,
-      marathonsCompleted: 9
-    },
-    {
-      id: 3,
-      name: "Pedro Costa",
-      email: "pedro@email.com",
-      joinDate: "2024-01-20",
-      totalScore: 740,
-      marathonsCompleted: 7
-    }
-  ];
+  });
 
-  const linkedMarathons = [
-    {
-      id: 1,
-      title: "Maratona de JavaScript Básico",
-      difficulty: "Iniciante",
-      status: "Aberta",
-      participants: 22,
-      startDate: "2024-07-15"
-    },
-    {
-      id: 2,
-      title: "JavaScript Avançado",
-      difficulty: "Avançado",
-      status: "Finalizada",
-      participants: 18,
-      startDate: "2024-07-01"
-    },
-    {
-      id: 3,
-      title: "DOM e Eventos",
-      difficulty: "Intermediário",
-      status: "Aguardando início",
-      participants: 0,
-      startDate: "2024-07-25"
-    }
-  ];
+  const onSubmit = async (values: CreateMarathonFormData) => {
+    try {
+      const marathonData: CreateMarathonRequest = {
+        title: values.title,
+        description: values.description || undefined,
+        context: values.context,
+        difficulty: values.difficulty as
+          | "Beginner"
+          | "Intermediate"
+          | "Advanced",
+        timeLimit: parseInt(values.timeLimit),
+        startDate: values.startDate ? new Date(values.startDate) : undefined,
+        endDate: values.endDate ? new Date(values.endDate) : undefined,
+        number_of_questions: values.number_of_questions,
+      };
 
-  const handleCopyInviteLink = () => {
-    navigator.clipboard.writeText(classData.inviteLink);
-    toast({
-      title: "Link copiado!",
-      description: "O link de convite foi copiado para a área de transferência.",
-    });
-  };
+      const marathon = await createMarathonMutation.mutateAsync({
+        classroomId: classId!,
+        data: marathonData,
+      });
 
-  const handleInviteByEmail = () => {
-    if (!inviteEmail) {
       toast({
-        title: "Email obrigatório",
-        description: "Digite um email para enviar o convite.",
+        title: "Sucesso!",
+        description: "Maratona criada com sucesso.",
+      });
+      setIsCreateDialogOpen(false);
+      form.reset();
+      navigate(`/marathons/question-management/${marathon.id}`);
+    } catch (error) {
+      console.error("Erro ao criar maratona:", error);
+      toast({
+        title: "Erro",
+        description: "Erro ao criar maratona. Tente novamente.",
         variant: "destructive",
       });
-      return;
-    }
-
-    toast({
-      title: "Convite enviado!",
-      description: `Convite enviado para ${inviteEmail}`,
-    });
-    setInviteEmail('');
-    setShowInviteModal(false);
-  };
-
-  const handleRemoveStudent = (studentName: string) => {
-    if (window.confirm(`Tem certeza que deseja remover ${studentName} da turma?`)) {
-      toast({
-        title: "Aluno removido",
-        description: `${studentName} foi removido da turma.`,
-      });
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (error || !classData) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Turma não encontrada
+          </h2>
+          <p className="text-gray-600 mb-4">
+            A turma que você está procurando não existe ou foi removida.
+          </p>
+          <Button onClick={() => navigate("/classes")}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Voltar para Turmas
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Get marathons from classroom data or default to empty array
+  const linkedMarathons = classData.marathons || [];
+
+  // Helper function to get marathon status based on dates
+  const getMarathonStatus = (startDate: string, endDate: string | null) => {
+    const now = new Date();
+    const start = new Date(startDate);
+    const end = endDate ? new Date(endDate) : null;
+
+    if (now < start) {
+      return "Aguardando início";
+    } else if (end && now > end) {
+      return "Finalizada";
+    } else {
+      return "Aberta";
+    }
+  };
+
+  // const handleCopyInviteLink = () => {
+  //   const inviteLink = `${window.location.origin}/join-class/${classData.id}`;
+  //   navigator.clipboard.writeText(inviteLink);
+  //   toast({
+  //     title: "Link copiado!",
+  //     description:
+  //       "O link de convite foi copiado para a área de transferência.",
+  //   });
+  // };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Aberta':
-        return 'bg-green-100 text-green-800';
-      case 'Finalizada':
-        return 'bg-gray-100 text-gray-800';
-      case 'Aguardando início':
-        return 'bg-yellow-100 text-yellow-800';
+      case "Aberta":
+        return "bg-green-100 text-green-800";
+      case "Finalizada":
+        return "bg-gray-100 text-gray-800";
+      case "Aguardando início":
+        return "bg-yellow-100 text-yellow-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case 'Iniciante':
-        return 'bg-blue-100 text-blue-800';
-      case 'Intermediário':
-        return 'bg-orange-100 text-orange-800';
-      case 'Avançado':
-        return 'bg-red-100 text-red-800';
+      case "Iniciante":
+        return "bg-blue-100 text-blue-800";
+      case "Intermediário":
+        return "bg-orange-100 text-orange-800";
+      case "Avançado":
+        return "bg-red-100 text-red-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -151,211 +219,354 @@ const ClassDetails = () => {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => navigate('/classes')}
+          onClick={() => navigate("/classes")}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Voltar
         </Button>
         <div>
           <h1 className="text-3xl font-bold text-gray-900">{classData.name}</h1>
-          <p className="text-gray-600 mt-1">Código: {classData.code}</p>
         </div>
       </div>
 
       {/* Class Info */}
       <Card>
-        <CardHeader>
-          <div className="flex items-start justify-between">
-            <div className="space-y-2">
+        <CardContent className="flex items-center justify-between space-x-6">
+          <div className="flex w-full space-x-14">
+            <div className="flex flex-col items-start">
               <CardTitle className="text-xl">{classData.name}</CardTitle>
-              <div className="flex gap-2">
-                <Badge variant="outline">
-                  Código: {classData.code}
-                </Badge>
-                <Badge className={classData.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
-                  {classData.isActive ? 'Ativa' : 'Inativa'}
-                </Badge>
-              </div>
+              <CardDescription className="text-sm">
+                Criada em{" "}
+                {new Date(classData.created_at).toLocaleDateString("pt-BR")}
+              </CardDescription>
             </div>
-            <Users className="h-8 w-8 text-blue-500" />
-          </div>
-          {classData.description && (
-            <CardDescription className="text-sm">
-              {classData.description}
-            </CardDescription>
-          )}
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center p-3 border rounded-lg">
-              <Users className="h-6 w-6 text-gray-500 mx-auto mb-2" />
-              <div className="text-2xl font-bold">{classData.studentCount}/{classData.maxStudents}</div>
-              <div className="text-sm text-gray-600">Alunos</div>
-            </div>
-            <div className="text-center p-3 border rounded-lg">
-              <Calendar className="h-6 w-6 text-gray-500 mx-auto mb-2" />
-              <div className="text-lg font-bold">
-                {new Date(classData.expirationDate).toLocaleDateString('pt-BR')}
-              </div>
-              <div className="text-sm text-gray-600">Expira em</div>
-            </div>
-            <div className="text-center p-3 border rounded-lg">
-              <Trophy className="h-6 w-6 text-gray-500 mx-auto mb-2" />
+            <div className="flex justify-center space-x-6 items-center py-3 border rounded-lg w-1/2">
+              <Trophy className="h-6 w-6 text-gray-500" />
               <div className="text-2xl font-bold">{linkedMarathons.length}</div>
-              <div className="text-sm text-gray-600">Maratonas</div>
+              <div className="text-sm text-gray-800">Maratonas</div>
             </div>
           </div>
+          <Users className="h-8 w-8 text-blue-500" />
         </CardContent>
       </Card>
 
       {/* Tabs */}
-      <Tabs defaultValue="students" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="students">Alunos</TabsTrigger>
+      <Tabs defaultValue="marathons" className="space-y-6">
+        <TabsList className="mx-auto w-full">
           <TabsTrigger value="marathons">Maratonas Vinculadas</TabsTrigger>
-          <TabsTrigger value="invite">Convidar Aluno</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="students" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span>Alunos da Turma ({students.length})</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {students.map((student) => (
-                  <div key={student.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex-1">
-                      <h4 className="font-medium">{student.name}</h4>
-                      <p className="text-sm text-gray-600">{student.email}</p>
-                      <div className="flex gap-4 text-xs text-gray-500 mt-1">
-                        <span>Entrou em: {new Date(student.joinDate).toLocaleDateString('pt-BR')}</span>
-                        <span>Pontuação: {student.totalScore}</span>
-                        <span>Maratonas: {student.marathonsCompleted}</span>
-                      </div>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleRemoveStudent(student.name)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         <TabsContent value="marathons" className="space-y-4">
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>Maratonas Vinculadas ({linkedMarathons.length})</CardTitle>
+                <CardTitle>
+                  Maratonas Vinculadas ({linkedMarathons.length})
+                </CardTitle>
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => navigate(`/classes/${classData.id}/marathons`)}
+                    onClick={() => navigate(`/classes/${classId}/marathons`)}
                   >
                     <Trophy className="mr-2 h-4 w-4" />
                     Ver Todas
                   </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => navigate(`/classes/${classData.id}/create-marathon`)}
+                  <Dialog
+                    open={isCreateDialogOpen}
+                    onOpenChange={setIsCreateDialogOpen}
                   >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Criar Maratona
-                  </Button>
+                    <DialogTrigger asChild>
+                      <Button size="sm">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Criar Maratona
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Criar Nova Maratona</DialogTitle>
+                        <DialogDescription>
+                          Preencha os dados abaixo para criar uma nova maratona
+                          para esta turma.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <Form {...form}>
+                        <form
+                          onSubmit={form.handleSubmit(onSubmit)}
+                          className="space-y-4"
+                        >
+                          <FormField
+                            control={form.control}
+                            name="title"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Título</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder="Digite o título"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="description"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Descrição (Opcional)</FormLabel>
+                                <FormControl>
+                                  <Textarea
+                                    placeholder="Digite a descrição"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="context"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Contexto</FormLabel>
+                                <FormControl>
+                                  <Textarea
+                                    placeholder="Digite o contexto da maratona"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="difficulty"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Dificuldade</FormLabel>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Selecione a dificuldade" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem
+                                      value={DIFFICULTY_LEVELS.BEGINNER}
+                                    >
+                                      {
+                                        DIFFICULTY_DISPLAY[
+                                          DIFFICULTY_LEVELS.BEGINNER
+                                        ]
+                                      }
+                                    </SelectItem>
+                                    <SelectItem
+                                      value={DIFFICULTY_LEVELS.INTERMEDIATE}
+                                    >
+                                      {
+                                        DIFFICULTY_DISPLAY[
+                                          DIFFICULTY_LEVELS.INTERMEDIATE
+                                        ]
+                                      }
+                                    </SelectItem>
+                                    <SelectItem
+                                      value={DIFFICULTY_LEVELS.ADVANCED}
+                                    >
+                                      {
+                                        DIFFICULTY_DISPLAY[
+                                          DIFFICULTY_LEVELS.ADVANCED
+                                        ]
+                                      }
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                              control={form.control}
+                              name="timeLimit"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Tempo (min)</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      type="number"
+                                      placeholder="60"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="number_of_questions"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Nº Questões</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      type="number"
+                                      placeholder="5"
+                                      {...field}
+                                      onChange={(e) =>
+                                        field.onChange(
+                                          parseInt(e.target.value) || 1
+                                        )
+                                      }
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                              control={form.control}
+                              name="startDate"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Data Início</FormLabel>
+                                  <FormControl>
+                                    <Input type="datetime-local" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="endDate"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Data Fim</FormLabel>
+                                  <FormControl>
+                                    <Input type="datetime-local" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+
+                          <div className="flex justify-end space-x-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => setIsCreateDialogOpen(false)}
+                            >
+                              Cancelar
+                            </Button>
+                            <Button
+                              type="submit"
+                              disabled={createMarathonMutation.isPending}
+                            >
+                              {createMarathonMutation.isPending && (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              )}
+                              Criar
+                            </Button>
+                          </div>
+                        </form>
+                      </Form>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {linkedMarathons.map((marathon) => (
-                  <div key={marathon.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex-1">
-                      <h4 className="font-medium">{marathon.title}</h4>
-                      <div className="flex gap-2 mt-2">
-                        <Badge className={getStatusColor(marathon.status)}>
-                          {marathon.status}
-                        </Badge>
-                        <Badge className={getDifficultyColor(marathon.difficulty)}>
-                          {marathon.difficulty}
-                        </Badge>
-                      </div>
-                      <div className="flex gap-4 text-xs text-gray-500 mt-1">
-                        <span>Participantes: {marathon.participants}</span>
-                        <span>Início: {new Date(marathon.startDate).toLocaleDateString('pt-BR')}</span>
-                      </div>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate(`/marathons/${marathon.id}`)}
+                {linkedMarathons.map((marathon) => {
+                  const status = getMarathonStatus(
+                    marathon.start_date,
+                    marathon.end_date
+                  );
+                  const participantCount = marathon.enrollments
+                    ? marathon.enrollments.length
+                    : 0;
+
+                  return (
+                    <div
+                      key={marathon.id}
+                      className="flex items-center justify-between p-4 border rounded-lg"
                     >
-                      <Eye className="mr-2 h-4 w-4" />
-                      Ver
-                    </Button>
-                  </div>
-                ))}
+                      <div className="flex-1">
+                        <h4 className="font-medium">{marathon.title}</h4>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {marathon.description}
+                        </p>
+                        <div className="flex gap-2 mt-2">
+                          <Badge className={getStatusColor(status)}>
+                            {status}
+                          </Badge>
+                          <Badge
+                            className={getDifficultyColor(
+                              marathon.difficulty === "Easy"
+                                ? "Iniciante"
+                                : marathon.difficulty === "Medium"
+                                ? "Intermediário"
+                                : "Avançado"
+                            )}
+                          >
+                            {marathon.difficulty === "Easy"
+                              ? "Iniciante"
+                              : marathon.difficulty === "Medium"
+                              ? "Intermediário"
+                              : "Avançado"}
+                          </Badge>
+                        </div>
+                        <div className="flex gap-4 text-xs text-gray-500 mt-1">
+                          <span>Participantes: {participantCount}</span>
+                          <span>
+                            Início:{" "}
+                            {new Date(marathon.start_date).toLocaleDateString(
+                              "pt-BR"
+                            )}
+                          </span>
+                          {marathon.end_date && (
+                            <span>
+                              Fim:{" "}
+                              {new Date(marathon.end_date).toLocaleDateString(
+                                "pt-BR"
+                              )}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/marathons/${marathon.id}`)}
+                      >
+                        <Eye className="mr-2 h-4 w-4" />
+                        Ver
+                      </Button>
+                    </div>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="invite" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Copy className="h-5 w-5" />
-                  Link de Convite
-                </CardTitle>
-                <CardDescription>
-                  Compartilhe este link para que alunos se juntem à turma
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="p-3 bg-gray-50 border rounded-lg break-all text-sm">
-                  {classData.inviteLink}
-                </div>
-                <Button onClick={handleCopyInviteLink} className="w-full">
-                  <Copy className="mr-2 h-4 w-4" />
-                  Copiar Link
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Mail className="h-5 w-5" />
-                  Convite por Email
-                </CardTitle>
-                <CardDescription>
-                  Envie um convite diretamente para o email do aluno
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Input
-                  placeholder="email@exemplo.com"
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
-                  type="email"
-                />
-                <Button onClick={handleInviteByEmail} className="w-full">
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Enviar Convite
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
         </TabsContent>
       </Tabs>
     </div>

@@ -1,10 +1,10 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ClassroomService,
-  type Classroom,
   type CreateClassroomRequest,
   type UpdateClassroomRequest,
+  type ClassroomWithMarathonsAndEnrollments,
 } from "@/services/classroom.service";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // Query Keys
 export const classroomKeys = {
@@ -27,16 +27,14 @@ export const useClassrooms = () => {
 
 // Hook para obter uma classroom específica
 export const useClassroom = (id: string) => {
-  return useQuery({
+  return useQuery<ClassroomWithMarathonsAndEnrollments>({
     queryKey: classroomKeys.detail(id),
     queryFn: () => ClassroomService.findOne(id),
     enabled: !!id,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
-};
-
-// Hook para criar classroom
+}; // Hook para criar classroom
 export const useCreateClassroom = () => {
   const queryClient = useQueryClient();
 
