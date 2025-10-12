@@ -56,6 +56,11 @@ export class LanguageMarathonController {
     return this.marathonService.findOneById(id);
   }
 
+  @Get(':id/with-questions')
+  findOneByIdWithQuestions(@Param('id') id: string): Promise<LanguageMarathon> {
+    return this.marathonService.findOneByIdWithQuestions(id);
+  }
+
   @UseGuards(RolesGuard)
   @Roles(Role.Professor)
   @Patch(':id')

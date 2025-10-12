@@ -179,7 +179,7 @@ async function main() {
       user_id: student1.id,
       answer:
         'Our team faced a difficult coding bug. We worked together, debugging line by line. My role was checking the logs.',
-      score: 8.5,
+      score: 85,
     },
   });
   await prisma.aiFeedbacks.create({
@@ -242,7 +242,7 @@ async function main() {
       user_id: student1.id,
       answer:
         'They should have regular meetings and establish clear roles early.',
-      score: 8.8,
+      score: 88,
     },
   });
   await prisma.aiFeedbacks.create({
@@ -262,7 +262,7 @@ async function main() {
       question_id: question4.id,
       user_id: student1.id,
       answer: `Once, a presentation failed because we didn't practice enough. We should have done more mock runs.`,
-      score: 7.5,
+      score: 75,
     },
   });
   await prisma.aiFeedbacks.create({
@@ -283,7 +283,7 @@ async function main() {
       user_id: student1.id,
       answer:
         'Different ideas lead to better results. In a design project, varied backgrounds helped us innovate.',
-      score: 9.2,
+      score: 92,
     },
   });
   await prisma.aiFeedbacks.create({
@@ -308,7 +308,7 @@ async function main() {
       user_id: student2.id,
       answer:
         'My team had trouble with project scope. We broke it into smaller tasks. I managed the task list.',
-      score: 9.0,
+      score: 90,
     },
   });
 
@@ -319,7 +319,7 @@ async function main() {
       user_id: student2.id,
       answer:
         'Respect and clear objectives are key. Without them, teams can become disorganized and inefficient.',
-      score: 9.5,
+      score: 95,
     },
   });
 
@@ -330,7 +330,7 @@ async function main() {
       user_id: student2.id,
       answer:
         'Regular check-ins and an open-door policy for feedback are crucial to building trust and good vibes.',
-      score: 8.7,
+      score: 87,
     },
   });
 
@@ -341,7 +341,7 @@ async function main() {
       user_id: student2.id,
       answer:
         'A past group project struggled with uneven workload distribution. We should have assigned responsibilities more clearly from the start and had more frequent progress reviews.',
-      score: 8.0,
+      score: 80,
     },
   });
 
@@ -352,7 +352,7 @@ async function main() {
       user_id: student2.id,
       answer:
         'When a team has diverse backgrounds, they bring unique perspectives that can lead to more creative and comprehensive solutions. For instance, different cultural insights in a marketing campaign led to broader appeal.',
-      score: 9.3,
+      score: 93,
     },
   });
   console.log(`Created submissions for student ${student2.name}.`);
@@ -434,7 +434,7 @@ async function main() {
       user_id: student1.id,
       answer:
         'Assunto: Pedido de Feedback - Projeto X. Prezado Gerente, eu gostaria de solicitar seu feedback sobre o andamento do Projeto X. Sua opinião seria muito valiosa. Att, Alice.',
-      score: 9.1,
+      score: 91,
     },
   });
   await prisma.aiFeedbacks.create({
@@ -455,7 +455,7 @@ async function main() {
       user_id: student1.id,
       answer:
         'Eu chamei meu colega para uma conversa privada e usei a técnica do "sanduíche": comecei com um elogio, depois a crítica construtiva, e finalizei com um incentivo. Ele recebeu bem.',
-      score: 9.5,
+      score: 95,
     },
   });
 
@@ -466,7 +466,7 @@ async function main() {
       user_id: student1.id,
       answer:
         'Eu esperaria um momento apropriado, reconheceria o valor da ideia da maioria, e então apresentaria minha perspectiva como uma alternativa a ser considerada, focando nos dados que suportam minha sugestão.',
-      score: 9.8,
+      score: 98,
     },
   });
   console.log(
@@ -481,7 +481,7 @@ async function main() {
       user_id: student2.id,
       answer:
         'Oi, chefe. Pode dar uma olhada no projeto? Quero saber o que você acha. Valeu!',
-      score: 6.0,
+      score: 60,
     },
   });
 
@@ -492,7 +492,7 @@ async function main() {
       user_id: student2.id,
       answer:
         'Uma vez, eu precisei falar com um colega sobre a qualidade do código dele. Eu mostrei exemplos específicos e sugeri algumas ferramentas que poderiam ajudar. O resultado foi positivo e ele melhorou nas entregas seguintes.',
-      score: 8.9,
+      score: 89,
     },
   });
 
@@ -503,7 +503,7 @@ async function main() {
       user_id: student2.id,
       answer:
         'Eu levantaria a mão e diria: "Pessoal, entendo o ponto de vocês, mas já pensaram nesta outra possibilidade?" e explicaria minha ideia com calma.',
-      score: 8.5,
+      score: 85,
     },
   });
   console.log(

@@ -12,6 +12,9 @@ export abstract class AbstractLanguageMarathonRepository {
     code: string,
   ): Promise<LanguageMarathon>;
   abstract findOneById(id: string): Promise<LanguageMarathon | null>;
+  abstract findOneByIdWithQuestions(
+    id: string,
+  ): Promise<LanguageMarathon | null>;
   abstract findOneByCode(code: string): Promise<LanguageMarathon | null>;
   abstract update(
     id: string,

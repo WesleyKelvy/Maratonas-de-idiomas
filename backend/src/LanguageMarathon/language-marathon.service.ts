@@ -110,6 +110,15 @@ export class LanguageMarathonService
     return marathon;
   }
 
+  async findOneByIdWithQuestions(id: string): Promise<LanguageMarathon> {
+    const marathon = await this.marathonRepository.findOneByIdWithQuestions(id);
+    if (!marathon) {
+      throw new NotFoundException(`Marathon with ID ${id} not found.`);
+    }
+
+    return marathon;
+  }
+
   async findOneByCode(code: string): Promise<LanguageMarathon> {
     const marathon = await this.marathonRepository.findOneByCode(code);
     if (!marathon) {

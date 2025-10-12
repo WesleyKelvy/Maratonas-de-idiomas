@@ -61,6 +61,18 @@ export class PrismaLanguageMarathonRepository
     });
   }
 
+  async findOneByIdWithQuestions(id: string): Promise<LanguageMarathon | null> {
+    return this.prisma.languageMarathon.findUnique({
+      where: { id },
+      include: {
+        classroom: {
+          select: { creator: { select: { name: true } } },
+        },
+        questions: { omit: { marathon_id: true } },
+      },
+    });
+  }
+
   /**
    * Finds a single marathon by its ID
    */
