@@ -1,6 +1,6 @@
 import { Question } from '@prisma/client';
 import { QuestionArray } from '../interfaces/geminiResponse';
-import { GenerateQuestionsDto } from '../interfaces/generateQuestionsDto';
+import { GenerateQuestionsDto } from '../interfaces/GenerateQuestions';
 import { UpdateQuestionDto } from '../dto/question.update.dto';
 
 // Mock the entire QuestionService to avoid GoogleGenAI dependency issues

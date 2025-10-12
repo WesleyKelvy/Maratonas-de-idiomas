@@ -448,6 +448,7 @@ async function main() {
     },
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const submission2_q2 = await prisma.submission.create({
     data: {
       marathon_id: marathon2.id,
@@ -459,6 +460,7 @@ async function main() {
     },
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const submission2_q3 = await prisma.submission.create({
     data: {
       marathon_id: marathon2.id,

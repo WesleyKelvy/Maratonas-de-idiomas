@@ -1,23 +1,23 @@
-import { Type } from 'class-transformer';
-import { IsString, ValidateNested } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export interface GeminiResponse {
   questions: {
-    question_text: string;
+    title: string;
+    prompt_text: string;
   }[];
 }
 
 export type QuestionArray = {
-  question_text: string;
+  title: string;
+  prompt_text: string;
 }[];
 
-export class SingleQuestionDto {
+export class QuestionDto {
+  @IsNotEmpty()
   @IsString()
-  question_text: string;
-}
+  prompt_text: string;
 
-export class QuestionArrayDto {
-  @ValidateNested({ each: true })
-  @Type(() => SingleQuestionDto)
-  questions: SingleQuestionDto[];
+  @IsNotEmpty()
+  @IsString()
+  title: string;
 }

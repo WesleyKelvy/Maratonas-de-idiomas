@@ -1,10 +1,10 @@
-import { GenerateQuestionsDto } from 'src/Question/interfaces/generateQuestionsDto';
+import { GenerateQuestions } from 'src/Question/interfaces/GenerateQuestions';
 
 export const createQuestionPromptTemplate = ({
   context,
   difficulty,
   number_of_questions,
-}: GenerateQuestionsDto) => {
+}: GenerateQuestions) => {
   return `Prompt: Generate English Questions in JSON Format. You are an expert English language teacher and curriculum designer, specializing in creating structured educational content. Your task is to generate a precise number of English language practice questions based on the parameters provided below and format the entire output as a single, valid JSON object. Do not include any explanatory text, greetings, or any characters before or after the JSON object. The output must be a raw JSON that can be parsed directly by an application. Input Parameters (to be provided dynamically): context: "${context}", difficulty: "${difficulty}", number_of_questions: ${number_of_questions}. JSON Output Structure: {"questions":[{"question_text":"Your generated question text here."},{"question_text":"Your second generated question text here."}]}. Guidelines for Question Generation: Question Content: Each question must encourage a complete written answer, not just a multiple-choice selection. It should directly relate to the provided context. Beginner: Focus on basic vocabulary and simple sentence structures (present or past tense). Ask "what," "where," or "who" questions. Intermediate: Use more complex sentence structures. Encourage explanations, comparisons, or sequencing of events. Ask "how" or "why" questions. Advanced: Encourage argumentation, hypothesis, or abstract thought. Prompt for the use of conditionals (if/then), passive voice, or a formal/academic tone. Language Focus: For each question, briefly describe the primary language skill being assessed (e.g., "Using past tense irregular verbs," "Constructing conditional sentences," "Using descriptive adjectives," "Comparing and contrasting ideas").`;
 };
 

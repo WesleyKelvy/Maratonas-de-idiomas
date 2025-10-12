@@ -3,8 +3,8 @@ import { QuestionController } from '../question.controller';
 import { QUESTION_SERVICE_TOKEN } from '../abstract-services/abstract-question.service';
 import { LANGUAGE_MARATHON_SERVICE_TOKEN } from '../../LanguageMarathon/abstract-services/abstract-language-marathon.service';
 import { UpdateQuestionDto } from '../dto/question.update.dto';
-import { QuestionArrayDto } from '../interfaces/geminiResponse';
-import { GenerateQuestionsDto } from '../interfaces/generateQuestionsDto';
+import { QuestionArray } from '../interfaces/geminiResponse';
+import { GenerateQuestions } from '../interfaces/GenerateQuestions';
 import { Question } from '@prisma/client';
 
 describe('QuestionController', () => {
@@ -45,18 +45,16 @@ describe('QuestionController', () => {
     number_of_questions: 5,
   };
 
-  const mockGenerateQuestionsDto: GenerateQuestionsDto = {
+  const mockGenerateQuestionsDto: GenerateQuestions = {
     context: 'Test context',
     difficulty: 'Beginner',
     number_of_questions: 5,
   };
 
-  const mockQuestionArrayDto: QuestionArrayDto = {
-    questions: [
-      { question_text: 'What is the capital of France?' },
-      { question_text: 'What is the largest planet?' },
-    ],
-  };
+  const mockQuestionArrayDto: QuestionArray = [
+    { title: 'teste1', prompt_text: 'What is the capital of France?' },
+    { title: 'teste1', prompt_text: 'What is the largest planet?' },
+  ];
 
   const mockUpdateQuestionDto: UpdateQuestionDto = {
     title: 'Updated Question',
@@ -132,13 +130,13 @@ describe('QuestionController', () => {
       const questions = [mockQuestion];
       mockQuestionService.create.mockResolvedValue(questions);
 
-      const result = await controller.sabeQuestions(
+      const result = await controller.saveQuestions(
         marathonId,
         mockQuestionArrayDto,
       );
 
       expect(mockQuestionService.create).toHaveBeenCalledWith(
-        mockQuestionArrayDto.questions,
+        mockQuestionArrayDto,
         marathonId,
       );
       expect(result).toEqual(questions);
@@ -149,13 +147,13 @@ describe('QuestionController', () => {
       const questions = [mockQuestion];
       mockQuestionService.create.mockResolvedValue(questions);
 
-      const result = await controller.sabeQuestions(
+      const result = await controller.saveQuestions(
         marathonId,
         mockQuestionArrayDto,
       );
 
       expect(mockQuestionService.create).toHaveBeenCalledWith(
-        mockQuestionArrayDto.questions,
+        mockQuestionArrayDto,
         marathonId,
       );
       expect(result).toEqual(questions);
@@ -168,9 +166,7 @@ describe('QuestionController', () => {
         mockQuestionArray,
       );
 
-      const result = await controller.generateQuestions(
-        mockGenerateQuestionsDto,
-      );
+      const result = await controller.getGeminiQuestions();
 
       expect(
         mockQuestionService.generateQuestionsWithGemini,
@@ -179,7 +175,7 @@ describe('QuestionController', () => {
     });
 
     it('should handle different question generation parameters', async () => {
-      const differentDto: GenerateQuestionsDto = {
+      const differentDto: GenerateQuestions = {
         context: 'Advanced context',
         difficulty: 'Advanced',
         number_of_questions: 10,
@@ -188,7 +184,7 @@ describe('QuestionController', () => {
         mockQuestionArray,
       );
 
-      const result = await controller.generateQuestions(differentDto);
+      const result = await controller.getGeminiQuestions();
 
       expect(
         mockQuestionService.generateQuestionsWithGemini,

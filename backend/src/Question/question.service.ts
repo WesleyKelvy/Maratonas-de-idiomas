@@ -13,7 +13,7 @@ import {
   GeminiResponse,
   QuestionArray,
 } from 'src/Question/interfaces/geminiResponse';
-import { GenerateQuestionsDto } from 'src/Question/interfaces/generateQuestionsDto';
+import { GenerateQuestions } from 'src/Question/interfaces/GenerateQuestions';
 import { createOptimizedPrompt } from 'src/Question/prompts/create-questions';
 import {
   AbstractQuestionRepository,
@@ -34,9 +34,9 @@ export class QuestionService implements AbstractQuestionService {
   }
 
   async generateQuestionsWithGemini(
-    dto: GenerateQuestionsDto,
+    data: GenerateQuestions,
   ): Promise<QuestionArray> {
-    const promptTemplate = createOptimizedPrompt(dto);
+    const promptTemplate = createOptimizedPrompt(data);
 
     try {
       const output = await this.gemini.models.generateContent({
@@ -88,9 +88,7 @@ export class QuestionService implements AbstractQuestionService {
       const createdChunk = await Promise.all(
         batch.map((q) =>
           this.questionRepository.create(
-            {
-              prompt_text: q.question_text,
-            },
+            { title: q.title, prompt_text: q.prompt_text },
             marathonId,
           ),
         ),
@@ -122,6 +120,7 @@ export class QuestionService implements AbstractQuestionService {
   async remove(id: number): Promise<void> {
     const question = await this.questionRepository.findOne(id);
     if (!question) {
+      console.log('question');
       throw new NotFoundException(`Question with ID ${id} not found.`);
     }
     await this.questionRepository.remove(id);

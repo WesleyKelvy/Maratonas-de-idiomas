@@ -1,7 +1,7 @@
 import { Question } from '@prisma/client';
 import { UpdateQuestionDto } from 'src/Question/dto/question.update.dto';
 import { QuestionArray } from 'src/Question/interfaces/geminiResponse';
-import { GenerateQuestionsDto } from 'src/Question/interfaces/generateQuestionsDto';
+import { GenerateQuestionsDto } from 'src/Question/interfaces/GenerateQuestions';
 
 export abstract class AbstractQuestionService {
   abstract create(dto: QuestionArray, marathonId: string): Promise<Question[]>;

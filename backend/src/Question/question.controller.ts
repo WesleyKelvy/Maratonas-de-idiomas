@@ -25,7 +25,7 @@ import {
 import { UpdateQuestionDto } from 'src/Question/dto/question.update.dto';
 import {
   QuestionArray,
-  QuestionArrayDto,
+  QuestionDto,
 } from 'src/Question/interfaces/geminiResponse';
 
 @Controller('questions')
@@ -51,7 +51,7 @@ export class QuestionController {
 
   @UseGuards(RolesGuard)
   @Roles(Role.Professor)
-  @Post('create-questions')
+  @Post(':marathonId/create-questions/')
   @HttpCode(HttpStatus.CREATED)
   async getGeminiQuestions(
     @Param('marathonId') marathonId: string,
@@ -67,13 +67,13 @@ export class QuestionController {
 
   @UseGuards(RolesGuard)
   @Roles(Role.Professor)
-  @Post('save-questions')
+  @Post(':marathonId/save-questions')
   @HttpCode(HttpStatus.CREATED)
   async saveQuestions(
     @Param('marathonId') marathonId: string,
-    @Body() dto: QuestionArrayDto,
+    @Body() dto: QuestionDto[],
   ): Promise<Question[]> {
-    return this.questionService.create(dto.questions, marathonId);
+    return this.questionService.create(dto, marathonId);
   }
 
   @UseGuards(RolesGuard)

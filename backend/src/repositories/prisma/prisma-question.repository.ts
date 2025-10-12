@@ -45,7 +45,6 @@ export class PrismaQuestionRepository implements AbstractQuestionRepository {
    * Updates a question by its ID
    */
   async update(id: number, dto: UpdateQuestionDto): Promise<Question> {
-    // Verify existence
     const existing = await this.prisma.question.findUnique({ where: { id } });
     if (!existing) {
       throw new NotFoundException(`Question with ID ${id} not found.`);
@@ -63,11 +62,6 @@ export class PrismaQuestionRepository implements AbstractQuestionRepository {
    * Removes a question by its ID
    */
   async remove(id: number): Promise<void> {
-    // Verify existence
-    const existing = await this.prisma.question.findUnique({ where: { id } });
-    if (!existing) {
-      throw new NotFoundException(`Question with ID ${id} not found.`);
-    }
     await this.prisma.question.delete({ where: { id } });
   }
 }
