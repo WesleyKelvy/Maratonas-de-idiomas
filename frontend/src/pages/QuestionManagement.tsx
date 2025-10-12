@@ -19,6 +19,12 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useMarathonWithQuestions } from "@/hooks/use-marathon";
 import {
   useDeleteQuestion,
@@ -27,12 +33,14 @@ import {
   useUpdateQuestion,
 } from "@/hooks/use-question";
 import { useToast } from "@/hooks/use-toast";
-import { GeminiQuestionResponse, Question } from "@/services/question.service";
 import {
   editQuestionFormSchema,
   type EditQuestionFormData,
 } from "@/schemas/question.schema";
+import { GeminiQuestionResponse } from "@/services/question.service";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  AlertTriangle,
   ArrowLeft,
   Brain,
   Clock,
@@ -46,9 +54,8 @@ import {
   Users,
 } from "lucide-react";
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useNavigate, useParams } from "react-router-dom";
 
 interface EditQuestion {
   id?: number;
@@ -80,7 +87,6 @@ const QuestionManagement = () => {
     GeminiQuestionResponse[]
   >([]);
 
-  // Fetch marathon data with questions (optimized single request)
   const {
     data: marathon,
     isLoading: marathonLoading,
@@ -89,6 +95,15 @@ const QuestionManagement = () => {
 
   // Extract questions from marathon data
   const questions = marathon?.questions || [];
+
+  // Check if marathon has started (current date > start_date)
+  const marathonHasStarted = marathon?.start_date
+    ? new Date() > new Date(marathon.start_date)
+    : false;
+
+  const disabledTooltip = marathonHasStarted
+    ? "Não é possível editar questões após o início da maratona"
+    : "";
 
   // Mutations
   const generateMutation = useGenerateQuestionsWithGemini();
@@ -322,7 +337,7 @@ const QuestionManagement = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex  gap-4">
+        <div className="flex gap-4">
           <Button
             variant="outline"
             size="sm"
@@ -332,18 +347,42 @@ const QuestionManagement = () => {
             Voltar
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className="text-3xl font-bold text-gray-900 text-">
               Gerenciar Questões
             </h1>
-            <p className="text-gray-600 mt-2">
-              {marathon?.title || "Maratona"}
-            </p>
+            <div className="flex space-x-3">
+              <p className=" mt-2">Nome da Maratona:</p>
+              <p className=" mt-2">{marathon?.title || "Maratona"}</p>
+            </div>
           </div>
         </div>
-        <Badge variant="outline" className="text-sm text-neutral-200">
-          ID: {marathonId}
-        </Badge>
+        <p className="border-2 border-neutral-300 rounded-full px-2 text-sm text-neutral-500">
+          ID da maratona: {marathonId}
+        </p>
       </div>
+
+      {/* Warning Message for Started Marathon */}
+      {marathonHasStarted && (
+        <div className="mb-4">
+          <Card className="border-orange-200 bg-orange-50">
+            <CardContent className="flex items-center gap-3 py-4">
+              <AlertTriangle className="h-5 w-5 text-orange-600 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-orange-800 font-medium">
+                  Maratona em Andamento
+                </p>
+                <p className="text-orange-700 text-sm">
+                  A maratona já foi iniciada em{" "}
+                  {new Date(marathon?.start_date || "").toLocaleDateString(
+                    "pt-BR"
+                  )}
+                  . Não é possível editar questões após o início da maratona.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Marathon Info - Collapsible */}
       <div className="mb-4">
@@ -417,9 +456,13 @@ const QuestionManagement = () => {
                   </div>
                 </div>
                 <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                  <p className="text-sm text-gray-700">
+                  <p className="text-sm pb-3">
                     <strong>Descrição:</strong>{" "}
                     {marathon?.description || "Sem descrição disponível"}
+                  </p>
+                  <p className="text-sm">
+                    <strong>Contexto:</strong>{" "}
+                    {marathon?.context || "Sem contexto disponível"}
                   </p>
                 </div>
               </div>
@@ -430,40 +473,83 @@ const QuestionManagement = () => {
 
       {/* Actions */}
       <div className="flex items-center justify-between">
-        <div className="flex gap-3">
-          <Button
-            onClick={generateQuestionsWithAI}
-            disabled={generateMutation.isPending}
-            className="bg-purple-600 hover:bg-purple-700"
-          >
-            {generateMutation.isPending ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Sparkles className="mr-2 h-4 w-4" />
-            )}
-            {generateMutation.isPending ? "Gerando..." : "Gerar com IA"}
-          </Button>
-          <Button variant="outline" onClick={handleAddNewQuestion}>
-            <Plus className="mr-2 h-4 w-4" />
-            Adicionar Questão
-          </Button>
-        </div>
+        <TooltipProvider>
+          <div className="flex gap-3">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div>
+                  <Button
+                    onClick={generateQuestionsWithAI}
+                    disabled={generateMutation.isPending || marathonHasStarted}
+                    className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50"
+                  >
+                    {generateMutation.isPending ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="mr-2 h-4 w-4" />
+                    )}
+                    {generateMutation.isPending ? "Gerando..." : "Gerar com IA"}
+                  </Button>
+                </div>
+              </TooltipTrigger>
+              {marathonHasStarted && (
+                <TooltipContent>
+                  <p>{disabledTooltip}</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div>
+                  <Button
+                    variant="outline"
+                    onClick={handleAddNewQuestion}
+                    disabled={marathonHasStarted}
+                    className="disabled:opacity-50"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Adicionar Questão
+                  </Button>
+                </div>
+              </TooltipTrigger>
+              {marathonHasStarted && (
+                <TooltipContent>
+                  <p>{disabledTooltip}</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </div>
+        </TooltipProvider>
 
         {generatedQuestions.length > 0 && (
-          <Button
-            onClick={handleSaveAllQuestions}
-            disabled={saveMutation.isPending}
-            className="bg-green-600 hover:bg-green-700"
-          >
-            {saveMutation.isPending ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Save className="mr-2 h-4 w-4" />
-            )}
-            {saveMutation.isPending
-              ? "Salvando..."
-              : `Salvar Geradas (${generatedQuestions.length})`}
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div>
+                  <Button
+                    onClick={handleSaveAllQuestions}
+                    disabled={saveMutation.isPending || marathonHasStarted}
+                    className="bg-green-600 hover:bg-green-700 disabled:opacity-50"
+                  >
+                    {saveMutation.isPending ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Save className="mr-2 h-4 w-4" />
+                    )}
+                    {saveMutation.isPending
+                      ? "Salvando..."
+                      : `Salvar Geradas (${generatedQuestions.length})`}
+                  </Button>
+                </div>
+              </TooltipTrigger>
+              {marathonHasStarted && (
+                <TooltipContent>
+                  <p>{disabledTooltip}</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
         )}
       </div>
 
@@ -491,22 +577,55 @@ const QuestionManagement = () => {
                       </CardTitle>
                     </div>
                     <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEditQuestion(question)}
-                        disabled={updateMutation.isPending}
-                      >
-                        <Edit3 className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeleteQuestion(question.id)}
-                        disabled={deleteMutation.isPending}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleEditQuestion(question)}
+                                disabled={
+                                  updateMutation.isPending || marathonHasStarted
+                                }
+                                className="disabled:opacity-50"
+                              >
+                                <Edit3 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TooltipTrigger>
+                          {marathonHasStarted && (
+                            <TooltipContent>
+                              <p>{disabledTooltip}</p>
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  handleDeleteQuestion(question.id)
+                                }
+                                disabled={
+                                  deleteMutation.isPending || marathonHasStarted
+                                }
+                                className="disabled:opacity-50"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TooltipTrigger>
+                          {marathonHasStarted && (
+                            <TooltipContent>
+                              <p>{disabledTooltip}</p>
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                   </div>
                 </CardHeader>
@@ -547,15 +666,30 @@ const QuestionManagement = () => {
                       </CardTitle>
                     </div>
                     <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          handleEditGeneratedQuestion(question, index)
-                        }
-                      >
-                        <Edit3 className="h-4 w-4" />
-                      </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  handleEditGeneratedQuestion(question, index)
+                                }
+                                disabled={marathonHasStarted}
+                                className="disabled:opacity-50"
+                              >
+                                <Edit3 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TooltipTrigger>
+                          {marathonHasStarted && (
+                            <TooltipContent>
+                              <p>{disabledTooltip}</p>
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                   </div>
                 </CardHeader>
