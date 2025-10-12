@@ -1,9 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Classroom } from '@prisma/client';
 import { AbstractClassroomRepository } from 'src/repositories/abstract/classroom.repository';
 import { CreateClassroomDto } from 'src/Classroom/dto/classroom.create.dto';
 import { UpdateClassroomDto } from 'src/Classroom/dto/classroom.update.dto';
+import {
+  Classroom,
+  ClassroomWithMarathonIds,
+} from 'src/Classroom/entities/classroom.entity';
 
 @Injectable()
 export class PrismaClassroomRepository implements AbstractClassroomRepository {
@@ -21,9 +24,12 @@ export class PrismaClassroomRepository implements AbstractClassroomRepository {
   /**
    * Returns all classrooms created by a specific user
    */
-  async findAllByUserId(userId: string): Promise<Classroom[]> {
+  async findAllByUserId(
+    userId: string,
+  ): Promise<ClassroomWithMarathonIds[] | null> {
     return await this.prisma.classroom.findMany({
       where: { created_by: userId },
+      include: { marathons: { select: { id: true } } },
     });
   }
 
@@ -34,7 +40,7 @@ export class PrismaClassroomRepository implements AbstractClassroomRepository {
     return await this.prisma.classroom.create({
       data: {
         name: dto.name,
-        invite_expiration: dto.invite_expiration,
+        // invite_expiration: dto.invite_expiration,
         creator: {
           connect: { id: userId },
         },
@@ -45,9 +51,10 @@ export class PrismaClassroomRepository implements AbstractClassroomRepository {
   /**
    * Finds a single classroom by its code
    */
-  async findById(id: string): Promise<Classroom | null> {
+  async findById(id: string): Promise<ClassroomWithMarathonIds | null> {
     return await this.prisma.classroom.findUnique({
       where: { id },
+      include: { marathons: { select: { id: true } } },
     });
   }
 
@@ -63,7 +70,7 @@ export class PrismaClassroomRepository implements AbstractClassroomRepository {
       where: { id, created_by: userId },
       data: {
         name: dto.name,
-        invite_expiration: dto.invite_expiration,
+        // invite_expiration: dto.invite_expiration,
       },
     });
   }

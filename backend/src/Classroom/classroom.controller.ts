@@ -11,7 +11,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { Classroom, Role } from '@prisma/client';
+import { Role } from '@prisma/client';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
@@ -22,6 +22,10 @@ import {
 } from 'src/Classroom/abstract-services/abstract-classrom.service';
 import { CreateClassroomDto } from 'src/Classroom/dto/classroom.create.dto';
 import { UpdateClassroomDto } from 'src/Classroom/dto/classroom.update.dto';
+import {
+  Classroom,
+  ClassroomWithMarathonIds,
+} from 'src/Classroom/entities/classroom.entity';
 
 @Controller('classroom')
 export class ClassroomController {
@@ -42,25 +46,29 @@ export class ClassroomController {
   }
 
   @Get()
-  findAllByUserId(@CurrentUser() user: UserFromJwt): Promise<Classroom[]> {
+  findAllByUserId(
+    @CurrentUser() user: UserFromJwt,
+  ): Promise<ClassroomWithMarathonIds[]> {
     return this.classroomService.findAllByUserId(user.id);
   }
 
   @Get(':id')
-  findOne(@Param('id') code: string): Promise<Classroom> {
-    return this.classroomService.findOne(code);
+  findOne(@Param('id') id: string): Promise<ClassroomWithMarathonIds> {
+    return this.classroomService.findOne(id);
   }
+
   @UseGuards(RolesGuard)
   @Roles(Role.Professor)
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
   update(
-    @Param('id') code: string,
+    @Param('id') classroomId: string,
     @Body() updateDto: UpdateClassroomDto,
     @CurrentUser() user: UserFromJwt,
   ): Promise<Classroom> {
-    return this.classroomService.update(code, updateDto, user.id);
+    return this.classroomService.update(classroomId, updateDto, user.id);
   }
+
   @UseGuards(RolesGuard)
   @Roles(Role.Professor)
   @Delete(':id')

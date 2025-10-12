@@ -1,13 +1,18 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Classroom } from '@prisma/client';
 import { AbstractClassroomService } from 'src/Classroom/abstract-services/abstract-classrom.service';
 import { CreateClassroomDto } from 'src/Classroom/dto/classroom.create.dto';
 import { UpdateClassroomDto } from 'src/Classroom/dto/classroom.update.dto';
+import {
+  Classroom,
+  ClassroomWithMarathonIds,
+  ClassroomWithMarathons,
+} from 'src/Classroom/entities/classroom.entity';
 import {
   AbstractClassroomRepository,
   CLASSROOM_REPOSITORY_TOKEN,
@@ -26,7 +31,7 @@ export class ClassroomService implements AbstractClassroomService {
     private readonly classroomRepository: AbstractClassroomRepository,
   ) {}
 
-  async findOneByMarathonId(id: string): Promise<Classroom> {
+  async findOneByMarathonId(id: string): Promise<ClassroomWithMarathons> {
     const classroom = await this.classroomRepository.findOneByMarathonId(id);
     if (!classroom) {
       throw new NotFoundException(`No classroom found for marathon ID ${id}.`);
@@ -35,7 +40,7 @@ export class ClassroomService implements AbstractClassroomService {
     return classroom;
   }
 
-  async findAllByUserId(id: string): Promise<Classroom[]> {
+  async findAllByUserId(id: string): Promise<ClassroomWithMarathonIds[]> {
     return await this.classroomRepository.findAllByUserId(id);
   }
 
@@ -45,7 +50,7 @@ export class ClassroomService implements AbstractClassroomService {
     return this.classroomRepository.create(dto, userId);
   }
 
-  async findOne(id: string): Promise<Classroom> {
+  async findOne(id: string): Promise<ClassroomWithMarathonIds> {
     const classroom = await this.classroomRepository.findById(id);
     if (!classroom) {
       throw new NotFoundException(`No classroom found with Id ${id}`);
@@ -78,6 +83,11 @@ export class ClassroomService implements AbstractClassroomService {
 
     if (classroom.created_by !== userId)
       throw new ForbiddenException('Not allowed!');
+
+    if (classroom?.marathons.length > 0)
+      throw new BadRequestException(
+        `Not allowed to delete a classroom with marathons`,
+      );
 
     this.classroomRepository.remove(id, userId);
   }
