@@ -87,7 +87,7 @@ model Classroom {
 // Language Marathon
 model LanguageMarathon {
   id                    String     @id @default(cuid())
-  code                  String
+  code                  String     @unique
   title                 String
   description           String?
   context               String

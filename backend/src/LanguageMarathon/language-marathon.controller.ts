@@ -68,6 +68,11 @@ export class LanguageMarathonController {
     return this.marathonService.findOneById(id);
   }
 
+  @Get(':code/:code') //  marathon-enrollment screen
+  findOneByCode(@Param('code') code: string): Promise<LanguageMarathon> {
+    return this.marathonService.findOneByCode(code);
+  }
+
   @Get(':id/with-questions')
   findOneByIdWithQuestions(@Param('id') id: string): Promise<LanguageMarathon> {
     return this.marathonService.findOneByIdWithQuestions(id);

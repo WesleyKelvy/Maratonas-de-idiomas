@@ -130,6 +130,9 @@ export class PrismaLanguageMarathonRepository
   async findOneByCode(code: string): Promise<LanguageMarathon | null> {
     return this.prisma.languageMarathon.findFirst({
       where: { code },
+      include: {
+        classroom: { select: { creator: { select: { name: true } } } },
+      },
     });
   }
 
