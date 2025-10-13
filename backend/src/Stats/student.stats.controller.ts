@@ -27,6 +27,6 @@ export class StudentStatsController {
   findOne(
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<Omit<StudentStats, 'userId'>> {
-    return this.studentStatsService.findByUserId(id);
+    return this.studentStatsService.findOne(id);
   }
 }

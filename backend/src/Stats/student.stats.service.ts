@@ -32,7 +32,7 @@ export class StudentStatsService implements AbstractStudentStatsService {
     return await this.studentStatsRepository.create(id);
   }
 
-  async findByUserId(id: string): Promise<Omit<StudentStats, 'userId'>> {
+  async findOne(id: string): Promise<Omit<StudentStats, 'userId'>> {
     const studentStats = await this.studentStatsRepository.findByUserId(id);
     if (!studentStats) {
       throw new NotFoundException(`Student stats with ID ${id} not found.`);
@@ -64,7 +64,7 @@ export class StudentStatsService implements AbstractStudentStatsService {
       ...u,
     }))) {
       // load existing stats
-      const stats = await this.findByUserId(user_id);
+      const stats = await this.findOne(user_id);
 
       // prepare updates
       const updates: Partial<UpdateStudentStatsDto> = {

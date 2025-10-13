@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { LanguageMarathon } from '@prisma/client';
+import { LanguageMarathon, Role } from '@prisma/client';
 import { CreateLanguageMarathonDto } from 'src/LanguageMarathon/dto/language-marathon.create.dto';
 import { UpdateLanguageMarathonDto } from 'src/LanguageMarathon/dto/language-marathon.update.dto';
 import {
@@ -27,9 +27,17 @@ export class PrismaLanguageMarathonRepository
   /**
    * Finds recent marathons and stats for a user
    */
-  async findRecentMarathons(userId: string): Promise<RecentMarathons[]> {
-    const marathons = await this.prisma.languageMarathon.findMany({
-      where: { created_by: userId },
+  async findRecentMarathons(
+    userId: string,
+    role: Role,
+  ): Promise<RecentMarathons[]> {
+    const whereClause =
+      role === Role.Professor
+        ? { created_by: userId }
+        : { enrollments: { some: { user_id: userId } } };
+
+    const data = await this.prisma.languageMarathon.findMany({
+      where: whereClause,
       select: {
         id: true,
         title: true,
@@ -48,13 +56,9 @@ export class PrismaLanguageMarathonRepository
       take: 3,
     });
 
-    return marathons.map((m) => ({
-      id: m.id,
-      title: m.title,
-      difficulty: m.difficulty,
-      start_date: m.start_date,
-      end_date: m.end_date,
-      enrollmentsCount: m._count.enrollments,
+    return data.map(({ _count, ...rest }) => ({
+      ...rest,
+      enrollmentsCount: _count.enrollments,
     }));
   }
 

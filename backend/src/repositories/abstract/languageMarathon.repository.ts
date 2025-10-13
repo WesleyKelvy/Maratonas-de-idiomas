@@ -1,4 +1,4 @@
-import { LanguageMarathon } from '@prisma/client';
+import { LanguageMarathon, Role } from '@prisma/client';
 import { CreateLanguageMarathonDto } from 'src/LanguageMarathon/dto/language-marathon.create.dto';
 import { UpdateLanguageMarathonDto } from 'src/LanguageMarathon/dto/language-marathon.update.dto';
 import {
@@ -28,7 +28,10 @@ export abstract class AbstractLanguageMarathonRepository {
     id: string,
   ): Promise<LanguageMarathon | null>;
 
-  abstract findRecentMarathons(id: string): Promise<RecentMarathons[] | null>;
+  abstract findRecentMarathons(
+    id: string,
+    role: Role,
+  ): Promise<RecentMarathons[] | null>;
 
   abstract findOneByCode(code: string): Promise<LanguageMarathon | null>;
 

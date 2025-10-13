@@ -61,29 +61,25 @@ export class LanguageMarathonService
     return marathons;
   }
 
-  async findRecentMarathons(
+  async findRecentMarathonsAndUserStats(
     userId: string,
     role: Role,
   ): Promise<RecentMarathonsAndUserStats> {
-    const userStatsPromise =
+    const statsService =
       role === Role.Professor
-        ? this.professorStatsService.findOne(userId)
-        : this.studentStatsService.findByUserId(userId);
+        ? this.professorStatsService
+        : this.studentStatsService;
 
-    // Executa ambas as promessas em paralelo
-    const [marathonsData, userStatsData] = await Promise.all([
-      this.marathonRepository.findRecentMarathons(userId),
-      userStatsPromise,
+    const [userStats, marathons] = await Promise.all([
+      statsService.findOne(userId),
+      this.marathonRepository.findRecentMarathons(userId, role),
     ]);
 
-    if (!marathonsData) {
+    if (!marathons) {
       throw new NotFoundException(`No found marathons for user id: ${userId}.`);
     }
 
-    return {
-      marathons: marathonsData,
-      userStats: userStatsData,
-    };
+    return { marathons, userStats };
   }
 
   async findAllByClassroomId(id: string): Promise<LanguageMarathon[]> {

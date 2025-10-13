@@ -27,7 +27,7 @@ export abstract class AbstractLanguageMarathonService {
     userId: string,
   ): Promise<CustomLanguageMarathon[]>;
 
-  abstract findRecentMarathons(
+  abstract findRecentMarathonsAndUserStats(
     userId: string,
     role: Role,
   ): Promise<RecentMarathonsAndUserStats>;

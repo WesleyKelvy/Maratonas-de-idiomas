@@ -54,10 +54,13 @@ export class LanguageMarathonController {
   }
 
   @Get('/recent-marathons')
-  findRecentMarathons(
+  findRecentMarathonsAndUserStats(
     @CurrentUser() user: UserFromJwt,
   ): Promise<RecentMarathonsAndUserStats> {
-    return this.marathonService.findRecentMarathons(user.id, user.role);
+    return this.marathonService.findRecentMarathonsAndUserStats(
+      user.id,
+      user.role,
+    );
   }
 
   @Get(':id')
