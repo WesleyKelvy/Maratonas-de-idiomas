@@ -113,7 +113,7 @@ export class LanguageMarathonService
       throw new ForbiddenException('Not allowed!');
 
     const code = randomBytes(8).toString('hex');
-    const startDate = new Date();
+    const startDate = new Date(dto.startDate);
     const endDate = new Date(startDate);
     endDate.setMinutes(startDate.getMinutes() + dto.timeLimit);
 

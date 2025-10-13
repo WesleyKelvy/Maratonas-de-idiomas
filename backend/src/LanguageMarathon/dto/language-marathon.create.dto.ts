@@ -29,7 +29,6 @@ export class CreateLanguageMarathonDto {
   @IsInt()
   timeLimit: number;
 
-  @IsOptional()
   @Transform(({ value }) => (value ? new Date(value) : value))
   @IsDate()
   startDate: Date;
