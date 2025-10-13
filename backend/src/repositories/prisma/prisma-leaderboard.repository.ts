@@ -14,8 +14,9 @@ export class PrismaLeaderboardRepository
    * @param data The data for the new leaderboard entries.
    */
   createMany(data: Prisma.LeaderboardCreateManyInput[]) {
-    this.prisma.leaderboard.createMany({
+    return this.prisma.leaderboard.createMany({
       data,
+      skipDuplicates: true,
     });
   }
 
@@ -32,12 +33,13 @@ export class PrismaLeaderboardRepository
       include: {
         user: {
           select: {
-            name: true, // Include user's name in the result
+            id: true,
+            name: true,
           },
         },
       },
       orderBy: {
-        position: 'asc', // Order by position
+        position: 'asc',
       },
     });
   }

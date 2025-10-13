@@ -14,9 +14,9 @@ type CustomLanguageMarathonWithEnrollments = {
   enrollments: EnrollmentIds[];
 };
 
-type CustomLanguageMarathon = Omit<
+export type CustomLanguageMarathon = Omit<
   CustomLanguageMarathonWithEnrollments,
-  'enrollment'
+  'enrollments'
 >;
 
 export class ClassroomWithLanguageMarathon {
