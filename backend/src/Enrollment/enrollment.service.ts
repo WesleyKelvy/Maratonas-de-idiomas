@@ -1,15 +1,13 @@
 import {
+  BadRequestException,
   ConflictException,
   Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { Enrollment } from '@prisma/client';
-import {
-  AbstractClassroomService,
-  CLASSROOM_SERVICE_TOKEN,
-} from 'src/Classroom/abstract-services/abstract-classrom.service';
 import { AbstractEnrollmentService } from 'src/Enrollment/abstract-services/abstract-enrollment.service';
+import { EnrollmentWithMarathons } from 'src/Enrollment/entities/enrollment.entity';
 import {
   AbstractLanguageMarathonService,
   LANGUAGE_MARATHON_SERVICE_TOKEN,
@@ -22,14 +20,18 @@ import {
   AbstractProfessorStatsService,
   PROFESSOR_STATS_SERVICE_TOKEN,
 } from 'src/Stats/abstract-services/abstract-professor-stats.service';
+import {
+  AbstractUserService,
+  USER_SERVICE_TOKEN,
+} from 'src/User/abstract-services/abstract-user.service';
 
 @Injectable()
 export class EnrollmentService implements AbstractEnrollmentService {
   constructor(
     @Inject(PROFESSOR_STATS_SERVICE_TOKEN)
     private readonly professorStatsService: AbstractProfessorStatsService,
-    @Inject(CLASSROOM_SERVICE_TOKEN)
-    private readonly classroomService: AbstractClassroomService,
+    @Inject(USER_SERVICE_TOKEN)
+    private readonly userService: AbstractUserService,
     @Inject(LANGUAGE_MARATHON_SERVICE_TOKEN)
     private readonly marathonService: AbstractLanguageMarathonService,
     @Inject(ENROLLMENT_REPOSITORY_TOKEN)
@@ -52,7 +54,7 @@ export class EnrollmentService implements AbstractEnrollmentService {
     return enrollment;
   }
 
-  async findAllByUserId(id: string): Promise<Enrollment[]> {
+  async findAllByUserId(id: string): Promise<EnrollmentWithMarathons[]> {
     const enrollment = await this.enrollmentRepository.findAllByUserId(id);
     if (!enrollment) {
       throw new NotFoundException('Marathons for this classroom do not exist.');
@@ -61,13 +63,15 @@ export class EnrollmentService implements AbstractEnrollmentService {
     return enrollment;
   }
 
-  async findOne(marathonId: string, userId: string): Promise<Enrollment> {
-    return await this.enrollmentRepository.findOne(marathonId, userId);
+  async findOne(code: string, userId: string): Promise<Enrollment> {
+    return await this.enrollmentRepository.findOne(code, userId);
   }
 
   async create(userId: string, code: string): Promise<Enrollment> {
-    const data = await this.findOne(code, userId);
+    const user = await this.userService.findById(userId);
+    if (!user) throw new BadRequestException('User not found');
 
+    const data = await this.findOne(code, userId);
     if (data) throw new ConflictException('Enrollment already done!');
 
     const {

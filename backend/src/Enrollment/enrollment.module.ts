@@ -8,9 +8,10 @@ import { LanguageMarathonModule } from 'src/LanguageMarathon/language-marathon.m
 import { ENROLLMENT_REPOSITORY_TOKEN } from 'src/repositories/abstract/enrollment.repository';
 import { PrismaEnrollmentRepository } from 'src/repositories/prisma/prisma-enrollment.repository';
 import { StatsModule } from 'src/Stats/stats.module';
+import { UserModule } from 'src/User/user.module';
 
 @Module({
-  imports: [ClassroomModule, StatsModule, LanguageMarathonModule],
+  imports: [ClassroomModule, StatsModule, LanguageMarathonModule, UserModule],
   controllers: [EnrollmentController],
   providers: [
     {

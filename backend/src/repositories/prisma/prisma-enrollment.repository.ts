@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Enrollment } from '@prisma/client';
+import { EnrollmentWithMarathons } from 'src/Enrollment/entities/enrollment.entity';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AbstractEnrollmentRepository } from 'src/repositories/abstract/enrollment.repository';
 
@@ -8,12 +9,9 @@ export class PrismaEnrollmentRepository
   implements AbstractEnrollmentRepository
 {
   constructor(private readonly prisma: PrismaService) {}
-  async findOne(
-    marathonId: string,
-    userId: string,
-  ): Promise<Enrollment | null> {
+  async findOne(code: string, userId: string): Promise<Enrollment | null> {
     return await this.prisma.enrollment.findFirst({
-      where: { user_id: userId, marathon_id: marathonId },
+      where: { user_id: userId, marathon_code: code },
     });
   }
 
@@ -28,28 +26,41 @@ export class PrismaEnrollmentRepository
     });
   }
 
-  async findAllByUserId(userId: string): Promise<Enrollment[]> {
+  async findAllByUserId(userId: string): Promise<EnrollmentWithMarathons[]> {
     return await this.prisma.enrollment.findMany({
       where: { user_id: userId },
-      include: {
-        marathon: true,
+      select: {
+        id: true,
+        marathon: {
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            difficulty: true,
+            start_date: true,
+            end_date: true,
+            number_of_questions: true,
+            timeLimit: true,
+            code: true,
+          },
+        },
       },
     });
   }
 
   async create(
-    marathonId: string,
     userId: string,
+    marathonId: string,
     code: string,
   ): Promise<Enrollment> {
     return await this.prisma.enrollment.create({
       data: {
         marathon_code: code,
-        user: {
-          connect: { id: userId },
-        },
         marathon: {
           connect: { id: marathonId },
+        },
+        user: {
+          connect: { id: userId },
         },
       },
     });

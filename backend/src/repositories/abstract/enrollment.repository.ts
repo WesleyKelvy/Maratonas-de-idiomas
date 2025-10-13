@@ -1,4 +1,5 @@
 import { Enrollment } from '@prisma/client';
+import { EnrollmentWithMarathons } from 'src/Enrollment/entities/enrollment.entity';
 
 export abstract class AbstractEnrollmentRepository {
   abstract create(
@@ -6,11 +7,10 @@ export abstract class AbstractEnrollmentRepository {
     marathon_id: string,
     code: string,
   ): Promise<Enrollment>;
-  abstract findAllByUserId(userId: string): Promise<Enrollment[] | null>;
-  abstract findOne(
-    marathonId: string,
+  abstract findAllByUserId(
     userId: string,
-  ): Promise<Enrollment | null>;
+  ): Promise<EnrollmentWithMarathons[] | null>;
+  abstract findOne(code: string, userId: string): Promise<Enrollment | null>;
   abstract findAllEnrollmentsByMarathonId(
     marathonId: string,
   ): Promise<Enrollment[] | null>;
