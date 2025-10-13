@@ -59,6 +59,7 @@ export class PrismaSubmissionRepository
   async findAllByUserId(userId: string): Promise<Submission[]> {
     return this.prisma.submission.findMany({
       where: { user_id: userId },
+      include: { marathon: { select: { title: true } } },
     });
   }
 

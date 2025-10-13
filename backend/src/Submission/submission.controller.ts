@@ -7,9 +7,12 @@ import {
   Inject,
   Param,
   Post,
+  UseGuards,
 } from '@nestjs/common';
-import { Submission } from '@prisma/client';
+import { Role, Submission } from '@prisma/client';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { UserFromJwt } from 'src/auth/models/UserFromJwt';
 import {
   AbstractSubmissionService,
@@ -17,13 +20,15 @@ import {
 } from 'src/Submission/abstract-services/abstract-submission.service';
 import { CreateSubmissionDto } from 'src/Submission/dto/submission.create.dto';
 
-@Controller('submission/')
+@Controller('submission')
 export class SubmissionController {
   constructor(
     @Inject(SUBMISSION_SERVICE_TOKEN)
     private readonly submissionService: AbstractSubmissionService,
   ) {}
 
+  @UseGuards(RolesGuard)
+  @Roles(Role.Student)
   @Post('marathon/:marathonId/question/:questionId')
   @HttpCode(HttpStatus.CREATED)
   create(
@@ -41,7 +46,7 @@ export class SubmissionController {
     );
   }
 
-  @Get('user')
+  @Get('user/get-my-submissions')
   findAllByUserId(@CurrentUser() user: UserFromJwt): Promise<Submission[]> {
     return this.submissionService.findAllByUserId(user.id);
   }
