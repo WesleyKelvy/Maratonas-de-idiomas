@@ -1,4 +1,4 @@
-import React from "react";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -6,82 +6,146 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Trophy, Users, Medal, BookOpen, Plus, Eye } from "lucide-react";
-import { useAuth } from "../contexts/AuthContext";
+import {
+  isProfessorStats,
+  isStudentStats,
+} from "@/helper/roles-dashboard.helper";
+import { useRecentMarathons } from "@/hooks/use-marathon";
+import {
+  BookOpen,
+  Eye,
+  Loader2,
+  Medal,
+  Plus,
+  Target,
+  Trophy,
+  Users,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+
+interface StatCard {
+  title: string;
+  value: string;
+  icon: any;
+  description: string;
+}
 
 const Dashboard = () => {
   const { user, isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
 
-  const studentStats = [
+  // Fetch recent marathons and user stats from backend
+  const {
+    data: dashboardData,
+    isLoading: dashboardLoading,
+    error: dashboardError,
+  } = useRecentMarathons();
+
+  // Get user stats from API data
+  const userStats = dashboardData?.userStats;
+  const recentMarathons = dashboardData?.marathons || [];
+
+  // Helper function to get marathon status
+  const getMarathonStatus = (startDate: string, endDate: string | null) => {
+    const now = new Date();
+    const start = new Date(startDate);
+    const end = endDate ? new Date(endDate) : null;
+
+    if (now < start) {
+      return "Aguardando início";
+    } else if (end && now > end) {
+      return "Finalizada";
+    } else {
+      return "Aberta";
+    }
+  };
+
+  // Helper function to get difficulty display
+  const getDifficultyDisplay = (difficulty: string) => {
+    switch (difficulty) {
+      case "Beginner":
+        return "Iniciante";
+      case "Intermediate":
+        return "Intermediário";
+      case "Advanced":
+        return "Avançado";
+      default:
+        return difficulty;
+    }
+  };
+
+  const studentStats: StatCard[] = [
     {
       title: "Pontuação Total",
-      value: "1,250",
+      value: isStudentStats(userStats)
+        ? userStats.total_points.toString()
+        : "0",
       icon: Trophy,
       description: "Pontos acumulados",
     },
     {
       title: "Maratonas Participadas",
-      value: "12",
+      value: isStudentStats(userStats)
+        ? userStats.marathons_participated.toString()
+        : "0",
       icon: BookOpen,
       description: "Maratonas concluídas",
     },
     {
       title: "Pódios",
-      value: "3",
+      value: isStudentStats(userStats) ? userStats.podiums.toString() : "0",
       icon: Medal,
-      description: "Primeiros lugares",
+      description: "Top 3 posições",
+    },
+    {
+      title: "Vitórias",
+      value: isStudentStats(userStats)
+        ? userStats.first_places.toString()
+        : "0",
+      icon: Target,
+      description: "1º lugares conquistados",
     },
   ];
 
-  const teacherStats = [
+  const teacherStats: StatCard[] = [
+    {
+      title: "Maratonas Criadas",
+      value: isProfessorStats(userStats)
+        ? userStats.total_marathons.toString()
+        : "0",
+      icon: Trophy,
+      description: "Total de Maratonas",
+    },
     {
       title: "Turmas Criadas",
-      value: "8",
-      icon: Users,
+      value: isProfessorStats(userStats)
+        ? userStats.total_classes.toString()
+        : "0",
+      icon: BookOpen,
       description: "Turmas ativas",
     },
     {
-      title: "Maratonas Criadas",
-      value: "15",
-      icon: Trophy,
-      description: "Maratonas disponíveis",
-    },
-    {
-      title: "Alunos Alcançados",
-      value: "124",
+      title: "Estudantes Alcançados",
+      value: isProfessorStats(userStats)
+        ? userStats.total_students_reached.toString()
+        : "0",
       icon: Users,
       description: "Total de alunos",
     },
   ];
 
-  const recentMarathons = [
-    {
-      id: 1,
-      title: "Maratona de JavaScript",
-      difficulty: "Intermediário",
-      status: "Aberta",
-      participants: 45,
-    },
-    {
-      id: 2,
-      title: "Python para Iniciantes",
-      difficulty: "Iniciante",
-      status: "Aberta",
-      participants: 32,
-    },
-    {
-      id: 3,
-      title: "Algoritmos Avançados",
-      difficulty: "Avançado",
-      status: "Finalizada",
-      participants: 28,
-    },
-  ];
-
   const stats = user?.role === "Professor" ? teacherStats : studentStats;
+
+  // Loading state
+  if (dashboardLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Carregando dashboard...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -98,7 +162,11 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div
+        className={`grid grid-cols-1  gap-6 ${
+          isStudentStats(userStats) ? "md:grid-cols-4" : "md:grid-cols-3"
+        }`}
+      >
         {stats.map((stat, index) => {
           const Icon = stat.icon;
           return (
@@ -131,37 +199,71 @@ const Dashboard = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {recentMarathons.map((marathon) => (
-              <div
-                key={marathon.id}
-                className="flex items-center justify-between p-3 border rounded-lg"
-              >
-                <div>
-                  <h4 className="font-medium">{marathon.title}</h4>
-                  <p className="text-sm text-gray-600">
-                    {marathon.difficulty} • {marathon.participants}{" "}
-                    participantes
-                  </p>
-                  <span
-                    className={`inline-block px-2 py-1 text-xs rounded-full mt-1 ${
-                      marathon.status === "Aberta"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-gray-100 text-gray-800"
-                    }`}
-                  >
-                    {marathon.status}
-                  </span>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate(`/marathons/${marathon.id}`)}
-                >
-                  <Eye className="h-4 w-4 mr-2" />
-                  Ver
-                </Button>
+            {recentMarathons.length === 0 ? (
+              <div className="text-center py-8">
+                <Trophy className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  {user?.role === "Professor"
+                    ? "Nenhuma maratona criada ainda"
+                    : "Nenhuma maratona disponível"}
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  {user?.role === "Professor"
+                    ? "Crie sua primeira maratona para começar."
+                    : "Aguarde novas maratonas serem disponibilizadas."}
+                </p>
+                {user?.role === "Professor" && (
+                  <Button onClick={() => navigate("/marathons?create=true")}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Criar Primeira Maratona
+                  </Button>
+                )}
               </div>
-            ))}
+            ) : (
+              recentMarathons.map((marathon) => {
+                const status = getMarathonStatus(
+                  marathon.start_date,
+                  marathon.end_date
+                );
+                const participantCount = marathon.enrollments
+                  ? marathon.enrollments.length
+                  : 0;
+
+                return (
+                  <div
+                    key={marathon.id}
+                    className="flex items-center justify-between p-3 border rounded-lg"
+                  >
+                    <div>
+                      <h4 className="font-medium">{marathon.title}</h4>
+                      <p className="text-sm text-gray-600">
+                        {getDifficultyDisplay(marathon.difficulty)} •{" "}
+                        {participantCount} participantes
+                      </p>
+                      <span
+                        className={`inline-block px-2 py-1 text-xs rounded-full mt-1 ${
+                          status === "Aberta"
+                            ? "bg-green-100 text-green-800"
+                            : status === "Aguardando início"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        {status}
+                      </span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate(`/marathons/${marathon.id}`)}
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      Ver
+                    </Button>
+                  </div>
+                );
+              })
+            )}
           </CardContent>
         </Card>
 

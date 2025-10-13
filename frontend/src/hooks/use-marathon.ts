@@ -2,6 +2,8 @@ import {
   MarathonService,
   type CreateMarathonRequest,
   type UpdateMarathonRequest,
+  type CustomLanguageMarathon,
+  type RecentMarathonsAndUserStats,
 } from "@/services/marathon.service";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -11,6 +13,9 @@ export const marathonKeys = {
   lists: () => [...marathonKeys.all, "list"] as const,
   list: (classroomId: string) =>
     [...marathonKeys.lists(), { classroomId }] as const,
+  userList: () => [...marathonKeys.lists(), "user"] as const,
+  idsAndTitles: () => [...marathonKeys.all, "ids-and-titles"] as const,
+  recentMarathons: () => [...marathonKeys.all, "recent-marathons"] as const,
   details: () => [...marathonKeys.all, "detail"] as const,
   detail: (id: string) => [...marathonKeys.details(), id] as const,
   withQuestions: (id: string) =>
@@ -56,6 +61,33 @@ export const useMarathonWithQuestions = (marathonId: string) => {
     queryFn: () => MarathonService.findOneWithQuestions(marathonId),
     enabled: !!marathonId,
     staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+};
+
+export const useMarathonIdsAndTitles = () => {
+  return useQuery({
+    queryKey: marathonKeys.idsAndTitles(),
+    queryFn: () => MarathonService.findAllIdsAndTitle(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+  });
+};
+
+export const useUserMarathons = () => {
+  return useQuery({
+    queryKey: marathonKeys.userList(),
+    queryFn: () => MarathonService.findAllByUserId(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+  });
+};
+
+export const useRecentMarathons = () => {
+  return useQuery({
+    queryKey: marathonKeys.recentMarathons(),
+    queryFn: () => MarathonService.findRecentMarathonsAndUserStats(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
   });
 };

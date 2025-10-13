@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/api-client";
+import { ProfessorStats, StudentStats } from "@/services/profile.service";
 
 export interface MarathonQuestion {
   id: number;
@@ -28,6 +29,16 @@ export interface LanguageMarathon {
     };
   };
   questions?: MarathonQuestion[];
+}
+
+export interface CustomLanguageMarathon {
+  id: string;
+  title: string;
+}
+
+export interface RecentMarathonsAndUserStats {
+  marathons: LanguageMarathon[];
+  userStats: StudentStats | ProfessorStats | null;
 }
 
 export interface CreateMarathonRequest {
@@ -64,10 +75,24 @@ export class MarathonService {
     );
   }
 
-  // GET /marathon/user/:id - findAllByUserId
-  static async findAllByUserId(userId: string): Promise<LanguageMarathon[]> {
+  // GET /marathon/user - findAllByUserId (now uses currentUser from JWT)
+  static async findAllByUserId(): Promise<LanguageMarathon[]> {
     return apiClient.get<LanguageMarathon[]>(
-      `${MarathonService.BASE_URL}/user/${userId}`
+      `${MarathonService.BASE_URL}/user`
+    );
+  }
+
+  // GET /marathon/ids-and-titles - findAllIdsAndTitle (now uses currentUser from JWT)
+  static async findAllIdsAndTitle(): Promise<CustomLanguageMarathon[]> {
+    return apiClient.get<CustomLanguageMarathon[]>(
+      `${MarathonService.BASE_URL}/ids-and-titles`
+    );
+  }
+
+  // GET /marathon/recent-marathons - findRecentMarathonsAndUserStats (uses currentUser from JWT)
+  static async findRecentMarathonsAndUserStats(): Promise<RecentMarathonsAndUserStats> {
+    return apiClient.get<RecentMarathonsAndUserStats>(
+      `${MarathonService.BASE_URL}/recent-marathons`
     );
   }
 

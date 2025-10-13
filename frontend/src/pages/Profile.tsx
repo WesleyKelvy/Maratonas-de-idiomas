@@ -456,7 +456,7 @@ const Profile = () => {
         </div>
       </div>
       {/* Recent Achievements */}
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle>Conquistas</CardTitle>
           <CardDescription>
@@ -488,7 +488,7 @@ const Profile = () => {
             );
           })}
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   );
 };
