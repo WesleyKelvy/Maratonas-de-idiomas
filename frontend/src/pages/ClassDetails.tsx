@@ -1,5 +1,5 @@
-import React from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -7,9 +7,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -27,7 +24,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -35,26 +31,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Users,
-  ArrowLeft,
-  Copy,
-  Trophy,
-  Eye,
-  Plus,
-  Loader2,
-} from "lucide-react";
-import { toast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { useClassroom } from "@/hooks/use-classroom";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  createMarathonFormSchema,
-  CreateMarathonFormData,
-} from "@/schemas/marathon.schema";
 import { useCreateMarathon } from "@/hooks/use-marathon";
+import { toast } from "@/hooks/use-toast";
+import {
+  CreateMarathonFormData,
+  createMarathonFormSchema,
+} from "@/schemas/marathon.schema";
 import { CreateMarathonRequest } from "@/services/marathon.service";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ArrowLeft, Eye, Loader2, Plus, Trophy, Users } from "lucide-react";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { useNavigate, useParams } from "react-router-dom";
 
 const DIFFICULTY_LEVELS = {
   BEGINNER: "Beginner",
@@ -89,7 +80,7 @@ const ClassDetails = () => {
       timeLimit: "",
       startDate: "",
       endDate: "",
-      number_of_questions: 1,
+      number_of_questions: "",
       classroom_id: classId,
     },
   });
@@ -107,7 +98,7 @@ const ClassDetails = () => {
         timeLimit: parseInt(values.timeLimit),
         startDate: values.startDate ? new Date(values.startDate) : undefined,
         endDate: values.endDate ? new Date(values.endDate) : undefined,
-        number_of_questions: values.number_of_questions,
+        number_of_questions: parseInt(values.number_of_questions),
       };
 
       const marathon = await createMarathonMutation.mutateAsync({
@@ -264,14 +255,14 @@ const ClassDetails = () => {
                   Maratonas Vinculadas ({linkedMarathons.length})
                 </CardTitle>
                 <div className="flex gap-2">
-                  <Button
+                  {/* <Button
                     variant="outline"
                     size="sm"
                     onClick={() => navigate(`/classes/${classId}/marathons`)}
                   >
                     <Trophy className="mr-2 h-4 w-4" />
                     Ver Todas
-                  </Button>
+                  </Button> */}
                   <Dialog
                     open={isCreateDialogOpen}
                     onOpenChange={setIsCreateDialogOpen}
