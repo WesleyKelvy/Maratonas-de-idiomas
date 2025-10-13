@@ -103,6 +103,13 @@ export class MarathonService {
     );
   }
 
+  // GET /marathon/:code/:code - findOneByCode (marathon-enrollment screen)
+  static async findOneByCode(code: string): Promise<LanguageMarathon> {
+    return apiClient.get<LanguageMarathon>(
+      `${MarathonService.BASE_URL}/${code}/${code}`
+    );
+  }
+
   // GET /marathon/:id/with-questions - findOneWithQuestions
   static async findOneWithQuestions(
     marathonId: string

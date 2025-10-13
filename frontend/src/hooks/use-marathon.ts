@@ -42,6 +42,17 @@ export const useMarathon = (marathonId: string) => {
   });
 };
 
+export const useMarathonByCode = (code: string, enabled: boolean = true) => {
+  return useQuery({
+    queryKey: [...marathonKeys.all, "by-code", code],
+    queryFn: () => MarathonService.findOneByCode(code),
+    enabled: !!code && enabled,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    retry: false, // Don't retry if marathon not found
+  });
+};
+
 export const useMarathonByClassroom = (
   classroomId: string,
   marathonId: string

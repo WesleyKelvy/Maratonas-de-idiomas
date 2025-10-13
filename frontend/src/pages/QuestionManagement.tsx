@@ -96,11 +96,11 @@ const QuestionManagement = () => {
   // Extract questions from marathon data
   const questions = marathon?.questions || [];
 
-  // Check if marathon has started (current date > start_date)
+  // Check if marathon has started (current UTC date > start_date)
   const marathonHasStarted = marathon?.start_date
     ? new Date() > new Date(marathon.start_date)
     : false;
-
+  
   const disabledTooltip = marathonHasStarted
     ? "Não é possível editar questões após o início da maratona"
     : "";
@@ -375,6 +375,11 @@ const QuestionManagement = () => {
                   A maratona já foi iniciada em{" "}
                   {new Date(marathon?.start_date || "").toLocaleDateString(
                     "pt-BR"
+                  )}{" "}
+                  às{" "}
+                  {new Date(marathon?.start_date || "").toLocaleTimeString(
+                    "pt-BR",
+                    { hour: "2-digit", minute: "2-digit" }
                   )}
                   . Não é possível editar questões após o início da maratona.
                 </p>

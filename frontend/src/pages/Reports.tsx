@@ -175,11 +175,11 @@ const ReportsPage = () => {
                       <SelectItem key={classroom.id} value={classroom.id}>
                         <div className="flex flex-col">
                           <span className="font-medium">{classroom.name}</span>
-                          {classroom.description && (
+                          {/* {classroom.description && (
                             <span className="text-sm text-muted-foreground">
                               {classroom.description}
                             </span>
-                          )}
+                          )} */}
                         </div>
                       </SelectItem>
                     ))}
