@@ -45,16 +45,16 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
   AlertCircle,
+  BookText,
   Clock,
   Eye,
   Loader2,
   Play,
   Plus,
   Search,
-  BookText,
+  TableOfContents,
   Trophy,
   Users,
-  TableOfContents,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -79,18 +79,6 @@ const DIFFICULTY_DISPLAY = {
   [DIFFICULTY_LEVELS.INTERMEDIATE]: "Intermediário",
   [DIFFICULTY_LEVELS.ADVANCED]: "Avançado",
 } as const;
-
-const INITIAL_FORM_STATE = {
-  title: "",
-  description: "",
-  context: "",
-  difficulty: "" as "Beginner" | "Intermediate" | "Advanced" | "",
-  timeLimit: "",
-  startDate: "",
-  endDate: "",
-  number_of_questions: "",
-  classroom_id: "",
-};
 
 const Marathons = () => {
   const { user } = useAuth();
@@ -279,7 +267,7 @@ const Marathons = () => {
               <DialogHeader>
                 <DialogTitle>Criar nova Maratona</DialogTitle>
                 <DialogDescription>
-                  Preencha os dados para criar uma nova maratona de programação.
+                  Preencha os dados para criar uma nova maratona.
                 </DialogDescription>
               </DialogHeader>
               <Form {...form}>
