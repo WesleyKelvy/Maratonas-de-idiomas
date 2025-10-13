@@ -52,29 +52,32 @@ export class LeaderboardService implements AbstractLeaderboardService {
   }
 
   async generateLeaderboardForMarathon(marathonId: string): Promise<void> {
-    // 1) Fetch all scored submissions in this marathon
-    const submissions = await this.prisma.submission.findMany({
-      where: {
-        question: { marathon_id: marathonId },
-        score: { not: null },
-      },
-      select: { user_id: true, score: true },
-    });
+    // 1. In parallel, search for aggregated scores AND enrolled students
+    const [scoredUsers, enrollments] = await Promise.all([
+      this.prisma.submission.groupBy({
+        by: ['user_id'],
+        where: {
+          question: { marathon_id: marathonId },
+          score: { not: null },
+        },
+        _sum: {
+          score: true, // Sum the 'score' column for each group
+        },
+      }),
 
-    // 2) Sum up scores per student
-    const userScores = new Map<string, number>();
-    for (const { user_id, score } of submissions) {
-      const prev = userScores.get(user_id) ?? 0;
-      userScores.set(user_id, prev + (score ?? 0));
-    }
+      // Query 2: Get all enrolled students
+      this.prisma.enrollment.findMany({
+        where: { marathon_id: marathonId },
+        select: { user_id: true },
+      }),
+    ]);
 
-    // 3) Get all enrolled students for this marathon
-    const enrollments = await this.prisma.enrollment.findMany({
-      where: { marathon_id: marathonId },
-      select: { user_id: true },
-    });
+    // 2. Maps scores for quick search
+    const userScores = new Map<string, number>(
+      scoredUsers.map((u) => [u.user_id, u._sum.score ?? 0]),
+    );
 
-    // 4) Build ranking array
+    // 3. Create the ranking, guaranteeing 0 points for those who signed up but didn't score
     const ranking = enrollments
       .map(({ user_id }) => ({
         userId: user_id,
@@ -82,7 +85,7 @@ export class LeaderboardService implements AbstractLeaderboardService {
       }))
       .sort((a, b) => b.score - a.score);
 
-    // 5) Write to Leaderboard table
+    // 4. Prepare the data for insertion into the leaderboard
     const leaderboardData: CreateLeaderboardDto[] = ranking.map((u, idx) => ({
       marathon_id: marathonId,
       user_id: u.userId,
@@ -90,16 +93,19 @@ export class LeaderboardService implements AbstractLeaderboardService {
       position: idx + 1,
     }));
 
-    await this.leaderboardRepository.deleteByMarathonId(marathonId);
-    await this.leaderboardRepository.createMany(leaderboardData);
+    // 5. Perform all write operations in a single atomic transaction
+    await this.prisma.$transaction([
+      // Create the new leaderboard
+      this.leaderboardRepository.createMany(leaderboardData),
+
+      // Mark marathon as leaderboard generated
+      this.prisma.languageMarathon.update({
+        where: { id: marathonId },
+        data: { leaderboard_generated: true },
+      }),
+    ]);
 
     await this.studentStatsService.updateStudentStats(leaderboardData);
-
-    // 6) Mark marathon as having a generated leaderboard
-    await this.prisma.languageMarathon.update({
-      where: { id: marathonId },
-      data: { leaderboard_generated: true },
-    });
   }
 
   async getLeaderboardForMarathon(marathonId: string): Promise<Leaderboard[]> {

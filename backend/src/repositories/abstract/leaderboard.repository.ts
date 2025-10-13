@@ -5,7 +5,7 @@ export abstract class AbstractLeaderboardRepository {
    * Creates multiple leaderboard entries in a single transaction.
    * @param data An array of data to create leaderboard entries.
    */
-  abstract createMany(data: Prisma.LeaderboardCreateManyInput[]): Promise<void>;
+  abstract createMany(data: Prisma.LeaderboardCreateManyInput[]);
 
   /**
    * Finds all leaderboard entries for a given marathon, ordered by position.
@@ -19,7 +19,7 @@ export abstract class AbstractLeaderboardRepository {
    * This is useful for regenerating a leaderboard.
    * @param marathonId The ID of the marathon.
    */
-  abstract deleteByMarathonId(marathonId: string): Promise<void>;
+  abstract deleteByMarathonId(marathonId: string);
 }
 
 export const LEADERBOARD_REPOSITORY_TOKEN = 'LEADERBOARD_REPOSITORY_TOKEN';

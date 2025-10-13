@@ -13,8 +13,8 @@ export class PrismaLeaderboardRepository
    * Creates multiple leaderboard entries.
    * @param data The data for the new leaderboard entries.
    */
-  async createMany(data: Prisma.LeaderboardCreateManyInput[]): Promise<void> {
-    await this.prisma.leaderboard.createMany({
+  createMany(data: Prisma.LeaderboardCreateManyInput[]) {
+    this.prisma.leaderboard.createMany({
       data,
     });
   }
@@ -46,8 +46,8 @@ export class PrismaLeaderboardRepository
    * Deletes all leaderboard entries for a specific marathon.
    * @param marathonId The ID of the marathon to clear the leaderboard for.
    */
-  async deleteByMarathonId(marathonId: string): Promise<void> {
-    await this.prisma.leaderboard.deleteMany({
+  deleteByMarathonId(marathonId: string) {
+    this.prisma.leaderboard.deleteMany({
       where: {
         marathon_id: marathonId,
       },
