@@ -20,7 +20,7 @@ export class StudentStatsService implements AbstractStudentStatsService {
     private readonly studentStatsRepository: AbstractStudentStatsRepository,
   ) {}
 
-  async create(id: string): Promise<StudentStats> {
+  async create(id: string): Promise<Omit<StudentStats, 'userId'>> {
     // Example business logic: Prevent creating multiple stats for the same user
     const existingStat = await this.studentStatsRepository.findByUserId(id);
     if (existingStat) {
@@ -32,48 +32,32 @@ export class StudentStatsService implements AbstractStudentStatsService {
     return await this.studentStatsRepository.create(id);
   }
 
-  async findByUserId(id: string): Promise<StudentStats> {
-    const prismaStat = await this.studentStatsRepository.findByUserId(id);
-    if (!prismaStat) {
+  async findByUserId(id: string): Promise<Omit<StudentStats, 'userId'>> {
+    const studentStats = await this.studentStatsRepository.findByUserId(id);
+    if (!studentStats) {
       throw new NotFoundException(`Student stats with ID ${id} not found.`);
     }
-    return {
-      userId: prismaStat.userId,
-      total_points: prismaStat.total_points,
-      marathons_participated: prismaStat.marathons_participated,
-      podiums: prismaStat.podiums,
-      first_places: prismaStat.first_places,
-    };
+    return studentStats;
   }
 
   async update(
     id: string,
     updateStatDto: UpdateStudentStatsDto,
-  ): Promise<StudentStats> {
+  ): Promise<Omit<StudentStats, 'userId'>> {
     const existingStat = await this.studentStatsRepository.findByUserId(id);
     if (!existingStat) {
       throw new NotFoundException(`Student stats with ID ${id} not found.`);
     }
-    const updatedPrismaStat = await this.studentStatsRepository.update(
-      id,
-      updateStatDto,
-    );
-    return {
-      userId: updatedPrismaStat.userId,
-      total_points: updatedPrismaStat.total_points,
-      marathons_participated: updatedPrismaStat.marathons_participated,
-      podiums: updatedPrismaStat.podiums,
-      first_places: updatedPrismaStat.first_places,
-    };
+    return await this.studentStatsRepository.update(id, updateStatDto);
   }
 
-  async remove(id: string): Promise<void> {
-    const existingStat = await this.studentStatsRepository.findByUserId(id);
-    if (!existingStat) {
-      throw new NotFoundException(`Student stats with ID ${id} not found.`);
-    }
-    await this.studentStatsRepository.remove(id);
-  }
+  // async remove(id: string): Promise<void> {
+  //   const existingStat = await this.studentStatsRepository.findByUserId(id);
+  //   if (!existingStat) {
+  //     throw new NotFoundException(`Student stats with ID ${id} not found.`);
+  //   }
+  //   await this.studentStatsRepository.remove(id);
+  // }
 
   async updateStudentStats(leaderboardDto: CreateLeaderboardDto[]) {
     for (const { user_id, score, position } of leaderboardDto.map((u) => ({

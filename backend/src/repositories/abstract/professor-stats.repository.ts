@@ -1,14 +1,15 @@
-import { ProfessorStats as PrismaProfessorStats } from '@prisma/client'; // Use TeacherStats from Prisma
+import { ProfessorStats } from '@prisma/client';
 import { UpdateProfessorStatsDto } from 'src/Stats/dto/professor.update-stats.dto';
 
 export abstract class AbstractProfessorStatsRepository {
-  abstract create(id: string): Promise<PrismaProfessorStats>;
-  abstract findByUserId(userId: string): Promise<PrismaProfessorStats | null>;
+  abstract create(id: string): Promise<Omit<ProfessorStats, 'userId'>>;
+  abstract findByUserId(
+    userId: string,
+  ): Promise<Omit<ProfessorStats, 'userId'> | null>;
   abstract update(
     id: string,
     updateStatDto: UpdateProfessorStatsDto,
-  ): Promise<PrismaProfessorStats>;
-  abstract remove(id: string): Promise<void>;
+  ): Promise<Omit<ProfessorStats, 'userId'>>;
   abstract incrementClasses(userId: string): Promise<void>;
   abstract incrementMarathons(userId: string): Promise<void>;
   abstract incrementStudentsReached(userId: string): Promise<void>;

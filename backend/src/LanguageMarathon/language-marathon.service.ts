@@ -5,7 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { LanguageMarathon } from '@prisma/client';
+import { LanguageMarathon, Role } from '@prisma/client';
 import { randomBytes } from 'crypto';
 import {
   AbstractClassroomService,
@@ -14,7 +14,10 @@ import {
 import { AbstractLanguageMarathonService } from 'src/LanguageMarathon/abstract-services/abstract-language-marathon.service';
 import { CreateLanguageMarathonDto } from 'src/LanguageMarathon/dto/language-marathon.create.dto';
 import { UpdateLanguageMarathonDto } from 'src/LanguageMarathon/dto/language-marathon.update.dto';
-import { CustomLanguageMarathon } from 'src/LanguageMarathon/entities/language-marathon.entity';
+import {
+  CustomLanguageMarathon,
+  RecentMarathonsAndUserStats,
+} from 'src/LanguageMarathon/entities/language-marathon.entity';
 import {
   AbstractLeaderboardService,
   LEADERBOARD_SERVICE_TOKEN,
@@ -27,6 +30,10 @@ import {
   AbstractProfessorStatsService,
   PROFESSOR_STATS_SERVICE_TOKEN,
 } from 'src/Stats/abstract-services/abstract-professor-stats.service';
+import {
+  AbstractStudentStatsService,
+  STUDENT_STATS_SERVICE_TOKEN,
+} from 'src/Stats/abstract-services/abstract-student-stats.service';
 
 @Injectable()
 export class LanguageMarathonService
@@ -37,6 +44,8 @@ export class LanguageMarathonService
     private readonly marathonRepository: AbstractLanguageMarathonRepository,
     @Inject(PROFESSOR_STATS_SERVICE_TOKEN)
     private readonly professorStatsService: AbstractProfessorStatsService,
+    @Inject(STUDENT_STATS_SERVICE_TOKEN)
+    private readonly studentStatsService: AbstractStudentStatsService,
     @Inject(LEADERBOARD_SERVICE_TOKEN)
     private readonly leaderboardService: AbstractLeaderboardService,
     @Inject(CLASSROOM_SERVICE_TOKEN)
@@ -50,6 +59,31 @@ export class LanguageMarathonService
       throw new NotFoundException(`No found classroom for user id: ${userId}.`);
 
     return marathons;
+  }
+
+  async findRecentMarathons(
+    userId: string,
+    role: Role,
+  ): Promise<RecentMarathonsAndUserStats> {
+    const userStatsPromise =
+      role === Role.Professor
+        ? this.professorStatsService.findOne(userId)
+        : this.studentStatsService.findByUserId(userId);
+
+    // Executa ambas as promessas em paralelo
+    const [marathonsData, userStatsData] = await Promise.all([
+      this.marathonRepository.findRecentMarathons(userId),
+      userStatsPromise,
+    ]);
+
+    if (!marathonsData) {
+      throw new NotFoundException(`No found marathons for user id: ${userId}.`);
+    }
+
+    return {
+      marathons: marathonsData,
+      userStats: userStatsData,
+    };
   }
 
   async findAllByClassroomId(id: string): Promise<LanguageMarathon[]> {

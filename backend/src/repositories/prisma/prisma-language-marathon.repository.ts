@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { LanguageMarathon } from '@prisma/client';
 import { CreateLanguageMarathonDto } from 'src/LanguageMarathon/dto/language-marathon.create.dto';
 import { UpdateLanguageMarathonDto } from 'src/LanguageMarathon/dto/language-marathon.update.dto';
-import { CustomLanguageMarathon } from 'src/LanguageMarathon/entities/language-marathon.entity';
+import {
+  CustomLanguageMarathon,
+  RecentMarathons,
+} from 'src/LanguageMarathon/entities/language-marathon.entity';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AbstractLanguageMarathonRepository } from 'src/repositories/abstract/languageMarathon.repository';
 
@@ -19,6 +22,40 @@ export class PrismaLanguageMarathonRepository
         title: true,
       },
     });
+  }
+
+  /**
+   * Finds recent marathons and stats for a user
+   */
+  async findRecentMarathons(userId: string): Promise<RecentMarathons[]> {
+    const marathons = await this.prisma.languageMarathon.findMany({
+      where: { created_by: userId },
+      select: {
+        id: true,
+        title: true,
+        difficulty: true,
+        start_date: true,
+        end_date: true,
+        _count: {
+          select: {
+            enrollments: true,
+          },
+        },
+      },
+      orderBy: {
+        start_date: 'desc',
+      },
+      take: 3,
+    });
+
+    return marathons.map((m) => ({
+      id: m.id,
+      title: m.title,
+      difficulty: m.difficulty,
+      start_date: m.start_date,
+      end_date: m.end_date,
+      enrollmentsCount: m._count.enrollments,
+    }));
   }
 
   /**

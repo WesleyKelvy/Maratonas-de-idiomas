@@ -15,13 +15,17 @@ import { LanguageMarathon, Role } from '@prisma/client';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { UserFromJwt } from 'src/auth/models/UserFromJwt';
 import {
   AbstractLanguageMarathonService,
   LANGUAGE_MARATHON_SERVICE_TOKEN,
 } from 'src/LanguageMarathon/abstract-services/abstract-language-marathon.service';
 import { CreateLanguageMarathonDto } from 'src/LanguageMarathon/dto/language-marathon.create.dto';
 import { UpdateLanguageMarathonDto } from 'src/LanguageMarathon/dto/language-marathon.update.dto';
-import { CustomLanguageMarathon } from 'src/LanguageMarathon/entities/language-marathon.entity';
+import {
+  CustomLanguageMarathon,
+  RecentMarathonsAndUserStats,
+} from 'src/LanguageMarathon/entities/language-marathon.entity';
 
 @Controller('marathon')
 export class LanguageMarathonController {
@@ -29,6 +33,42 @@ export class LanguageMarathonController {
     @Inject(LANGUAGE_MARATHON_SERVICE_TOKEN)
     private readonly marathonService: AbstractLanguageMarathonService,
   ) {}
+
+  @Get('/classroom/:id')
+  findAllByClassroomId(@Param('id') id: string): Promise<LanguageMarathon[]> {
+    return this.marathonService.findAllByClassroomId(id);
+  }
+
+  @Get('/user')
+  findAllByUserId(
+    @CurrentUser('id') userId: string,
+  ): Promise<LanguageMarathon[]> {
+    return this.marathonService.findAllByUserId(userId);
+  }
+
+  @Get('/ids-and-titles') // Only gets finished marathons for displaing ranking.
+  findAllIdsAndTitle(
+    @CurrentUser('id') id: string,
+  ): Promise<CustomLanguageMarathon[]> {
+    return this.marathonService.findAllIdsAndTitle(id);
+  }
+
+  @Get('/recent-marathons')
+  findRecentMarathons(
+    @CurrentUser() user: UserFromJwt,
+  ): Promise<RecentMarathonsAndUserStats> {
+    return this.marathonService.findRecentMarathons(user.id, user.role);
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string): Promise<LanguageMarathon> {
+    return this.marathonService.findOneById(id);
+  }
+
+  @Get(':id/with-questions')
+  findOneByIdWithQuestions(@Param('id') id: string): Promise<LanguageMarathon> {
+    return this.marathonService.findOneByIdWithQuestions(id);
+  }
 
   @UseGuards(RolesGuard)
   @Roles(Role.Professor)
@@ -40,33 +80,6 @@ export class LanguageMarathonController {
     @CurrentUser('id') userId: string,
   ): Promise<LanguageMarathon> {
     return this.marathonService.create(dto, id, userId);
-  }
-
-  @Get('/classroom/:id')
-  findAllByClassroomId(@Param('id') id: string): Promise<LanguageMarathon[]> {
-    return this.marathonService.findAllByClassroomId(id);
-  }
-
-  @Get('/user/:id')
-  findAllByUserId(@Param('id') id: string): Promise<LanguageMarathon[]> {
-    return this.marathonService.findAllByUserId(id);
-  }
-
-  @Get('/ids-and-titles/user/:id') // Only gets finished marathons for displaing ranking.
-  findAllIdsAndTitle(
-    @Param('id') id: string,
-  ): Promise<CustomLanguageMarathon[]> {
-    return this.marathonService.findAllIdsAndTitle(id);
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string): Promise<LanguageMarathon> {
-    return this.marathonService.findOneById(id);
-  }
-
-  @Get(':id/with-questions')
-  findOneByIdWithQuestions(@Param('id') id: string): Promise<LanguageMarathon> {
-    return this.marathonService.findOneByIdWithQuestions(id);
   }
 
   @UseGuards(RolesGuard)

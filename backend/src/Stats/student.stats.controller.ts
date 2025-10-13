@@ -22,29 +22,11 @@ export class StudentStatsController {
     private readonly studentStatsService: AbstractStudentStatsService,
   ) {}
 
-  // @Post()
-  // @HttpCode(HttpStatus.CREATED)
-  // create(@Body() id: string): Promise<StudentStats> {
-  //   return this.studentStatsService.create(id);
-  // }
-
   @Roles(Role.Student)
   @Get('user/:id')
-  findOne(@Param('id', ParseUUIDPipe) id: string): Promise<StudentStats> {
+  findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<Omit<StudentStats, 'userId'>> {
     return this.studentStatsService.findByUserId(id);
   }
-
-  // @Patch(':id')
-  // update(
-  //   @Param('id', ParseUUIDPipe) id: string,
-  //   @Body() updateStatDto: UpdateStudentStatsDto,
-  // ): Promise<StudentStats> {
-  //   return this.studentStatsService.update(id, updateStatDto);
-  // }
-
-  // @Delete(':id')
-  // @HttpCode(HttpStatus.NO_CONTENT)
-  // remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
-  //   return this.studentStatsService.remove(id);
-  // }
 }

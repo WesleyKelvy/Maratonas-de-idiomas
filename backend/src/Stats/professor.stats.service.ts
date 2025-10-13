@@ -10,7 +10,6 @@ import {
   PROFESSOR_STATS_REPOSITORY_TOKEN,
 } from 'src/repositories/abstract/professor-stats.repository';
 import { AbstractProfessorStatsService } from 'src/Stats/abstract-services/abstract-professor-stats.service';
-import { UpdateProfessorStatsDto } from 'src/Stats/dto/professor.update-stats.dto';
 
 @Injectable()
 export class ProfessorStatsService implements AbstractProfessorStatsService {
@@ -19,7 +18,7 @@ export class ProfessorStatsService implements AbstractProfessorStatsService {
     private readonly professorStatsRepository: AbstractProfessorStatsRepository,
   ) {}
 
-  async create(id: string): Promise<ProfessorStats> {
+  async create(id: string): Promise<Omit<ProfessorStats, 'userId'>> {
     const existingStat = await this.professorStatsRepository.findByUserId(id);
     if (existingStat) {
       throw new ConflictException(
@@ -30,46 +29,37 @@ export class ProfessorStatsService implements AbstractProfessorStatsService {
     return await this.professorStatsRepository.create(id);
   }
 
-  async findOne(id: string): Promise<ProfessorStats> {
+  async findOne(id: string): Promise<Omit<ProfessorStats, 'userId'>> {
     const prismaStat = await this.professorStatsRepository.findByUserId(id);
     if (!prismaStat) {
       throw new NotFoundException(`Professor stats with ID ${id} not found.`);
     }
     return {
-      userId: prismaStat.userId,
       total_classes: prismaStat.total_classes,
       total_marathons: prismaStat.total_marathons,
       total_students_reached: prismaStat.total_students_reached,
     };
   }
 
-  async update(
-    id: string,
-    updateStatDto: UpdateProfessorStatsDto,
-  ): Promise<ProfessorStats> {
-    const existingStat = await this.professorStatsRepository.findByUserId(id);
-    if (!existingStat) {
-      throw new NotFoundException(`Professor stats with ID ${id} not found.`);
-    }
-    const updatedPrismaStat = await this.professorStatsRepository.update(
-      id,
-      updateStatDto,
-    );
-    return {
-      userId: updatedPrismaStat.userId,
-      total_classes: updatedPrismaStat.total_classes,
-      total_marathons: updatedPrismaStat.total_marathons,
-      total_students_reached: updatedPrismaStat.total_students_reached,
-    };
-  }
+  // async update(
+  //   id: string,
+  //   updateStatDto: UpdateProfessorStatsDto,
+  // ): Promise<Omit<ProfessorStats, 'userId'>> {
+  //   const existingStat = await this.professorStatsRepository.findByUserId(id);
+  //   if (!existingStat) {
+  //     throw new NotFoundException(`Professor stats with ID ${id} not found.`);
+  //   }
+  //   return await this.professorStatsRepository.update(id, updateStatDto);
+  // }
 
-  async remove(id: string): Promise<void> {
-    const existingStat = await this.professorStatsRepository.findByUserId(id);
-    if (!existingStat) {
-      throw new NotFoundException(`Professor stats with ID ${id} not found.`);
-    }
-    await this.professorStatsRepository.remove(id);
-  }
+  // async remove(id: string): Promise<void> {
+  //   const existingStat = await this.professorStatsRepository.findByUserId(id);
+  //   if (!existingStat) {
+  //     throw new NotFoundException(`Professor stats with ID ${id} not found.`);
+  //   }
+  //   await this.professorStatsRepository.remove(id);
+  // }
+
   async incrementClassesProfessorStats(userId: string): Promise<void> {
     await this.professorStatsRepository.incrementClasses(userId);
   }

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ProfessorStats as PrismaProfessorStats } from '@prisma/client';
+import { ProfessorStats } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AbstractProfessorStatsRepository } from 'src/repositories/abstract/professor-stats.repository';
 import { UpdateProfessorStatsDto } from 'src/Stats/dto/professor.update-stats.dto';
@@ -10,37 +10,42 @@ export class PrismaProfessorStatsRepository
 {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(id: string): Promise<PrismaProfessorStats> {
+  async create(id: string): Promise<Omit<ProfessorStats, 'userId'>> {
     return await this.prisma.professorStats.create({
       data: {
         user: {
           connect: { id },
         },
       },
+      omit: { userId: true },
     });
   }
 
-  async findByUserId(userId: string): Promise<PrismaProfessorStats | null> {
+  async findByUserId(
+    userId: string,
+  ): Promise<Omit<ProfessorStats, 'userId'> | null> {
     return await this.prisma.professorStats.findUnique({
       where: { userId: userId },
+      omit: { userId: true },
     });
   }
 
   async update(
     id: string,
     updateStatDto: UpdateProfessorStatsDto,
-  ): Promise<PrismaProfessorStats> {
+  ): Promise<Omit<ProfessorStats, 'userId'>> {
     return await this.prisma.professorStats.update({
       where: { userId: id },
       data: updateStatDto,
+      omit: { userId: true },
     });
   }
 
-  async remove(id: string): Promise<void> {
-    await this.prisma.studentStats.delete({
-      where: { userId: id },
-    });
-  }
+  // async remove(id: string): Promise<void> {
+  //   await this.prisma.studentStats.delete({
+  //     where: { userId: id },
+  //   });
+  // }
 
   async incrementClasses(userId: string): Promise<void> {
     await this.prisma.professorStats.update({
