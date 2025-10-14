@@ -113,6 +113,7 @@ async function main() {
   // 6) Create Questions for the marathon
   const question1 = await prisma.question.create({
     data: {
+      title: 'Question WESLEY',
       prompt_text:
         'Describe a situation where a team you were part of faced a significant challenge. How did the team collaborate to overcome it, and what was your specific role in that process?',
       marathon: { connect: { id: marathon.id } },
@@ -121,6 +122,7 @@ async function main() {
 
   const question2 = await prisma.question.create({
     data: {
+      title: 'Question WESLEY',
       prompt_text:
         "In your opinion, what are the most crucial elements for effective teamwork? Provide examples of how these elements contribute to a team's success or failure.",
       marathon: { connect: { id: marathon.id } },
@@ -129,6 +131,7 @@ async function main() {
 
   const question3 = await prisma.question.create({
     data: {
+      title: 'Question WESLEY',
       prompt_text:
         'Imagine a new team is being formed for a project. What steps would you recommend they take to establish strong communication and a positive working environment from the outset?',
       marathon: { connect: { id: marathon.id } },
@@ -137,6 +140,7 @@ async function main() {
 
   const question4 = await prisma.question.create({
     data: {
+      title: 'Question WESLEY',
       prompt_text:
         'Reflect on a time when a team project did not go as planned. Analyze the reasons for the difficulties and suggest alternative approaches the team could have taken to achieve a better outcome.',
       marathon: { connect: { id: marathon.id } },
@@ -145,6 +149,7 @@ async function main() {
 
   const question5 = await prisma.question.create({
     data: {
+      title: 'Question WESLEY',
       prompt_text:
         'How can diverse perspectives and skills within a team contribute to more innovative solutions? Discuss a scenario where varied viewpoints led to a creative breakthrough.',
       marathon: { connect: { id: marathon.id } },
@@ -384,6 +389,7 @@ async function main() {
   // 11) Create Questions for the second marathon
   const m2_question1 = await prisma.question.create({
     data: {
+      title: 'Question KELVY',
       prompt_text:
         'Como você redigiria um e-mail para solicitar um feedback sobre um projeto importante para seu gerente?',
       marathon: { connect: { id: marathon2.id } },
@@ -392,6 +398,7 @@ async function main() {
 
   const m2_question2 = await prisma.question.create({
     data: {
+      title: 'Question KELVY',
       prompt_text:
         'Descreva uma situação em que você teve que dar um feedback construtivo a um colega. Qual foi sua abordagem e qual foi o resultado?',
       marathon: { connect: { id: marathon2.id } },
@@ -400,6 +407,7 @@ async function main() {
 
   const m2_question3 = await prisma.question.create({
     data: {
+      title: 'Question KELVY',
       prompt_text:
         'Em uma reunião de equipe, como você apresentaria uma ideia que discorda da opinião da maioria, garantindo que sua sugestão seja ouvida de forma respeitosa?',
       marathon: { connect: { id: marathon2.id } },

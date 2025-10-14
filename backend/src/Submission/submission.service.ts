@@ -17,6 +17,7 @@ import {
 } from 'src/repositories/abstract/submission.repository';
 import { AbstractSubmissionService } from 'src/Submission/abstract-services/abstract-submission.service';
 import { UpdateSubmissionDto } from 'src/Submission/dto/submission.update.dto';
+import { SubmissionWithMarathonAndQuestionTitle } from 'src/Submission/entities/submission.entity';
 
 @Injectable()
 export class SubmissionService implements AbstractSubmissionService {
@@ -65,7 +66,9 @@ export class SubmissionService implements AbstractSubmissionService {
     await this.submissionRepository.update(dto, submissionId);
   }
 
-  async findAllByUserId(id: string): Promise<Submission[]> {
+  async findAllByUserId(
+    id: string,
+  ): Promise<SubmissionWithMarathonAndQuestionTitle[]> {
     const submissions = await this.submissionRepository.findAllByUserId(id);
     if (!submissions) {
       throw new NotFoundException(`Submissions for this user does not exist.`);

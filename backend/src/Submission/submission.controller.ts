@@ -19,6 +19,7 @@ import {
   SUBMISSION_SERVICE_TOKEN,
 } from 'src/Submission/abstract-services/abstract-submission.service';
 import { CreateSubmissionDto } from 'src/Submission/dto/submission.create.dto';
+import { SubmissionWithMarathonAndQuestionTitle } from 'src/Submission/entities/submission.entity';
 
 @Controller('submission')
 export class SubmissionController {
@@ -47,7 +48,9 @@ export class SubmissionController {
   }
 
   @Get('user/get-my-submissions')
-  findAllByUserId(@CurrentUser() user: UserFromJwt): Promise<Submission[]> {
+  findAllByUserId(
+    @CurrentUser() user: UserFromJwt,
+  ): Promise<SubmissionWithMarathonAndQuestionTitle[]> {
     return this.submissionService.findAllByUserId(user.id);
   }
 

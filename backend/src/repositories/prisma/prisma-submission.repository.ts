@@ -3,6 +3,7 @@ import { Prisma, Submission } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AbstractSubmissionRepository } from 'src/repositories/abstract/submission.repository';
 import { UpdateSubmissionDto } from 'src/Submission/dto/submission.update.dto';
+import { SubmissionWithMarathonAndQuestionTitle } from 'src/Submission/entities/submission.entity';
 
 @Injectable()
 export class PrismaSubmissionRepository
@@ -56,10 +57,16 @@ export class PrismaSubmissionRepository
     });
   }
 
-  async findAllByUserId(userId: string): Promise<Submission[]> {
+  async findAllByUserId(
+    userId: string,
+  ): Promise<SubmissionWithMarathonAndQuestionTitle[]> {
     return this.prisma.submission.findMany({
       where: { user_id: userId },
-      include: { marathon: { select: { title: true } } },
+      omit: { user_id: true },
+      include: {
+        marathon: { select: { title: true } },
+        question: { select: { title: true } },
+      },
     });
   }
 

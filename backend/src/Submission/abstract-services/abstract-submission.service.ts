@@ -1,5 +1,6 @@
 import { Submission } from '@prisma/client';
 import { UpdateSubmissionDto } from 'src/Submission/dto/submission.update.dto';
+import { SubmissionWithMarathonAndQuestionTitle } from 'src/Submission/entities/submission.entity';
 
 export abstract class AbstractSubmissionService {
   abstract create(
@@ -8,7 +9,9 @@ export abstract class AbstractSubmissionService {
     userId: string,
     marathonId: string,
   ): Promise<void>;
-  abstract findAllByUserId(userId: string): Promise<Submission[]>;
+  abstract findAllByUserId(
+    userId: string,
+  ): Promise<SubmissionWithMarathonAndQuestionTitle[]>;
   abstract findOne(submissionId: string): Promise<Submission>;
   abstract update(
     dto: UpdateSubmissionDto,
