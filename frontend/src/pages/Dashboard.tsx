@@ -152,7 +152,7 @@ const Dashboard = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">
-            Bem-vindo, {user?.name}!
+            Bem-vindo(a), {user?.name}!
           </h1>
           <p className="text-gray-600 mt-2">
             {user?.role === "Professor"

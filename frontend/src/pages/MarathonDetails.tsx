@@ -94,7 +94,6 @@ const MarathonDetails = () => {
   // Fetch marathon data from backend (fallback if no state passed)
   const { data: fetchedMarathon, isLoading, error } = useMarathon(id || "");
 
-  console.log(fetchedMarathon);
   // Fetch classrooms for editing
   const { data: classrooms = [] } = useClassrooms();
 
@@ -291,8 +290,6 @@ const MarathonDetails = () => {
   const marathonHasStarted = fetchedMarathon?.start_date
     ? new Date() > new Date(fetchedMarathon.start_date)
     : false;
-
-  console.log(new Date());
 
   // Initialize edit form when marathon data is available and editing starts
   const handleStartEdit = () => {

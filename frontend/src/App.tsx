@@ -26,16 +26,17 @@ import MarathonEnrollment from "./pages/MarathonEnrollment";
 import MarathonExecution from "./pages/MarathonExecution";
 import MarathonReport from "./pages/MarathonReport";
 import Marathons from "./pages/Marathons";
-import MarathonDashboard from "./pages/MarathonStudentDashboard";
+import MarathonDashboardStudent from "./pages/MarathonStudentDashboard";
 import Profile from "./pages/Profile";
 import QuestionManagement from "./pages/QuestionManagement";
 import Ranking from "./pages/Ranking";
 import Reports from "./pages/Reports";
-import StudentEnrollments from "./pages/StudentEnrollments";
+import StudentMarathons from "./pages/StudentMarathons.tsx";
 import StudentSubmissions from "./pages/StudentSubmissions";
 import SubmissionDetails from "./pages/SubmissionDetails";
 import Submissions from "./pages/Submissions";
 import TeacherSubmissions from "./pages/TeacherSubmissions.tsx";
+import StudentEnrollments from "@/pages/StudentEnrollments.tsx";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -251,7 +252,7 @@ const AppRoutes = () => (
         <ProtectedRoute>
           <RoleBasedRoute allowedRoles={["Student"]}>
             <Layout>
-              <StudentEnrollments />
+              <StudentMarathons />
             </Layout>
           </RoleBasedRoute>
         </ProtectedRoute>
@@ -323,7 +324,7 @@ const AppRoutes = () => (
         <ProtectedRoute>
           <RoleBasedRoute allowedRoles={["Professor", "Admin"]}>
             <Layout>
-              <MarathonDashboard />
+              <MarathonDashboardStudent />
             </Layout>
           </RoleBasedRoute>
         </ProtectedRoute>

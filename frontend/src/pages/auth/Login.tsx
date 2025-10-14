@@ -52,7 +52,7 @@ const Login = () => {
 
       toast({
         title: "Login realizado com sucesso!",
-        description: "Bem-vindo de volta.",
+        description: "Bem-vindo(a) de volta.",
       });
 
       // Aguardar um pouco antes de navegar para garantir que o estado foi atualizado

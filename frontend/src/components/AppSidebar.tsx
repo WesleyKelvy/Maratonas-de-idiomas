@@ -34,7 +34,7 @@ export function AppSidebar() {
 
   const studentItems = [
     { title: "Dashboard", url: "/dashboard", icon: Home },
-    { title: "Minhas Maratonas", url: "/my-enrollments", icon: Trophy },
+    { title: "Minhas Maratonas", url: "minhas/my-enrollments", icon: Trophy },
     {
       title: "Inscrever em Maratona",
       url: "/marathon-enrollment",
@@ -74,8 +74,8 @@ export function AppSidebar() {
     }
     return currentPath.startsWith(path);
   };
-  const getNavCls = ({ isActive }: { isActive: boolean }) =>
-    isActive ? "bg-primary font-medium" : "hover:bg-muted ";
+  // const getNavCls = ({ isActive }: { isActive: boolean }) =>
+  //   isActive ? "bg-primary font-medium" : "hover:bg-muted ";
 
   return (
     <Sidebar

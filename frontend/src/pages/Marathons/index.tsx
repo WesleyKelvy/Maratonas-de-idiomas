@@ -23,6 +23,7 @@ const Marathons = () => {
     difficultyFilter: searchParams.get("difficulty") || "all",
     selectedClassroomId: searchParams.get("classroom") || "",
   });
+
   const [dialogOpen, setDialogOpen] = useState(
     searchParams.get("create") === "true"
   );
@@ -30,10 +31,12 @@ const Marathons = () => {
   // Data Fetching
   const { data: classrooms = [], isLoading: loadingClassrooms } =
     useClassrooms();
+
   const {
     data: classroomMarathons = [],
     isLoading: loadingClassroomMarathons,
-  } = useMarathons(filters.selectedClassroomId || "skip");
+  } = useMarathons(filters.selectedClassroomId);
+
   const { data: userMarathons = [], isLoading: loadingUserMarathons } =
     useUserMarathons();
 

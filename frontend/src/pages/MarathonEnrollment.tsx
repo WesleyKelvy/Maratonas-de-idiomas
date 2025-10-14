@@ -31,7 +31,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-const MarathonEnrollment = () => {
+const MyEnrollments = () => {
   const { user } = useAuth();
   const [marathonCode, setMarathonCode] = useState("");
   const [searchTriggered, setSearchTriggered] = useState(false);
@@ -435,4 +435,4 @@ const MarathonEnrollment = () => {
   );
 };
 
-export default MarathonEnrollment;
+export default MyEnrollments;
