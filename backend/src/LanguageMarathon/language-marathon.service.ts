@@ -54,9 +54,8 @@ export class LanguageMarathonService
 
   async findAllIdsAndTitle(userId: string): Promise<CustomLanguageMarathon[]> {
     const marathons = await this.marathonRepository.findAllIdsAndTitle(userId);
-
-    if (!marathons)
-      throw new NotFoundException(`No found classroom for user id: ${userId}.`);
+    if (marathons.length == 0)
+      throw new NotFoundException(`No found marathons for user id: ${userId}.`);
 
     return marathons;
   }

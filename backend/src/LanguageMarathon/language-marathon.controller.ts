@@ -46,7 +46,7 @@ export class LanguageMarathonController {
     return this.marathonService.findAllByUserId(userId);
   }
 
-  @Get('/ids-and-titles') // Only gets finished marathons for displaing ranking.
+  @Get('/ids-and-titles') // Only gets finished marathons for displaing ranking. PROFESSOR
   findAllIdsAndTitle(
     @CurrentUser('id') id: string,
   ): Promise<CustomLanguageMarathon[]> {

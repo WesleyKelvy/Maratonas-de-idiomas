@@ -14,9 +14,18 @@ export class PrismaLanguageMarathonRepository
   implements AbstractLanguageMarathonRepository
 {
   constructor(private readonly prisma: PrismaService) {}
+
   async findAllIdsAndTitle(userId: string): Promise<CustomLanguageMarathon[]> {
     return this.prisma.languageMarathon.findMany({
-      where: { created_by: userId, end_date: { lt: new Date() } },
+      where: {
+        OR: [
+          { created_by: userId, end_date: { lt: new Date() } },
+          {
+            enrollments: { some: { user_id: userId } },
+            end_date: { lt: new Date() },
+          },
+        ],
+      },
       select: {
         id: true,
         title: true,
