@@ -40,7 +40,7 @@ export function AppSidebar() {
       url: "/marathon-enrollment",
       icon: Medal,
     },
-    { title: "Minhas Submissões", url: "/submission", icon: FileText },
+    { title: "Minhas Submissões", url: "/my-submissions", icon: FileText },
     { title: "Ranking", url: "/ranking", icon: Medal },
     { title: "Perfil", url: "/profile", icon: User },
   ];

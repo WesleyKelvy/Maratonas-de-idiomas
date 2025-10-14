@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -6,8 +7,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -24,42 +30,31 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useAiFeedbackBySubmissionId } from "@/hooks/use-aiFeedback";
+import { useProcessedUserSubmissions } from "@/hooks/use-submission";
+import { SubmissionWithDetails } from "@/services/submission.service";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Search,
-  FileText,
-  Trophy,
+  AlertCircle,
+  Award,
   Clock,
   Eye,
-  Award,
-  AlertCircle,
+  FileText,
+  Loader2,
+  Search,
+  Trophy,
 } from "lucide-react";
+import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 
-interface SubmissionDetail {
-  id: string;
-  marathonName: string;
-  questionNumber: number;
-  question: string;
-  answer: string;
-  feedback: string;
-  score: number;
-  maxScore: number;
-  submissionDate: string;
-  aiEvaluation: string;
-  detailedFeedback: {
-    explanation: string;
-    pointsDeducted: number;
-    category: string;
-    suggestions: string[];
-  }[];
-}
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString("pt-BR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
 
 const StudentSubmissions = () => {
   const { user } = useAuth();
@@ -67,220 +62,33 @@ const StudentSubmissions = () => {
   const [marathonFilter, setMarathonFilter] = useState("all");
   const [scoreFilter, setScoreFilter] = useState("all");
   const [selectedSubmission, setSelectedSubmission] =
-    useState<SubmissionDetail | null>(null);
+    useState<SubmissionWithDetails | null>(null);
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
 
-  // Mock data - replace with API call
-  const mySubmissions: SubmissionDetail[] = [
-    {
-      id: "1",
-      marathonName: "Maratona de JavaScript",
-      questionNumber: 1,
-      question:
-        "Explique a diferença entre 'let', 'const' e 'var' em JavaScript e demonstre com exemplos práticos.",
-      answer:
-        "let é usado para variáveis que podem ser reatribuídas dentro de um escopo de bloco. const é usado para constantes que não podem ser reatribuídas. var tem escopo de função e pode causar problemas de hoisting...",
-      feedback:
-        "Excelente resposta! Você demonstrou um bom entendimento do conceito.",
-      score: 90,
-      maxScore: 100,
-      submissionDate: "2024-12-05T14:30:00",
-      aiEvaluation: "Positiva",
-      detailedFeedback: [
-        {
-          explanation: "Ótima explicação sobre escopo de bloco vs função",
-          pointsDeducted: 0,
-          category: "Conceitos Fundamentais",
-          suggestions: [],
-        },
-        {
-          explanation: "Poderia ter mencionado temporal dead zone",
-          pointsDeducted: 1,
-          category: "Detalhes Avançados",
-          suggestions: [
-            "Adicione exemplos de temporal dead zone",
-            "Explique o comportamento do hoisting com let/const",
-          ],
-        },
-      ],
-    },
-    {
-      id: "2",
-      marathonName: "Maratona de JavaScript",
-      questionNumber: 2,
-      question: "O que são closures em JavaScript e como elas funcionam?",
-      answer:
-        "Closures são funções que têm acesso ao escopo da função externa mesmo após ela ter retornado. Isso permite criar funções privadas...",
-      feedback:
-        "Boa resposta, mas poderia ser mais detalhada com exemplos práticos.",
-      score: 70,
-      maxScore: 100,
-      submissionDate: "2024-12-05T14:45:00",
-      aiEvaluation: "Neutra",
-      detailedFeedback: [
-        {
-          explanation: "Conceito básico bem explicado",
-          pointsDeducted: 0,
-          category: "Definição",
-          suggestions: [],
-        },
-        {
-          explanation: "Faltaram exemplos práticos de uso",
-          pointsDeducted: 2,
-          category: "Exemplos Práticos",
-          suggestions: [
-            "Adicione exemplos de closures em callbacks",
-            "Mostre casos de uso com módulos",
-          ],
-        },
-        {
-          explanation: "Não mencionou memory leaks potenciais",
-          pointsDeducted: 1,
-          category: "Considerações Importantes",
-          suggestions: [
-            "Explique quando closures podem causar vazamentos de memória",
-          ],
-        },
-      ],
-    },
-    {
-      id: "1",
-      marathonName: "Maratona de JavaScript",
-      questionNumber: 1,
-      question:
-        "Explique a diferença entre 'let', 'const' e 'var' em JavaScript e demonstre com exemplos práticos.",
-      answer:
-        "let é usado para variáveis que podem ser reatribuídas dentro de um escopo de bloco. const é usado para constantes que não podem ser reatribuídas. var tem escopo de função e pode causar problemas de hoisting...",
-      feedback:
-        "Excelente resposta! Você demonstrou um bom entendimento do conceito.",
-      score: 90,
-      maxScore: 100,
-      submissionDate: "2024-12-05T14:30:00",
-      aiEvaluation: "Positiva",
-      detailedFeedback: [
-        {
-          explanation: "Ótima explicação sobre escopo de bloco vs função",
-          pointsDeducted: 0,
-          category: "Conceitos Fundamentais",
-          suggestions: [],
-        },
-        {
-          explanation: "Poderia ter mencionado temporal dead zone",
-          pointsDeducted: 1,
-          category: "Detalhes Avançados",
-          suggestions: [
-            "Adicione exemplos de temporal dead zone",
-            "Explique o comportamento do hoisting com let/const",
-          ],
-        },
-      ],
-    },
-    {
-      id: "1",
-      marathonName: "Maratona de JavaScript",
-      questionNumber: 1,
-      question:
-        "Explique a diferença entre 'let', 'const' e 'var' em JavaScript e demonstre com exemplos práticos.",
-      answer:
-        "let é usado para variáveis que podem ser reatribuídas dentro de um escopo de bloco. const é usado para constantes que não podem ser reatribuídas. var tem escopo de função e pode causar problemas de hoisting...",
-      feedback:
-        "Excelente resposta! Você demonstrou um bom entendimento do conceito.",
-      score: 90,
-      maxScore: 100,
-      submissionDate: "2024-12-05T14:30:00",
-      aiEvaluation: "Positiva",
-      detailedFeedback: [
-        {
-          explanation: "Ótima explicação sobre escopo de bloco vs função",
-          pointsDeducted: 0,
-          category: "Conceitos Fundamentais",
-          suggestions: [],
-        },
-        {
-          explanation: "Poderia ter mencionado temporal dead zone",
-          pointsDeducted: 1,
-          category: "Detalhes Avançados",
-          suggestions: [
-            "Adicione exemplos de temporal dead zone",
-            "Explique o comportamento do hoisting com let/const",
-          ],
-        },
-      ],
-    },
-    {
-      id: "1",
-      marathonName: "Maratona de JavaScript",
-      questionNumber: 1,
-      question:
-        "Explique a diferença entre 'let', 'const' e 'var' em JavaScript e demonstre com exemplos práticos.",
-      answer:
-        "let é usado para variáveis que podem ser reatribuídas dentro de um escopo de bloco. const é usado para constantes que não podem ser reatribuídas. var tem escopo de função e pode causar problemas de hoisting...",
-      feedback:
-        "Excelente resposta! Você demonstrou um bom entendimento do conceito.",
-      score: 90,
-      maxScore: 100,
-      submissionDate: "2024-12-05T14:30:00",
-      aiEvaluation: "Positiva",
-      detailedFeedback: [
-        {
-          explanation: "Ótima explicação sobre escopo de bloco vs função",
-          pointsDeducted: 0,
-          category: "Conceitos Fundamentais",
-          suggestions: [],
-        },
-        {
-          explanation: "Poderia ter mencionado temporal dead zone",
-          pointsDeducted: 1,
-          category: "Detalhes Avançados",
-          suggestions: [
-            "Adicione exemplos de temporal dead zone",
-            "Explique o comportamento do hoisting com let/const",
-          ],
-        },
-      ],
-    },
-    {
-      id: "5",
-      marathonName: "Maratona de JavaScript",
-      questionNumber: 1,
-      question:
-        "Explique a diferença entre 'let', 'const' e 'var' em JavaScript e demonstre com exemplos práticos.",
-      answer:
-        "let é usado para variáveis que podem ser reatribuídas dentro de um escopo de bloco. const é usado para constantes que não podem ser reatribuídas. var tem escopo de função e pode causar problemas de hoisting...",
-      feedback:
-        "Excelente resposta! Você demonstrou um bom entendimento do conceito.",
-      score: 90,
-      maxScore: 100,
-      submissionDate: "2024-12-05T14:30:00",
-      aiEvaluation: "Positiva",
-      detailedFeedback: [
-        {
-          explanation: "Ótima explicação sobre escopo de bloco vs função",
-          pointsDeducted: 0,
-          category: "Conceitos Fundamentais",
-          suggestions: [],
-        },
-        {
-          explanation: "Poderia ter mencionado temporal dead zone",
-          pointsDeducted: 1,
-          category: "Detalhes Avançados",
-          suggestions: [
-            "Adicione exemplos de temporal dead zone",
-            "Explique o comportamento do hoisting com let/const",
-          ],
-        },
-      ],
-    },
-  ];
+  const { submissions, stats, isLoading, error } =
+    useProcessedUserSubmissions();
 
-  const marathons = [...new Set(mySubmissions.map((s) => s.marathonName))];
+  const {
+    data: aiFeedbackData,
+    isLoading: feedbackLoading,
+    error: feedbackError,
+    isFetching,
+    isSuccess,
+  } = useAiFeedbackBySubmissionId(
+    selectedSubmission?.id,
+    !!selectedSubmission && feedbackDialogOpen
+  );
 
-  const filteredSubmissions = mySubmissions.filter((submission) => {
+  const marathons = [...new Set(submissions.map((s) => s.marathonName))];
+
+  const filteredSubmissions = submissions.filter((submission) => {
     const matchesSearch =
       submission.marathonName
         .toLowerCase()
         .includes(searchTerm.toLowerCase()) ||
-      submission.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      submission.question.title
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
       submission.answer.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesMarathon =
@@ -288,18 +96,17 @@ const StudentSubmissions = () => {
 
     const matchesScore =
       scoreFilter === "all" ||
-      (scoreFilter === "high" &&
-        submission.score / submission.maxScore >= 0.8) ||
+      (scoreFilter === "high" && submission.percentage >= 80) ||
       (scoreFilter === "medium" &&
-        submission.score / submission.maxScore >= 0.5 &&
-        submission.score / submission.maxScore < 0.8) ||
-      (scoreFilter === "low" && submission.score / submission.maxScore < 0.5);
+        submission.percentage >= 50 &&
+        submission.percentage < 80) ||
+      (scoreFilter === "low" && submission.percentage < 50);
 
     return matchesSearch && matchesMarathon && matchesScore;
   });
 
-  const getScoreColor = (score: number, maxScore: number) => {
-    const percentage = (score / maxScore) * 100;
+  // Funções auxiliares para estilização
+  const getScoreColor = (percentage: number) => {
     if (percentage >= 80) return "text-green-600";
     if (percentage >= 50) return "text-yellow-600";
     return "text-red-600";
@@ -318,18 +125,37 @@ const StudentSubmissions = () => {
     }
   };
 
-  const handleViewFeedback = (submission: SubmissionDetail) => {
+  const handleViewFeedback = (submission: SubmissionWithDetails) => {
     setSelectedSubmission(submission);
     setFeedbackDialogOpen(true);
   };
 
-  const totalSubmissions = mySubmissions.length;
-  const averageScore =
-    mySubmissions.reduce((acc, sub) => acc + sub.score / sub.maxScore, 0) /
-    totalSubmissions;
-  const highScoreSubmissions = mySubmissions.filter(
-    (sub) => sub.score / sub.maxScore >= 0.8
-  ).length;
+  const handleCloseFeedbackDialog = (open: boolean) => {
+    setFeedbackDialogOpen(open);
+    if (!open) {
+      // Limpar submissão selecionada quando fechar o modal
+      setTimeout(() => setSelectedSubmission(null), 200);
+    }
+  };
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Card className="w-full max-w-md">
+          <CardContent className="flex flex-col items-center justify-center py-8">
+            <AlertCircle className="h-12 w-12 text-red-500 mb-4" />
+            <h3 className="text-lg font-semibold mb-2">
+              Erro ao carregar submissões
+            </h3>
+            <p className="text-muted-foreground text-center">
+              Não foi possível carregar suas submissões. Tente novamente mais
+              tarde.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -343,50 +169,71 @@ const StudentSubmissions = () => {
       </div>
 
       {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Minhas Submissões
-            </CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalSubmissions}</div>
-            <p className="text-xs text-muted-foreground">Respostas enviadas</p>
-          </CardContent>
-        </Card>
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[...Array(3)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="h-4 w-20 bg-gray-200 rounded animate-pulse" />
+                <div className="h-4 w-4 bg-gray-200 rounded animate-pulse" />
+              </CardHeader>
+              <CardContent>
+                <div className="h-8 w-16 bg-gray-200 rounded animate-pulse mb-2" />
+                <div className="h-3 w-24 bg-gray-200 rounded animate-pulse" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Minhas Submissões
+              </CardTitle>
+              <FileText className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalSubmissions}</div>
+              <p className="text-xs text-muted-foreground">
+                Respostas enviadas
+              </p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Minha Média</CardTitle>
-            <Trophy className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {(averageScore * 100).toFixed(1)}%
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Em todas as submissões
-            </p>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Minha Média</CardTitle>
+              <Trophy className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {(stats.averageScore * 100).toFixed(1)}%
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Em todas as submissões
+              </p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Alto Desempenho
-            </CardTitle>
-            <Award className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{highScoreSubmissions}</div>
-            <p className="text-xs text-muted-foreground">
-              Submissões com 80%+ de acerto
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Alto Desempenho
+              </CardTitle>
+              <Award className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {stats.highScoreSubmissions}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Submissões com 80%+ de acerto
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Filters */}
       <Card>
@@ -451,74 +298,103 @@ const StudentSubmissions = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredSubmissions.map((submission) => (
-                  <TableRow key={submission.id}>
-                    <TableCell className="font-medium">
-                      <div>
-                        <div className="font-semibold">
-                          {submission.marathonName}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          Questão {submission.questionNumber}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="max-w-xs">
-                      <div className="truncate" title={submission.question}>
-                        {submission.question}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span
-                          className={`font-bold ${getScoreColor(
-                            submission.score,
-                            submission.maxScore
-                          )}`}
-                        >
-                          {submission.score}/{submission.maxScore}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {(
-                            (submission.score / submission.maxScore) *
-                            100
-                          ).toFixed(0)}
-                          %
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        className={getEvaluationColor(submission.aiEvaluation)}
-                      >
-                        {submission.aiEvaluation}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <Clock className="h-3 w-3" />
-                        {new Date(submission.submissionDate).toLocaleDateString(
-                          "pt-BR"
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleViewFeedback(submission)}
-                      >
-                        <Eye className="h-4 w-4 mr-2" />
-                        Ver Feedback
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {isLoading
+                  ? // Loading skeleton
+                    [...Array(5)].map((_, i) => (
+                      <TableRow key={i}>
+                        <TableCell>
+                          <div className="space-y-2">
+                            <div className="h-4 w-32 bg-gray-200 rounded animate-pulse" />
+                            <div className="h-3 w-20 bg-gray-200 rounded animate-pulse" />
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="h-4 w-48 bg-gray-200 rounded animate-pulse" />
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-1">
+                            <div className="h-4 w-16 bg-gray-200 rounded animate-pulse" />
+                            <div className="h-3 w-12 bg-gray-200 rounded animate-pulse" />
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="h-6 w-20 bg-gray-200 rounded-full animate-pulse" />
+                        </TableCell>
+                        <TableCell>
+                          <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
+                        </TableCell>
+                        <TableCell>
+                          <div className="h-8 w-28 bg-gray-200 rounded animate-pulse" />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  : // Real data
+                    filteredSubmissions.map((submission) => (
+                      <TableRow key={submission.id}>
+                        <TableCell className="font-medium">
+                          <div>
+                            <div className="font-semibold">
+                              {submission.marathonName}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              Questão {submission.questionNumber}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="max-w-xs">
+                          <div
+                            className="truncate"
+                            title={submission.question.title}
+                          >
+                            {submission.question.title}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span
+                              className={`font-bold ${getScoreColor(
+                                submission.percentage
+                              )}`}
+                            >
+                              {submission.totalScore}/100
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {submission.percentage.toFixed(0)}%
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            className={getEvaluationColor(
+                              submission.aiEvaluation
+                            )}
+                          >
+                            {submission.aiEvaluation}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                            <Clock className="h-3 w-3" />
+                            {formatDate(submission.submitted_at)}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleViewFeedback(submission)}
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            Ver Feedback
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
               </TableBody>
             </Table>
           </div>
 
-          {filteredSubmissions.length === 0 && (
+          {!isLoading && filteredSubmissions.length === 0 && (
             <div className="text-center py-8">
               <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-medium mb-2">
@@ -535,7 +411,10 @@ const StudentSubmissions = () => {
       </Card>
 
       {/* Detailed Feedback Modal */}
-      <Dialog open={feedbackDialogOpen} onOpenChange={setFeedbackDialogOpen}>
+      <Dialog
+        open={feedbackDialogOpen}
+        onOpenChange={handleCloseFeedbackDialog}
+      >
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Feedback Detalhado</DialogTitle>
@@ -554,9 +433,7 @@ const StudentSubmissions = () => {
                   </CardTitle>
                   <CardDescription>
                     Questão {selectedSubmission.questionNumber} • Enviado em{" "}
-                    {new Date(
-                      selectedSubmission.submissionDate
-                    ).toLocaleDateString("pt-BR")}
+                    {formatDate(selectedSubmission.submitted_at)}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -564,7 +441,7 @@ const StudentSubmissions = () => {
                     <div>
                       <h4 className="font-semibold mb-2">Pergunta:</h4>
                       <p className="text-muted-foreground">
-                        {selectedSubmission.question}
+                        {selectedSubmission.question.title}
                       </p>
                     </div>
                     <div>
@@ -578,12 +455,10 @@ const StudentSubmissions = () => {
                         <span className="text-sm font-medium">Pontuação:</span>
                         <span
                           className={`ml-2 font-bold ${getScoreColor(
-                            selectedSubmission.score,
-                            selectedSubmission.maxScore
+                            selectedSubmission.percentage
                           )}`}
                         >
-                          {selectedSubmission.score}/
-                          {selectedSubmission.maxScore}
+                          {selectedSubmission.totalScore}/100
                         </span>
                       </div>
                       <Badge
@@ -600,79 +475,157 @@ const StudentSubmissions = () => {
 
               {/* Detailed Feedback */}
               <div className="space-y-4">
-                <h3 className="text-xl font-semibold">Análise Detalhada</h3>
-                {selectedSubmission.detailedFeedback.map((feedback, index) => (
-                  <Card
-                    key={index}
-                    className={`${
-                      feedback.pointsDeducted > 0
-                        ? "border-yellow-200"
-                        : "border-green-200"
-                    }`}
-                  >
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <CardTitle className="text-base">
-                            {feedback.category}
-                          </CardTitle>
-                          <CardDescription>
-                            {feedback.explanation}
-                          </CardDescription>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-semibold">Análise Detalhada</h3>
+                  {aiFeedbackData && aiFeedbackData.length > 0 && (
+                    <Badge variant="outline">
+                      {aiFeedbackData.length} feedback
+                      {aiFeedbackData.length > 1 ? "s" : ""}
+                    </Badge>
+                  )}
+                </div>
+
+                {feedbackLoading ? (
+                  // Loading skeleton para feedback
+                  [...Array(3)].map((_, i) => (
+                    <Card key={i} className="border-gray-200">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="h-4 w-32 bg-gray-200 rounded animate-pulse mb-2" />
+                            <div className="h-3 w-full bg-gray-200 rounded animate-pulse" />
+                          </div>
+                          <div className="h-6 w-20 bg-gray-200 rounded animate-pulse" />
                         </div>
-                        <div className="flex items-center gap-2">
-                          {feedback.pointsDeducted > 0 ? (
-                            <div className="flex items-center text-yellow-600">
-                              <AlertCircle className="h-4 w-4 mr-1" />
-                              <span className="text-sm font-medium">
-                                -{feedback.pointsDeducted} ponto
-                                {feedback.pointsDeducted > 1 ? "s" : ""}
-                              </span>
-                            </div>
-                          ) : (
-                            <div className="flex items-center text-green-600">
-                              <Trophy className="h-4 w-4 mr-1" />
-                              <span className="text-sm font-medium">
-                                Perfeito!
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </CardHeader>
-                    {feedback.suggestions.length > 0 && (
-                      <CardContent className="pt-0">
-                        <div>
-                          <h5 className="font-medium mb-2 text-sm">
-                            Sugestões de Melhoria:
-                          </h5>
-                          <ul className="space-y-1">
-                            {feedback.suggestions.map(
-                              (suggestion, suggestionIndex) => (
-                                <li
-                                  key={suggestionIndex}
-                                  className="text-sm text-muted-foreground flex items-start"
-                                >
-                                  <span className="mr-2 text-primary">•</span>
-                                  {suggestion}
-                                </li>
-                              )
-                            )}
-                          </ul>
-                        </div>
-                      </CardContent>
-                    )}
+                      </CardHeader>
+                    </Card>
+                  ))
+                ) : feedbackError ? (
+                  // Erro ao carregar feedback
+                  <Card className="border-red-200">
+                    <CardContent className="flex flex-col items-center justify-center py-8">
+                      <AlertCircle className="h-8 w-8 text-red-500 mb-2" />
+                      <p className="text-sm text-muted-foreground text-center">
+                        Erro ao carregar feedback detalhado. Tente novamente
+                        mais tarde.
+                      </p>
+                    </CardContent>
                   </Card>
-                ))}
+                ) : aiFeedbackData && aiFeedbackData.length > 0 ? (
+                  // Feedback real da API
+                  aiFeedbackData.map((feedback, index) => (
+                    <Card
+                      key={feedback.id}
+                      className={`${
+                        feedback.points_deducted > 0
+                          ? "border-red-200 bg-red-50"
+                          : "border-green-200 bg-green-50"
+                      }`}
+                    >
+                      <CardHeader className="pb-3">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <CardTitle className="text-base">
+                                {feedback.category}
+                              </CardTitle>
+                              <Badge
+                                variant={
+                                  feedback.points_deducted > 0
+                                    ? "destructive"
+                                    : "default"
+                                }
+                                className="text-xs"
+                              >
+                                {feedback.points_deducted > 0
+                                  ? `−${feedback.points_deducted} pts`
+                                  : "Perfeito"}
+                              </Badge>
+                            </div>
+                            <CardDescription className="text-sm text-black">
+                              {feedback.explanation}
+                            </CardDescription>
+                          </div>
+                          <div className="flex items-center gap-2 ml-4">
+                            {feedback.points_deducted > 0 ? (
+                              <div className="flex items-center text-red-600">
+                                <AlertCircle className="h-5 w-5" />
+                              </div>
+                            ) : (
+                              <div className="flex items-center text-green-600">
+                                <Trophy className="h-5 w-5" />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </CardHeader>
+                    </Card>
+                  ))
+                ) : (
+                  // Nenhum feedback encontrado
+                  <Card className="border-gray-200">
+                    <CardContent className="flex flex-col items-center justify-center py-8">
+                      <FileText className="h-8 w-8 text-gray-400 mb-2" />
+                      <p className="text-sm text-muted-foreground text-center">
+                        Nenhum feedback detalhado disponível para esta
+                        submissão.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
 
               {/* Summary */}
               <Card className="bg-muted/50">
                 <CardContent className="pt-6">
                   <h4 className="font-semibold mb-2">Resumo do Feedback:</h4>
-                  <p className="text-muted-foreground">
-                    {selectedSubmission.feedback}
-                  </p>
+                  {feedbackLoading ? (
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span className="text-muted-foreground">
+                        Carregando análise detalhada...
+                      </span>
+                    </div>
+                  ) : aiFeedbackData && aiFeedbackData.length > 0 ? (
+                    <div className="space-y-2">
+                      <p>
+                        Foram identificados{" "}
+                        <strong>{aiFeedbackData.length}</strong> pontos de
+                        análise em sua resposta.
+                      </p>
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-1">
+                          <span className="text-sm">Total deduzido:</span>
+                          {(() => {
+                            const totalDeducted = aiFeedbackData.reduce(
+                              (total, f) => total + f.points_deducted,
+                              0
+                            );
+                            return (
+                              <Badge
+                                variant={
+                                  totalDeducted > 0 ? "destructive" : "default"
+                                }
+                              >
+                                {totalDeducted} pontos
+                              </Badge>
+                            );
+                          })()}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-sm">Pontuação final:</span>
+                          <Badge variant="default">
+                            {selectedSubmission.totalScore}/100
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground">
+                      Sua resposta foi avaliada com pontuação direta, sem
+                      feedback detalhado disponível.
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             </div>

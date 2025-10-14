@@ -1,4 +1,5 @@
-import React from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -6,26 +7,23 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import {
-  ArrowLeft,
-  User,
-  Calendar,
-  Clock,
-  Award,
-  AlertCircle,
-  Trophy,
-  MessageSquare,
-  Loader2,
-  FileX,
-} from "lucide-react";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useSubmissionDetails } from "@/hooks/use-submission-details";
-import { DetailedSubmission } from "@/services/submission.service";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import {
+  AlertCircle,
+  ArrowLeft,
+  Award,
+  Calendar,
+  Clock,
+  FileX,
+  Loader2,
+  MessageSquare,
+  Trophy,
+  User,
+} from "lucide-react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 // Constants
 const MAX_SCORE = 100;
