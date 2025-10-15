@@ -117,6 +117,7 @@ export class PrismaLanguageMarathonRepository
         classroom: {
           select: { creator: { select: { name: true } } },
         },
+        enrollments: { select: { id: true } },
       },
     });
   }
@@ -137,7 +138,7 @@ export class PrismaLanguageMarathonRepository
    * Finds a single marathon by its ID
    */
   async findOneByCode(code: string): Promise<LanguageMarathon | null> {
-    return this.prisma.languageMarathon.findFirst({
+    return this.prisma.languageMarathon.findUnique({
       where: { code },
       include: {
         classroom: { select: { creator: { select: { name: true } } } },
@@ -183,7 +184,7 @@ export class PrismaLanguageMarathonRepository
           { created_by: userId, end_date: { lt: new Date() } },
           {
             enrollments: { some: { user_id: userId } },
-            end_date: { lt: new Date() },
+            // end_date: { lt: new Date() },
           },
         ],
       },
@@ -193,6 +194,7 @@ export class PrismaLanguageMarathonRepository
           select: { name: true, creator: { select: { name: true } } },
         },
       },
+      orderBy: { start_date: 'desc' },
     });
   }
 }

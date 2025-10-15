@@ -45,6 +45,7 @@ export class PrismaEnrollmentRepository
           },
         },
       },
+      orderBy: { created_at: 'desc' },
     });
   }
 
