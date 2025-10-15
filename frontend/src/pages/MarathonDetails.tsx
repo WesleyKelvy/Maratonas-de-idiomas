@@ -825,7 +825,7 @@ const MarathonDetails = () => {
                     <DialogContent>
                       <DialogHeader>
                         <DialogTitle>Confirmar Participação</DialogTitle>
-                        <DialogDescription className="space-y-4">
+                        <DialogDescription className="space-y-4 text-gray-900">
                           <p>
                             Você está prestes a iniciar a maratona "
                             {fetchedMarathon.title}".
