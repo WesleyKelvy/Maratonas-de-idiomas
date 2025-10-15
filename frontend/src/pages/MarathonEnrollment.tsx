@@ -10,12 +10,14 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "@/hooks/use-toast";
 import {
   useCreateEnrollment,
   useUserEnrollments,
 } from "@/hooks/use-enrollment";
 import { useMarathonByCode } from "@/hooks/use-marathon";
+import { toast } from "@/hooks/use-toast";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import {
   AlertCircle,
   Calendar,
@@ -28,8 +30,6 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 
 const MyEnrollments = () => {
   const { user } = useAuth();
@@ -74,10 +74,7 @@ const MyEnrollments = () => {
         code: marathon.code,
       });
 
-      // Refetch enrollments to update the list
       refetchEnrollments();
-
-      // Reset search
       setMarathonCode("");
       setSearchTriggered(false);
     } catch (error) {
@@ -85,7 +82,6 @@ const MyEnrollments = () => {
     }
   };
 
-  // Utility functions
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case "Beginner":
@@ -120,18 +116,23 @@ const MyEnrollments = () => {
     const endDate = marathon.end_date ? new Date(marathon.end_date) : null;
 
     if (endDate && now > endDate) return "Finalizada";
-    if (startDate && now < startDate) return "Aguardando início";
+    if (startDate && now >= startDate) return "Em andamento";
     return "Aberta";
+  };
+
+  const canEnroll = (marathon: any) => {
+    const status = getMarathonStatus(marathon);
+    return status === "Aberta";
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Aberta":
+        return "bg-yellow-100 text-yellow-800";
+      case "Em andamento":
         return "bg-green-100 text-green-800";
       case "Finalizada":
         return "bg-gray-100 text-gray-800";
-      case "Aguardando início":
-        return "bg-yellow-100 text-yellow-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -141,7 +142,6 @@ const MyEnrollments = () => {
     return format(new Date(date), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
   };
 
-  // Check if user is already enrolled
   const isAlreadyEnrolled = (marathonId: string) => {
     return enrolledMarathons.some(
       (enrollment) => enrollment.marathon.id === marathonId
@@ -158,19 +158,18 @@ const MyEnrollments = () => {
       </div>
 
       {/* Search Marathon */}
-      <Card className="flex w-full justify-between">
+      <Card>
         <CardHeader>
           <CardTitle>Buscar Maratona</CardTitle>
           <CardDescription>
             Digite o ID da maratona fornecido pelo seu professor
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex space-x-4 items-end w-full justify-end">
-          <div className="flex w-full space-y-4">
-            <div className="flex-1 w-full">
+        <CardContent>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
               <Label htmlFor="marathonCode">Código da Maratona</Label>
               <Input
-                className="w-full"
                 id="marathonCode"
                 placeholder="Ex: ABC123, XYZ789..."
                 value={marathonCode}
@@ -178,15 +177,15 @@ const MyEnrollments = () => {
                 onKeyUp={(e) => e.key === "Enter" && searchMarathon()}
               />
             </div>
+            <Button
+              onClick={searchMarathon}
+              disabled={marathonLoading}
+              className="w-full sm:w-auto sm:mt-6"
+            >
+              <Search className="mr-2 h-4 w-4" />
+              {marathonLoading ? "Buscando..." : "Buscar Maratona"}
+            </Button>
           </div>
-          <Button
-            onClick={searchMarathon}
-            disabled={marathonLoading}
-            className="w-full sm:w-auto"
-          >
-            <Search className="mr-2 h-4 w-4" />
-            {marathonLoading ? "Buscando..." : "Buscar Maratona"}
-          </Button>
         </CardContent>
       </Card>
 
@@ -217,7 +216,7 @@ const MyEnrollments = () => {
 
       {/* Marathon Details */}
       {marathon && !marathonLoading && (
-        <Card className="flex justify-between">
+        <Card>
           <CardHeader>
             <div className="flex items-start justify-between">
               <div className="space-y-2">
@@ -236,12 +235,12 @@ const MyEnrollments = () => {
               <Trophy className="h-6 w-6 text-yellow-500" />
             </div>
             {marathon.description && (
-              <CardDescription className="text-sm">
+              <CardDescription className="text-sm mt-2">
                 {marathon.description}
               </CardDescription>
             )}
           </CardHeader>
-          <CardContent className="space-y-4 w-2/3">
+          <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
@@ -296,58 +295,63 @@ const MyEnrollments = () => {
               </span>
             </div>
 
-            {getMarathonStatus(marathon) === "Aberta" &&
-              !isAlreadyEnrolled(marathon.id) && (
-                <Alert className="border-2 border-blue-300">
-                  <CheckCircle height={15} width={15} />
-                  <AlertDescription>
-                    Esta maratona está aberta para inscrições. Você pode se
-                    inscrever agora.
-                  </AlertDescription>
-                </Alert>
-              )}
+            {canEnroll(marathon) && !isAlreadyEnrolled(marathon.id) && (
+              <Alert className="border-2 border-blue-300">
+                <CheckCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Esta maratona está aberta para inscrições. Você pode se
+                  inscrever agora.
+                </AlertDescription>
+              </Alert>
+            )}
 
             {isAlreadyEnrolled(marathon.id) && (
               <Alert className="border-2 border-green-400">
-                <CheckCircle height={15} width={15} />
+                <CheckCircle className="h-4 w-4" />
                 <AlertDescription>
                   Você já está inscrito nesta maratona!
                 </AlertDescription>
               </Alert>
             )}
-            
+
             {getMarathonStatus(marathon) === "Finalizada" && (
               <Alert className="border-2 border-yellow-200">
-                <AlertCircle height={15} width={15} />
+                <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
                   Esta maratona já foi finalizada. Não é possível se inscrever.
                 </AlertDescription>
               </Alert>
             )}
 
-            {getMarathonStatus(marathon) === "Aberta" &&
+            {getMarathonStatus(marathon) === "Em andamento" &&
               !isAlreadyEnrolled(marathon.id) && (
-                <div className="flex gap-2">
-                  <Button
-                    onClick={handleEnroll}
-                    className="flex-1"
-                    disabled={createEnrollmentMutation.isPending}
-                  >
-                    {createEnrollmentMutation.isPending ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Trophy className="mr-2 h-4 w-4" />
-                    )}
-                    {createEnrollmentMutation.isPending
-                      ? "Inscrevendo..."
-                      : "Inscrever-se na Maratona"}
-                  </Button>
-                </div>
+                <Alert className="border-2 border-orange-200">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    Esta maratona já está em andamento. Inscrições encerradas.
+                  </AlertDescription>
+                </Alert>
               )}
+
+            {canEnroll(marathon) && !isAlreadyEnrolled(marathon.id) && (
+              <Button
+                onClick={handleEnroll}
+                className="w-full"
+                disabled={createEnrollmentMutation.isPending}
+              >
+                {createEnrollmentMutation.isPending ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Trophy className="mr-2 h-4 w-4" />
+                )}
+                {createEnrollmentMutation.isPending
+                  ? "Inscrevendo..."
+                  : "Inscrever-se na Maratona"}
+              </Button>
+            )}
           </CardContent>
         </Card>
       )}
-
       {/* Enrolled Marathons */}
       <Card>
         <CardHeader>
