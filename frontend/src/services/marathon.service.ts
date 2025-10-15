@@ -12,18 +12,22 @@ export interface LanguageMarathon {
   id: string;
   code: string;
   title: string;
-  description?: string;
+  description?: string | null;
   context: string;
   difficulty: string;
   timeLimit: number;
   start_date: string;
-  end_date?: string;
+  end_date?: string | null;
   number_of_questions: number;
   leaderboard_generated: boolean;
   classroom_id: string;
   created_by: string;
-  enrollments?: Array<{ user_id: string }>;
+  enrollments?: Array<{
+    id: string;
+    user_id?: string;
+  }>;
   classroom?: {
+    name: string;
     creator: {
       name: string;
     };
@@ -106,7 +110,7 @@ export class MarathonService {
   // GET /marathon/:code/:code - findOneByCode (marathon-enrollment screen)
   static async findOneByCode(code: string): Promise<LanguageMarathon> {
     return apiClient.get<LanguageMarathon>(
-      `${MarathonService.BASE_URL}/${code}/${code}`
+      `${MarathonService.BASE_URL}/code/${code}`
     );
   }
 
