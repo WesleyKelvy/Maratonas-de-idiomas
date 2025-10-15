@@ -36,7 +36,6 @@ import StudentSubmissions from "./pages/StudentSubmissions";
 import SubmissionDetails from "./pages/SubmissionDetails";
 import Submissions from "./pages/Submissions";
 import TeacherSubmissions from "./pages/TeacherSubmissions.tsx";
-import StudentEnrollments from "@/pages/StudentEnrollments.tsx";
 
 const queryClient = new QueryClient({
   defaultOptions: {
