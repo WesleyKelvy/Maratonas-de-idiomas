@@ -468,7 +468,7 @@ const StudentMarathons = () => {
                     <Button
                       size="sm"
                       onClick={() =>
-                        navigate(`/marathons/${marathon.id}/execute`)
+                        navigate(`/marathons/${marathon.id}?participate=true`)
                       }
                       className="flex-1"
                     >

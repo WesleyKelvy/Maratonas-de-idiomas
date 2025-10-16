@@ -60,9 +60,14 @@ import {
   Save,
   X,
 } from "lucide-react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // Navigation state interface
 interface NavigationState {
@@ -80,11 +85,25 @@ const MarathonDetails = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  // const [showRulesModal, setShowRulesModal] = useState(false);
 
   // Edit marathon state
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showParticipationDialog, setShowParticipationDialog] = useState(false);
+
+  // URL search params for handling dialog state
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Check if participation dialog should be open based on URL parameter
+  useEffect(() => {
+    const showDialog = searchParams.get("participate") === "true";
+    if (showDialog) {
+      setShowParticipationDialog(true);
+      // Clean up URL parameter
+      searchParams.delete("participate");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   // Get navigation state
   const navigationState = location.state as NavigationState | null;
@@ -815,7 +834,10 @@ const MarathonDetails = () => {
             user?.role === "Student" && (
               <Card>
                 <CardContent className="pt-6">
-                  <Dialog>
+                  <Dialog
+                    open={showParticipationDialog}
+                    onOpenChange={setShowParticipationDialog}
+                  >
                     <DialogTrigger asChild>
                       <Button size="lg" className="w-full">
                         <Play className="mr-2 h-5 w-5" />
@@ -851,7 +873,11 @@ const MarathonDetails = () => {
                         </DialogDescription>
                       </DialogHeader>
                       <div className="flex gap-3 mt-4">
-                        <Button variant="outline" className="flex-1">
+                        <Button
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => setShowParticipationDialog(false)}
+                        >
                           Cancelar
                         </Button>
                         <Button onClick={handleParticipate} className="flex-1">
