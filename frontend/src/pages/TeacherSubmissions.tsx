@@ -68,7 +68,7 @@ interface AiFeedback {
 }
 
 // Constants
-const MAX_SCORE = 10;
+const MAX_SCORE = 100;
 const SCORE_THRESHOLDS = {
   HIGH: 80,
   MEDIUM: 50,
