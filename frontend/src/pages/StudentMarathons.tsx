@@ -374,7 +374,7 @@ const StudentMarathons = () => {
                       ) : status === "Finalizada" ? (
                         <Badge className="bg-red-100 text-red-800">
                           <XCircle className="mr-1 h-3 w-3" />
-                          Não concluída
+                          Sem envios
                         </Badge>
                       ) : null}
                     </div>
@@ -415,7 +415,7 @@ const StudentMarathons = () => {
                   </div>
                 </div>
 
-                {score !== null && (
+                {/* {score !== null && (
                   <div className="bg-gray-50 p-3 rounded-lg">
                     <div className="flex items-center justify-between">
                       <span className="font-medium">Nota média:</span>
@@ -426,7 +426,7 @@ const StudentMarathons = () => {
                       </span>
                     </div>
                   </div>
-                )}
+                )} */}
 
                 <div className="text-xs text-gray-500 space-y-1">
                   <p>

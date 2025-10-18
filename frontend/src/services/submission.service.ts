@@ -106,6 +106,20 @@ export interface SubmissionWithDetails extends DetailedSubmission {
 
 export class SubmissionService {
   /**
+   * Criar uma nova submissão para uma questão específica
+   */
+  static async create(
+    marathonId: string,
+    questionId: number,
+    answer: string
+  ): Promise<void> {
+    await apiClient.post<void>(
+      `/submission/marathon/${marathonId}/question/${questionId}`,
+      { answer }
+    );
+  }
+
+  /**
    * Buscar todas as submissões do usuário logado
    */
   static async findAllByUserId(): Promise<DetailedSubmission[]> {

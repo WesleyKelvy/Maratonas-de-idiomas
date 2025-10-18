@@ -2,10 +2,9 @@ import { apiClient } from "@/lib/api-client";
 
 export interface Question {
   id: number;
-  marathonId: string;
-  title: string;
+  marathon_id: string;
+  title: string | null;
   prompt_text: string;
-  orderNumber: number;
 }
 
 export interface CreateQuestionRequest {
