@@ -1,6 +1,6 @@
-import { Process, Processor } from '@nestjs/bull';
+import { InjectQueue, Process, Processor } from '@nestjs/bull';
 import { Inject, Logger, OnModuleInit } from '@nestjs/common';
-import { Job } from 'bull';
+import { Job, Queue } from 'bull';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
   AbstractLeaderboardService,
@@ -20,6 +20,7 @@ export class LeaderboardProcessor implements OnModuleInit {
     private readonly leaderboardService: AbstractLeaderboardService,
     // Inject PrismaService to check the database on startup
     private readonly prisma: PrismaService,
+    @InjectQueue('leaderboard') private readonly leaderboardQueue: Queue,
   ) {}
 
   /**
@@ -27,28 +28,24 @@ export class LeaderboardProcessor implements OnModuleInit {
    * It's the perfect place to check for jobs that were missed while the server was offline.
    */
   async onModuleInit() {
-    this.logger.log(
-      'Checking for marathons that have already ended and need a leaderboard...',
-    );
+    this.logger.log('Checking for marathons that have already ended...');
 
     const finishedMarathons = await this.prisma.languageMarathon.findMany({
       where: {
-        end_date: {
-          lte: new Date(), // Marathon end date is in the past
-        },
-        leaderboard_generated: false, // And leaderboard has not been generated yet
+        end_date: { lte: new Date() },
+        leaderboard_generated: false,
       },
     });
 
     if (finishedMarathons.length > 0) {
       this.logger.log(
-        `Found ${finishedMarathons.length} finished marathons. Generating leaderboards now...`,
+        `Found ${finishedMarathons.length} finished marathons. Adding to queue...`,
       );
       for (const marathon of finishedMarathons) {
-        // Use the same generation logic
-        await this.handleGenerateLeaderboard({
-          data: { marathonId: marathon.id },
-        } as Job<{ marathonId: string }>);
+        // 2. Adicione um novo job à fila em vez de chamar o handler
+        await this.leaderboardQueue.add('generate', {
+          marathonId: marathon.id,
+        });
       }
     } else {
       this.logger.log('No pending leaderboards to generate on startup.');

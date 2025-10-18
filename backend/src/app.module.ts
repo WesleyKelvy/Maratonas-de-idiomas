@@ -25,6 +25,14 @@ import { UserModule } from './User/user.module';
       redis: {
         host: 'localhost',
         port: 6379,
+        maxRetriesPerRequest: null,
+        // enableReadyCheck: true,
+        enableOfflineQueue: true,
+        connectTimeout: 13000,
+        retryStrategy: (times) => {
+          console.log(`Redis retry attempt: ${times}`);
+          return Math.min(times * 100, 2500);
+        },
       },
     }),
     AuthModule,
