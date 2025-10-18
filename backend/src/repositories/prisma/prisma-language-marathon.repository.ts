@@ -78,6 +78,9 @@ export class PrismaLanguageMarathonRepository
     return this.prisma.languageMarathon.findMany({
       where: { classroom_id: id },
       include: { enrollments: { select: { user_id: true } } },
+      orderBy: {
+        start_date: 'desc',
+      },
     });
   }
 
@@ -181,7 +184,7 @@ export class PrismaLanguageMarathonRepository
     return this.prisma.languageMarathon.findMany({
       where: {
         OR: [
-          { created_by: userId, end_date: { lt: new Date() } },
+          { created_by: userId },
           {
             enrollments: { some: { user_id: userId } },
             // end_date: { lt: new Date() },
