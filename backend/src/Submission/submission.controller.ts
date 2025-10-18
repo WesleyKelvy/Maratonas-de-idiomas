@@ -31,7 +31,7 @@ export class SubmissionController {
   @UseGuards(RolesGuard)
   @Roles(Role.Student)
   @Post('marathon/:marathonId/question/:questionId')
-  @HttpCode(HttpStatus.CREATED)
+  @HttpCode(HttpStatus.NO_CONTENT)
   create(
     @Body() { answer }: CreateSubmissionDto,
     @Param('questionId') questionId: string,
