@@ -91,14 +91,14 @@ async function main() {
   // =================================================================
 
   // 5) Create LanguageMarathon with a 5-minute duration
-  const marathonEndDate = new Date(Date.now() + 1000 * 60 * 1); // 1 minute from now
+  const marathonEndDate = new Date(Date.now() + 1000 * 60 * 30); // 1 minute from now
   const marathon = await prisma.languageMarathon.create({
     data: {
       code: 'TEST-01',
       title: 'Maratona de Teste de Relatório',
       context: 'Team work',
       difficulty: Difficulty.Intermediate, // Changed to Intermediate
-      timeLimit: 1, // minutes
+      timeLimit: 30, // minutes
       start_date: new Date(),
       end_date: marathonEndDate,
       number_of_questions: 5, // Updated to 5 questions
@@ -113,7 +113,7 @@ async function main() {
   // 6) Create Questions for the marathon
   const question1 = await prisma.question.create({
     data: {
-      title: 'Question WESLEY',
+      title: 'Question Describe a situation',
       prompt_text:
         'Describe a situation where a team you were part of faced a significant challenge. How did the team collaborate to overcome it, and what was your specific role in that process?',
       marathon: { connect: { id: marathon.id } },
@@ -122,7 +122,7 @@ async function main() {
 
   const question2 = await prisma.question.create({
     data: {
-      title: 'Question WESLEY',
+      title: 'Question In your opinion',
       prompt_text:
         "In your opinion, what are the most crucial elements for effective teamwork? Provide examples of how these elements contribute to a team's success or failure.",
       marathon: { connect: { id: marathon.id } },
@@ -131,7 +131,7 @@ async function main() {
 
   const question3 = await prisma.question.create({
     data: {
-      title: 'Question WESLEY',
+      title: 'Question Imagine a new team',
       prompt_text:
         'Imagine a new team is being formed for a project. What steps would you recommend they take to establish strong communication and a positive working environment from the outset?',
       marathon: { connect: { id: marathon.id } },
@@ -140,7 +140,7 @@ async function main() {
 
   const question4 = await prisma.question.create({
     data: {
-      title: 'Question WESLEY',
+      title: 'Question Reflect on a time',
       prompt_text:
         'Reflect on a time when a team project did not go as planned. Analyze the reasons for the difficulties and suggest alternative approaches the team could have taken to achieve a better outcome.',
       marathon: { connect: { id: marathon.id } },
@@ -149,7 +149,7 @@ async function main() {
 
   const question5 = await prisma.question.create({
     data: {
-      title: 'Question WESLEY',
+      title: 'Question diverse perspectives',
       prompt_text:
         'How can diverse perspectives and skills within a team contribute to more innovative solutions? Discuss a scenario where varied viewpoints led to a creative breakthrough.',
       marathon: { connect: { id: marathon.id } },

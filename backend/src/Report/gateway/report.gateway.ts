@@ -8,6 +8,7 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
+import { Role } from '@prisma/client';
 import { Server, Socket } from 'socket.io';
 import { WsProfessorGuard } from 'src/auth/guards/ws-professor.guard';
 import { WsAuthService } from 'src/auth/ws-auth.service';
@@ -38,7 +39,9 @@ export class ReportGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handleConnection(client: Socket) {
     try {
       const user = this.wsAuthService.authenticateSocket(client);
+      if (user.role !== Role.Professor) client.disconnect();
       client.data.user = user;
+      console.log(user);
     } catch (error) {
       console.error(
         `[Marathon Session] Authentication failed: ${error.message}`,

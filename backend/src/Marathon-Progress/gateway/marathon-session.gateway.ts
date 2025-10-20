@@ -8,6 +8,7 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
+import { Role } from '@prisma/client';
 import { Server, Socket } from 'socket.io';
 import { WsStudentGuard } from 'src/auth/guards/ws-student.guard';
 import { WsAuthService } from 'src/auth/ws-auth.service';
@@ -48,6 +49,7 @@ export class MarathonSessionGateway
   handleConnection(client: Socket) {
     try {
       const user = this.wsAuthService.authenticateSocket(client);
+      if (user.role !== Role.Student) client.disconnect();
       client.data.user = user;
     } catch (error) {
       console.error(
