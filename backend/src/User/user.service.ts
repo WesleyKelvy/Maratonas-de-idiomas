@@ -62,10 +62,10 @@ export class UserService implements AbstractUserService {
       await this.studentStatsService.create(data.id);
     }
 
-    // await this.emailService.sendAccountCreatedEmail({
-    //   email: createdUser.email,
-    //   name: createdUser.name,
-    // });
+    await this.emailService.sendAccountCreatedEmail({
+      email: data.email,
+      name: data.name,
+    });
 
     return sanitazeUser(data);
   }
@@ -130,16 +130,16 @@ export class UserService implements AbstractUserService {
   }
 
   async remove(id: string): Promise<void> {
-    // Send email
-    // await this.emailService.sendAccountDeletionEmail({
-    //   email: user.email,
-    //   name: user.name,
-    // });
-
     const existingUser = await this.findById(id);
     if (!existingUser) {
       throw new NotFoundException(ERROR_MESSAGES.USER_NOT_FOUND);
     }
+
+    // Send email
+    await this.emailService.sendAccountDeletionEmail({
+      email: existingUser.email,
+      name: existingUser.name,
+    });
 
     await this.userRepository.remove(id);
   }
@@ -176,12 +176,12 @@ export class UserService implements AbstractUserService {
 
     const resetUrl = `${process.env.FRONTEND_URL}/user/reset-password?token=${resetToken}`;
 
+    // Send the email
+    await this.emailService.sendResetPasswordEmail(
+      { email: user.email, name: user.name },
+      resetUrl,
+    );
     return resetUrl;
-    // // Send the email:
-    // await this.emailService.sendResetPasswordEmail(
-    //   { email: user.email, name: user.name },
-    //   resetUrl,
-    // );
   }
 
   async resetPassword(token: string, newPassword: string): Promise<void> {

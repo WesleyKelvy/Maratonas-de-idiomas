@@ -25,6 +25,9 @@ export const passwordResetTemplate = (resetLink: string): string => `
     .button {
       display: inline-block;
       padding: 10px 20px;
+      display: block;
+      margin: 0 auto;
+      width: fit-content; /* Ou uma largura específica */
       background-color: #007bff;
       color: #ffffff;
       text-decoration: none;
@@ -42,14 +45,14 @@ export const passwordResetTemplate = (resetLink: string): string => `
 <body>
   <div class="container">
     <div class="header">
-      <h2>Password Reset Request</h2>
+      <h2>Solicitação de Redefinição de Senha</h2>
     </div>
-    <p>Hello,</p>
-    <p>We received a request to reset your password. Click the button below to reset it:</p>
-    <p><a href="${resetLink}" class="button">Reset Password</a></p>
-    <p>If you didn’t request this, please ignore this email.</p>
+    <p>Olá,</p>
+    <p>Recebemos uma solicitação para redefinir sua senha. Clique no botão abaixo para criar uma nova senha:</p>
+    <p><a href="${resetLink}" class="button">Redefinir Senha</a></p>
+    <p>Se você não fez essa solicitação, por favor ignore este e-mail.</p>
     <div class="footer">
-      <p>Thank you for using our service.</p>
+      <p>Obrigado por utilizar nossa plataforma.</p>
     </div>
   </div>
 </body>

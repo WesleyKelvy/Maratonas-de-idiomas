@@ -1,5 +1,4 @@
 export const accountCreationTemplate = (userName: string): string => `
-<!DOCTYPE html>
 <html>
 <head>
   <style>
@@ -31,6 +30,9 @@ export const accountCreationTemplate = (userName: string): string => `
     .button {
       display: inline-block;
       margin-top: 20px;
+      display: block;
+      width: fit-content;
+      margin: 0 auto;
       padding: 10px 20px;
       font-size: 16px;
       color: #ffffff;
@@ -46,18 +48,19 @@ export const accountCreationTemplate = (userName: string): string => `
 <body>
   <div class="container">
     <div class="header">
-      <h2>Welcome to Our Service!</h2>
+      <h2>Bem-vindo à nossa plataforma!</h2>
     </div>
-    <p>Hi ${userName},</p>
-    <p>We’re excited to welcome you to our platform! Your account has been successfully created, and you can now start exploring all the features and benefits we offer.</p>
-    <p>To get started, click the button below to log in and explore:</p>
-    <a href="https://your-service-url.com/login" class="button">Log In to Your Account</a>
-    <p>If you have any questions or need assistance, don’t hesitate to contact our support team. We’re here to help!</p>
+    <p>Olá ${userName},</p>
+    <p>Estamos muito felizes em recebê-lo(a) em nossa plataforma! Sua conta foi criada com sucesso, e agora você pode começar a explorar todos os recursos e benefícios que oferecemos.</p>
+    <p>Para começar, clique no botão abaixo para fazer login e explorar:</p>
+    <a href="http://0.0.0.0:3333/login" class="button">Acessar minha conta</a>
+    <p>Se você tiver alguma dúvida ou precisar de ajuda, não hesite em entrar em contato com nossa equipe de suporte. Estamos aqui para ajudar!</p>
     <div class="footer">
-      <p>Thank you for joining us!</p>
-      <p>If you need help, please reach out to our <a href="https://your-service-url.com/support">support team</a>.</p>
+      <p>Obrigado por se juntar a nós!</p>
+      <p>Se precisar de ajuda, entre em contato com nossa <a href="https://your-service-url.com/support">equipe de suporte</a>.</p>
     </div>
   </div>
 </body>
 </html>
+
 `;
