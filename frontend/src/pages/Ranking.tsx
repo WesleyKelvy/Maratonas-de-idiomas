@@ -224,9 +224,9 @@ const Ranking = () => {
                           <div className="text-2xl font-bold text-blue-600">
                             {rank.score.toLocaleString()} pts
                           </div>
-                          <div className="text-sm text-gray-600">
+                          {/* <div className="text-sm text-gray-600">
                             Tempo: {Math.round(rank.completionTime / 60)}min
-                          </div>
+                          </div> */}
                         </div>
                       </CardContent>
                     </Card>
