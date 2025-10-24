@@ -126,12 +126,12 @@ const Dashboard = () => {
       description: "Turmas ativas",
     },
     {
-      title: "Estudantes Alcançados",
+      title: "Inscrições realizadas",
       value: isProfessorStats(userStats)
         ? userStats.total_students_reached.toString()
         : "0",
       icon: Users,
-      description: "Total de alunos",
+      description: "Total de incrições dos alunos",
     },
   ];
 
