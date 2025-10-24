@@ -51,14 +51,14 @@ const ReportsPage = () => {
     error: reportError,
   } = useReport(selectedMarathonId);
 
-  // Atualizar o tempo a cada minuto para mostrar countdown
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 60000); // Atualiza a cada minuto
+  // // Atualizar o tempo a cada minuto para mostrar countdown
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     setCurrentTime(new Date());
+  //   }, 60000); // Atualiza a cada minuto
 
-    return () => clearInterval(interval);
-  }, []);
+  //   return () => clearInterval(interval);
+  // }, []);
 
   const handleClassroomChange = (value: string) => {
     setSelectedClassroomId(value);
@@ -99,29 +99,29 @@ const ReportsPage = () => {
     return currentTime > endDate;
   };
 
-  // Helper function to get time remaining for marathon
-  const getTimeRemaining = (marathon: LanguageMarathon) => {
-    if (!marathon?.end_date) return null;
+  // // Helper function to get time remaining for marathon
+  // const getTimeRemaining = (marathon: LanguageMarathon) => {
+  //   if (!marathon?.end_date) return null;
 
-    const endDate = new Date(marathon.end_date);
-    const diffInMs = endDate.getTime() - currentTime.getTime();
+  //   const endDate = new Date(marathon.end_date);
+  //   const diffInMs = endDate.getTime() - currentTime.getTime();
 
-    if (diffInMs <= 0) return null; // Marathon already finished
+  //   if (diffInMs <= 0) return null; // Marathon already finished
 
-    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
-    const diffInHours = Math.floor(diffInMinutes / 60);
-    const diffInDays = Math.floor(diffInHours / 24);
+  //   const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+  //   const diffInHours = Math.floor(diffInMinutes / 60);
+  //   const diffInDays = Math.floor(diffInHours / 24);
 
-    if (diffInDays > 0) {
-      return `${diffInDays} dia${diffInDays > 1 ? "s" : ""}`;
-    } else if (diffInHours > 0) {
-      return `${diffInHours} hora${diffInHours > 1 ? "s" : ""}`;
-    } else if (diffInMinutes > 0) {
-      return `${diffInMinutes} minuto${diffInMinutes > 1 ? "s" : ""}`;
-    } else {
-      return "menos de 1 minuto";
-    }
-  };
+  //   if (diffInDays > 0) {
+  //     return `${diffInDays} dia${diffInDays > 1 ? "s" : ""}`;
+  //   } else if (diffInHours > 0) {
+  //     return `${diffInHours} hora${diffInHours > 1 ? "s" : ""}`;
+  //   } else if (diffInMinutes > 0) {
+  //     return `${diffInMinutes} minuto${diffInMinutes > 1 ? "s" : ""}`;
+  //   } else {
+  //     return "menos de 1 minuto";
+  //   }
+  // };
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -333,34 +333,6 @@ const ReportsPage = () => {
                         <span className="font-medium">
                           Por favor, aguarde a finalização da maratona.
                         </span>
-                        <div className="text-sm">
-                          {selectedMarathon.end_date ? (
-                            <>
-                              <p>
-                                Ela terminará em:{" "}
-                                <span className="font-medium">
-                                  {format(
-                                    new Date(selectedMarathon.end_date),
-                                    "dd/MM/yyyy 'às' HH:mm",
-                                    { locale: ptBR }
-                                  )}
-                                </span>
-                              </p>
-                              {getTimeRemaining(selectedMarathon) && (
-                                <p className="mt-1">
-                                  Tempo restante:{" "}
-                                  <span className="font-medium text-blue-800">
-                                    {getTimeRemaining(selectedMarathon)}
-                                  </span>
-                                </p>
-                              )}
-                            </>
-                          ) : (
-                            <p>
-                              Esta maratona não possui data de término definida.
-                            </p>
-                          )}
-                        </div>
                       </div>
                     </div>
                     <Button className="w-full" disabled={true}>

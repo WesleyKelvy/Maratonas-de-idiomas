@@ -115,12 +115,14 @@ export default function MarathonReport() {
     // 3. (URL has generate=true OR there is an error)
     // 4. Not yet attempted to generate in this session
     // 5. Not in the process of generating
+    // 6. No active socket connection
     if (
       !reportData &&
       !isLoading &&
       (shouldGenerate || error) &&
       !hasGeneratedReport &&
-      !isGenerating
+      !isGenerating &&
+      !socket
     ) {
       console.log("Starting report generation - conditions met");
       initializeReportGeneration();
@@ -130,6 +132,7 @@ export default function MarathonReport() {
       if (socket) {
         console.log("Disconnecting socket...");
         socket.disconnect();
+        setSocket(null);
       }
     };
   }, [
@@ -140,13 +143,16 @@ export default function MarathonReport() {
     hasGeneratedReport,
     isGenerating,
     reportData,
+    socket,
   ]);
 
   const initializeReportGeneration = () => {
-    if (isGenerating || hasGeneratedReport) {
-      console.log("Skipping generation - already generating or generated");
-      return;
-    }
+    // if (isGenerating || hasGeneratedReport || socket) {
+    //   console.log(
+    //     "Skipping generation - already generating, generated, or connected"
+    //   );
+    //   return;
+    // }
 
     console.log("Initializing report generation for marathon:", marathonId);
     setIsGenerating(true);
@@ -154,11 +160,12 @@ export default function MarathonReport() {
     setGenerationProgress(0);
     setGenerationMessage("Conectando ao servidor...");
 
-    // Conect to WebSocket
+    // Connect to WebSocket
     const socketConnection = io(
       `${import.meta.env.VITE_API_BASE_URL || "http://localhost:3000"}/reports`,
       {
-        transports: ["websocket"],
+        withCredentials: true,
+        transports: ["websocket", "polling"],
       }
     );
 
@@ -201,6 +208,7 @@ export default function MarathonReport() {
       });
 
       socketConnection.disconnect();
+      setSocket(null);
     });
 
     socketConnection.on("report-error", (data) => {
@@ -209,23 +217,34 @@ export default function MarathonReport() {
       setHasGeneratedReport(false); // Allows new try on error case
       setGenerationMessage("Erro na geração do relatório");
 
-      toast({
-        title: "Erro",
-        description: data.message || "Falha ao gerar o relatório",
-        variant: "destructive",
-      });
+      // Se o erro for sobre relatório já existente, tentar recarregar os dados
+      if (data.message?.includes("already has a report")) {
+        toast({
+          title: "Relatório já existe",
+          description: "Carregando relatório existente...",
+        });
+        refetch();
+      } else {
+        toast({
+          title: "Erro",
+          description: data.message || "Falha ao gerar o relatório",
+          variant: "destructive",
+        });
+      }
 
       socketConnection.disconnect();
+      setSocket(null);
     });
 
     socketConnection.on("disconnect", () => {
       console.log("Disconnected from reports WebSocket");
+      setSocket(null);
     });
 
     socketConnection.on("connect_error", (error) => {
       console.error("WebSocket connection error:", error);
       setIsGenerating(false);
-      setHasGeneratedReport(false); // Allows new try on error on reconect
+      setHasGeneratedReport(false); // Allows new try on error on reconnect
       setGenerationMessage("Erro de conexão");
 
       toast({
@@ -233,6 +252,9 @@ export default function MarathonReport() {
         description: "Não foi possível conectar ao servidor",
         variant: "destructive",
       });
+
+      socketConnection.disconnect();
+      setSocket(null);
     });
 
     setSocket(socketConnection);
@@ -631,32 +653,6 @@ export default function MarathonReport() {
           </Accordion>
         </CardContent>
       </Card>
-
-      {/* Action Buttons -- IGNORE THIS CARD*/}
-      {/* <Card>
-        <CardHeader>
-          <CardTitle>Ações Recomendadas</CardTitle>
-          <CardDescription>
-            Próximos passos baseados nos resultados da análise
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-3">
-            <Button variant="default">
-              <BookOpen className="h-4 w-4 mr-2" />
-              Criar Plano de Estudos
-            </Button>
-            <Button variant="outline">
-              <Target className="h-4 w-4 mr-2" />
-              Agendar Revisão
-            </Button>
-            <Button variant="outline">
-              <Share2 className="h-4 w-4 mr-2" />
-              Compartilhar com Coordenação
-            </Button>
-          </div>
-        </CardContent>
-      </Card> */}
     </div>
   );
 }
