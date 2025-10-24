@@ -4,6 +4,7 @@ import { AiFeedbackModule } from 'src/AiFeedback/aiFeedback.module';
 import { AuthModule } from 'src/auth/auth.module';
 import { ProfessorGuard } from 'src/auth/guards/professor.guard';
 import { ClassroomModule } from 'src/Classroom/classroom.module';
+import { LanguageMarathonModule } from 'src/LanguageMarathon/language-marathon.module';
 import { REPORT_REPOSITORY_TOKEN } from 'src/repositories/abstract/report.repository';
 import { PrismaReportRepository } from 'src/repositories/prisma/prisma-report.repository';
 import {
@@ -11,7 +12,6 @@ import {
   REPORT_SERVICE_TOKEN,
 } from './abstract-services/abstract-report.service';
 import { ReportGateway } from './gateway/report.gateway';
-import { MockReportService } from './mock-report.service';
 import { ReportController } from './report.controller';
 import { ReportService } from './report.service';
 
@@ -19,11 +19,18 @@ import { ReportService } from './report.service';
 const reportServiceProvider = {
   provide: REPORT_SERVICE_TOKEN,
   useClass:
-    process.env.NODE_ENV === 'development' ? MockReportService : ReportService,
+    // process.env.NODE_ENV === 'development' ? MockReportService
+    // :
+    ReportService,
 };
 
 @Module({
-  imports: [ClassroomModule, AiFeedbackModule, AuthModule],
+  imports: [
+    ClassroomModule,
+    AiFeedbackModule,
+    AuthModule,
+    LanguageMarathonModule,
+  ],
   controllers: [ReportController],
   providers: [
     ReportGateway,

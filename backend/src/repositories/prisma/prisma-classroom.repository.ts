@@ -20,7 +20,13 @@ export class PrismaClassroomRepository implements AbstractClassroomRepository {
     marathonId: string,
   ): Promise<Classroom | null> {
     return await this.prisma.classroom.findFirst({
-      where: { marathons: { every: { id: marathonId } } },
+      where: {
+        marathons: {
+          some: {
+            id: marathonId,
+          },
+        },
+      },
     });
   }
 

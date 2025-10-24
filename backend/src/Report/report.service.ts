@@ -46,7 +46,21 @@ export class ReportService implements AbstractReportService {
     @Inject()
     private readonly gemini: GoogleGenAI,
   ) {
-    this.gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    if (!process.env.GEMINI_API_KEY) {
+      console.error('[Report Service] GEMINI_API_KEY not configured');
+      throw new Error('GEMINI_API_KEY is not configured');
+    }
+
+    try {
+      this.gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      console.log('[Report Service] Google GenAI initialized successfully');
+    } catch (error) {
+      console.error(
+        '[Report Service] Failed to initialize Google GenAI:',
+        error,
+      );
+      throw error;
+    }
   }
 
   setReportGateway(gateway: ReportGateway) {
@@ -61,8 +75,16 @@ export class ReportService implements AbstractReportService {
     return report;
   }
 
+  async findByMarathonIdOrNull(marathonId: string): Promise<Report | null> {
+    return await this.reportRepository.findByMarathonId(marathonId);
+  }
+
   async createReport(marathonId: string): Promise<Report> {
     try {
+      console.log(
+        `[Report] Starting report creation for marathon ${marathonId}`,
+      );
+
       const marathon = await this.marathonService.findOneById(marathonId);
 
       if (!marathon) {
@@ -86,8 +108,7 @@ export class ReportService implements AbstractReportService {
         );
       }
 
-      const reportOnDb = this.findByMarathonId(marathonId);
-
+      const reportOnDb = await this.findByMarathonIdOrNull(marathonId);
       if (reportOnDb) {
         throw new HttpException(
           'This marathon already has a report.',
@@ -164,7 +185,14 @@ export class ReportService implements AbstractReportService {
 
       return savedReport;
     } catch (error) {
-      console.error(`Error creating report for marathon ${marathonId}:`, error);
+      console.error(
+        `[Report] Error creating report for marathon ${marathonId}:`,
+        error,
+      );
+
+      // Emit error progress
+      this._emitProgress(marathonId, 0, `Erro: ${error.message}`);
+
       throw error;
     }
   }
@@ -225,8 +253,11 @@ export class ReportService implements AbstractReportService {
         },
       };
     } catch (error) {
-      console.error('Error in createFinalReport:', error);
-      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+      console.error('[Report] Error in createFinalReport:', error);
+      throw new HttpException(
+        `Failed to generate report: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -245,26 +276,66 @@ export class ReportService implements AbstractReportService {
           explanationSamples: examples,
         });
 
-        const output = await this.gemini.models.generateContent({
-          model: 'gemini-2.5-flash',
-          contents: advicePrompt,
-        });
+        // Retry logic for API calls
+        const maxRetries = 5;
+        let lastError: Error;
 
-        const response = output.text;
-        const cleanedText = response
-          .replace(/```json/g, '')
-          .replace(/```/g, '')
-          .trim();
-        const genResp = JSON.parse(cleanedText);
-        const { targeted_advice } = genResp;
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+          try {
+            console.log(
+              `[Report] API call attempt ${attempt}/${maxRetries} for ${categoryName}`,
+            );
 
-        // Return object matches ReportDetailsType structure
-        return {
-          category_name: categoryName,
-          occurrences,
-          examples: JSON.stringify(examples), // Convert to string as per type
-          targeted_advice,
-        };
+            const output = await this.gemini.models.generateContent({
+              model: 'gemini-2.0-flash-exp',
+              contents: advicePrompt,
+            });
+
+            const response = output.text;
+            const cleanedText = response
+              .replace(/```json/g, '')
+              .replace(/```/g, '')
+              .trim();
+
+            const genResp = JSON.parse(cleanedText);
+            const { targeted_advice } = genResp;
+
+            console.log(
+              `[Report] Successfully generated advice for ${categoryName}`,
+            );
+
+            // Return object matches ReportDetailsType structure
+            return {
+              category_name: categoryName,
+              occurrences,
+              examples: JSON.stringify(examples), // Convert to string as per type
+              targeted_advice,
+            };
+          } catch (error) {
+            lastError = error;
+            console.error(
+              `[Report] Attempt ${attempt}/${maxRetries} failed for ${categoryName}:`,
+              error.message,
+            );
+
+            // Wait before retrying (exponential backoff)
+            if (attempt < maxRetries) {
+              const waitTime = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
+              console.log(`[Report] Waiting ${waitTime}ms before retry...`);
+              await new Promise((resolve) => setTimeout(resolve, waitTime));
+            }
+          }
+        }
+
+        // If all retries failed
+        console.error(
+          `[Report] All retry attempts failed for ${categoryName}. Error:`,
+          lastError,
+        );
+        throw new HttpException(
+          `Failed to generate advice for category "${categoryName}" after ${maxRetries} attempts: ${lastError.message}`,
+          HttpStatus.SERVICE_UNAVAILABLE,
+        );
       },
     );
   }
