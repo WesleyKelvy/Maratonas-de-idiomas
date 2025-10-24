@@ -42,6 +42,7 @@ import {
   Loader2,
   Search,
   Trophy,
+  CircleAlert,
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
@@ -519,7 +520,7 @@ const StudentSubmissions = () => {
                       className={`${
                         feedback.points_deducted > 0
                           ? "border-red-200 bg-red-50"
-                          : "border-green-200 bg-green-50"
+                          : "border-yellow-200 bg-yellow-50"
                       }`}
                     >
                       <CardHeader className="pb-3">
@@ -537,8 +538,8 @@ const StudentSubmissions = () => {
                                 }
                                 className="text-xs"
                               >
-                                {feedback.points_deducted > 0
-                                  ? `−${feedback.points_deducted} pts`
+                                {feedback.points_deducted < 0
+                                  ? `${feedback.points_deducted} pts`
                                   : "Perfeito"}
                               </Badge>
                             </div>
@@ -552,8 +553,8 @@ const StudentSubmissions = () => {
                                 <AlertCircle className="h-5 w-5" />
                               </div>
                             ) : (
-                              <div className="flex items-center text-green-600">
-                                <Trophy className="h-5 w-5" />
+                              <div className="flex items-center text-red-600">
+                                <CircleAlert className="h-5 w-5" />
                               </div>
                             )}
                           </div>
@@ -594,7 +595,7 @@ const StudentSubmissions = () => {
                         análise em sua resposta.
                       </p>
                       <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-3">
                           <span className="text-sm">Total deduzido:</span>
                           {(() => {
                             const totalDeducted = aiFeedbackData.reduce(
@@ -611,12 +612,6 @@ const StudentSubmissions = () => {
                               </Badge>
                             );
                           })()}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <span className="text-sm">Pontuação final:</span>
-                          <Badge variant="default">
-                            {selectedSubmission.totalScore}/100
-                          </Badge>
                         </div>
                       </div>
                     </div>
