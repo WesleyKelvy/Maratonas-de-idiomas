@@ -29,10 +29,52 @@ type FinalReportData = {
   category: string;
 };
 
+// Queue para gerenciar requisições concorrentes
+class RequestQueue {
+  private queue: Array<() => Promise<any>> = [];
+  private running = 0;
+  private readonly maxConcurrent: number;
+
+  constructor(maxConcurrent: number = 3) {
+    this.maxConcurrent = maxConcurrent;
+  }
+
+  async add<T>(fn: () => Promise<T>): Promise<T> {
+    return new Promise((resolve, reject) => {
+      this.queue.push(async () => {
+        try {
+          const result = await fn();
+          resolve(result);
+        } catch (error) {
+          reject(error);
+        }
+      });
+      this.process();
+    });
+  }
+
+  private async process() {
+    if (this.running >= this.maxConcurrent || this.queue.length === 0) {
+      return;
+    }
+
+    this.running++;
+    const fn = this.queue.shift();
+
+    try {
+      await fn();
+    } finally {
+      this.running--;
+      this.process();
+    }
+  }
+}
+
 @Injectable()
 export class ReportService implements AbstractReportService {
-  // Gateway is being injected by the module to avoid circular dependention
   private reportGateway: ReportGateway;
+  private requestQueue: RequestQueue;
+  private ongoingReports = new Map<string, Promise<Report>>();
 
   constructor(
     @Inject(LANGUAGE_MARATHON_SERVICE_TOKEN)
@@ -61,6 +103,9 @@ export class ReportService implements AbstractReportService {
       );
       throw error;
     }
+
+    // Inicializa a fila com limite de 3 requisições simultâneas
+    this.requestQueue = new RequestQueue(3);
   }
 
   setReportGateway(gateway: ReportGateway) {
@@ -80,6 +125,28 @@ export class ReportService implements AbstractReportService {
   }
 
   async createReport(marathonId: string): Promise<Report> {
+    // Verifica se já existe uma geração em andamento para esta maratona
+    if (this.ongoingReports.has(marathonId)) {
+      console.log(
+        `[Report] Report generation already in progress for marathon ${marathonId}`,
+      );
+      return this.ongoingReports.get(marathonId);
+    }
+
+    // Cria a promise de geração e armazena
+    const reportPromise = this._executeReportCreation(marathonId);
+    this.ongoingReports.set(marathonId, reportPromise);
+
+    try {
+      const result = await reportPromise;
+      return result;
+    } finally {
+      // Remove da lista de ongoing após conclusão
+      this.ongoingReports.delete(marathonId);
+    }
+  }
+
+  private async _executeReportCreation(marathonId: string): Promise<Report> {
     try {
       console.log(
         `[Report] Starting report creation for marathon ${marathonId}`,
@@ -223,27 +290,10 @@ export class ReportService implements AbstractReportService {
         `Gerando conselhos para ${categoryMap.size} categorias...`,
       );
 
-      // Step 2: Create promises for each category
-      const reportCategoryPromises = this._generateAdvicePromises(categoryMap);
-
-      // Progress: 60% - 80%
-      const totalCategories = categoryMap.size;
-      let completedCategories = 0;
-
-      // Step 3: Execute all advice generation promises in parallel
-      const reportCategories = await Promise.all(
-        reportCategoryPromises.map(async (promise) => {
-          const result = await promise;
-          completedCategories++;
-          const progress =
-            60 + Math.floor((completedCategories / totalCategories) * 20);
-          this._emitProgress(
-            marathonId,
-            progress,
-            `Processando categoria ${completedCategories}/${totalCategories}...`,
-          );
-          return result;
-        }),
+      // Step 2: Gerar conselhos de forma sequencial com controle de concorrência
+      const reportCategories = await this._generateAdviceSequentially(
+        marathonId,
+        categoryMap,
       );
 
       return {
@@ -261,82 +311,123 @@ export class ReportService implements AbstractReportService {
     }
   }
 
-  private _generateAdvicePromises(
+  private async _generateAdviceSequentially(
+    marathonId: string,
     categoryMap: Map<string, { explanations: string[] }>,
-  ): Promise<ReportDetailsType>[] {
-    return Array.from(categoryMap.entries()).map(
-      async ([categoryName, data]) => {
+  ): Promise<ReportDetailsType[]> {
+    const categories = Array.from(categoryMap.entries());
+    const totalCategories = categories.length;
+    const reportCategories: ReportDetailsType[] = [];
+
+    // Processar em lotes usando a fila
+    const batchPromises = categories.map(([categoryName, data], index) => {
+      return this.requestQueue.add(async () => {
         const occurrences = data.explanations.length;
         // Take up to 3 unique explanations as examples
         const examples = [...new Set(data.explanations)].slice(0, 3);
 
-        const advicePrompt = createReportGenerationPrompt({
+        const result = await this._generateAdviceForCategory(
           categoryName,
           occurrences,
-          explanationSamples: examples,
+          examples,
+        );
+
+        // Atualizar progresso
+        const progress = 60 + Math.floor(((index + 1) / totalCategories) * 20);
+        this._emitProgress(
+          marathonId,
+          progress,
+          `Processando categoria ${index + 1}/${totalCategories}: ${categoryName}`,
+        );
+
+        return result;
+      });
+    });
+
+    // Esperar todas as categorias serem processadas
+    const results = await Promise.all(batchPromises);
+    reportCategories.push(...results);
+
+    return reportCategories;
+  }
+
+  private async _generateAdviceForCategory(
+    categoryName: string,
+    occurrences: number,
+    examples: string[],
+  ): Promise<ReportDetailsType> {
+    const advicePrompt = createReportGenerationPrompt({
+      categoryName,
+      occurrences,
+      explanationSamples: examples,
+    });
+
+    const maxRetries = 5;
+    let lastError: Error;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(
+          `[Report] API call attempt ${attempt}/${maxRetries} for ${categoryName}`,
+        );
+
+        const output = await this.gemini.models.generateContent({
+          model: 'gemini-2.0-flash-exp',
+          contents: advicePrompt,
         });
 
-        // Retry logic for API calls
-        const maxRetries = 5;
-        let lastError: Error;
+        const response = output.text;
+        const cleanedText = response
+          .replace(/```json/g, '')
+          .replace(/```/g, '')
+          .trim();
 
-        for (let attempt = 1; attempt <= maxRetries; attempt++) {
-          try {
-            console.log(
-              `[Report] API call attempt ${attempt}/${maxRetries} for ${categoryName}`,
-            );
+        const genResp = JSON.parse(cleanedText);
+        const { targeted_advice } = genResp;
 
-            const output = await this.gemini.models.generateContent({
-              model: 'gemini-2.0-flash-exp',
-              contents: advicePrompt,
-            });
+        console.log(
+          `[Report] Successfully generated advice for ${categoryName}`,
+        );
 
-            const response = output.text;
-            const cleanedText = response
-              .replace(/```json/g, '')
-              .replace(/```/g, '')
-              .trim();
-
-            const genResp = JSON.parse(cleanedText);
-            const { targeted_advice } = genResp;
-
-            console.log(
-              `[Report] Successfully generated advice for ${categoryName}`,
-            );
-
-            // Return object matches ReportDetailsType structure
-            return {
-              category_name: categoryName,
-              occurrences,
-              examples: JSON.stringify(examples), // Convert to string as per type
-              targeted_advice,
-            };
-          } catch (error) {
-            lastError = error;
-            console.error(
-              `[Report] Attempt ${attempt}/${maxRetries} failed for ${categoryName}:`,
-              error.message,
-            );
-
-            // Wait before retrying (exponential backoff)
-            if (attempt < maxRetries) {
-              const waitTime = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
-              console.log(`[Report] Waiting ${waitTime}ms before retry...`);
-              await new Promise((resolve) => setTimeout(resolve, waitTime));
-            }
-          }
-        }
-
-        // If all retries failed
+        return {
+          category_name: categoryName,
+          occurrences,
+          examples: JSON.stringify(examples),
+          targeted_advice,
+        };
+      } catch (error) {
+        lastError = error;
         console.error(
-          `[Report] All retry attempts failed for ${categoryName}. Error:`,
-          lastError,
+          `[Report] Attempt ${attempt}/${maxRetries} failed for ${categoryName}:`,
+          error.message || JSON.stringify(error),
         );
-        throw new HttpException(
-          `Failed to generate advice for category "${categoryName}" after ${maxRetries} attempts: ${lastError.message}`,
-          HttpStatus.SERVICE_UNAVAILABLE,
-        );
-      },
+
+        // Se for erro 503 (overloaded), esperar mais tempo
+        if (
+          error.message?.includes('503') ||
+          error.message?.includes('overloaded')
+        ) {
+          const waitTime = Math.pow(2, attempt) * 2000; // 4s, 8s, 16s, 32s
+          console.log(
+            `[Report] API overloaded, waiting ${waitTime}ms before retry...`,
+          );
+          await new Promise((resolve) => setTimeout(resolve, waitTime));
+        } else if (attempt < maxRetries) {
+          // Para outros erros, usar backoff normal
+          const waitTime = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
+          console.log(`[Report] Waiting ${waitTime}ms before retry...`);
+          await new Promise((resolve) => setTimeout(resolve, waitTime));
+        }
+      }
+    }
+
+    console.error(
+      `[Report] All retry attempts failed for ${categoryName}. Error:`,
+      lastError,
+    );
+    throw new HttpException(
+      `Failed to generate advice for category "${categoryName}" after ${maxRetries} attempts: ${lastError.message}`,
+      HttpStatus.SERVICE_UNAVAILABLE,
     );
   }
 
