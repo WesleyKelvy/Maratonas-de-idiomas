@@ -3,20 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "@/hooks/use-toast";
 import { useMarathonSocket } from "@/hooks/use-marathon-socket";
-import { MarathonService, LanguageMarathon } from "@/services/marathon.service";
-import { QuestionService, Question } from "@/services/question.service";
+import { toast } from "@/hooks/use-toast";
+import { LanguageMarathon, MarathonService } from "@/services/marathon.service";
+import { Question, QuestionService } from "@/services/question.service";
 import { SubmissionService } from "@/services/submission.service";
-import {
-  Clock,
-  Loader2,
-  ChevronLeft,
-  ChevronRight,
-  Wifi,
-  WifiOff,
-  Save,
-} from "lucide-react";
+import { Clock, Loader2, Save, Wifi, WifiOff } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -79,7 +71,7 @@ const MarathonExecution = () => {
   }, [navigate]);
 
   const handleQuestionChanged = useCallback((progress: any) => {
-    console.log("Question changed:", progress);
+    // console.log("Question changed:", progress);
     // O estado local já foi atualizado otimisticamente
   }, []);
 
@@ -91,7 +83,7 @@ const MarathonExecution = () => {
 
   const handleMarathonCompleted = useCallback(
     (data: any) => {
-      console.log("Marathon completed:", data);
+      // console.log("Marathon completed:", data);
       toast({
         title: "Maratona finalizada!",
         description:
@@ -150,6 +142,7 @@ const MarathonExecution = () => {
         setMarathon(marathonData);
 
         // Carregar questões da maratona
+        let questionsArray;
         if (marathonData.questions && marathonData.questions.length > 0) {
           const convertedQuestions = marathonData.questions.map((q) => ({
             id: q.id,
@@ -158,9 +151,11 @@ const MarathonExecution = () => {
             prompt_text: q.prompt_text,
           }));
           setQuestions(convertedQuestions);
+          questionsArray = marathonData.questions;
         } else {
           const questionsData = await QuestionService.findAllByMarathonId(id);
           setQuestions(questionsData);
+          questionsArray = questionsData;
         }
 
         // Carregar submissões existentes
@@ -173,6 +168,21 @@ const MarathonExecution = () => {
             marathonSubmissions.map((sub) => sub.question_id)
           );
           setSubmittedQuestions(submittedQuestionIds);
+
+          // Verificar se todas as questões já foram respondidas
+          const allQuestionsAnswered = questionsArray.every((question) =>
+            submittedQuestionIds.has(question.id)
+          );
+
+          if (allQuestionsAnswered && questionsArray.length > 0) {
+            toast({
+              title: "Maratona já concluída!",
+              description:
+                "Você já respondeu todas as questões desta maratona.",
+            });
+            navigate(-1); // Volta para a página anterior
+            return;
+          }
         } catch (submissionError) {
           console.warn(
             "Não foi possível carregar submissões existentes:",
@@ -260,6 +270,24 @@ const MarathonExecution = () => {
 
       // Limpar resposta atual
       setAnswer("");
+
+      // Automaticamente ir para a próxima questão ou finalizar se for a última
+      if (currentQuestion < questions.length - 1) {
+        // Ir para próxima questão
+        const nextIndex = currentQuestion + 1;
+        const nextQuestion = questions[nextIndex];
+
+        // Atualização otimista da UI
+        setCurrentQuestion(nextIndex);
+
+        // Notificar servidor via WebSocket
+        if (nextQuestion && isConnected) {
+          changeQuestion(nextQuestion.id);
+        }
+      } else {
+        // Última questão - finalizar maratona
+        completeMarathon();
+      }
     } catch (error) {
       console.error("Erro ao enviar resposta:", error);
       toast({
@@ -273,33 +301,33 @@ const MarathonExecution = () => {
   };
 
   // Função para navegar entre questões (via WebSocket)
-  const handleNavigateToQuestion = (
-    direction: "next" | "previous" | "finish"
-  ) => {
-    if (direction === "finish") {
-      completeMarathon();
-      return;
-    }
+  // const handleNavigateToQuestion = (
+  //   direction: "next" | "previous" | "finish"
+  // ) => {
+  //   if (direction === "finish") {
+  //     completeMarathon();
+  //     return;
+  //   }
 
-    let newIndex;
-    if (direction === "next" && currentQuestion < questions.length - 1) {
-      newIndex = currentQuestion + 1;
-    } else if (direction === "previous" && currentQuestion > 0) {
-      newIndex = currentQuestion - 1;
-    } else {
-      return;
-    }
+  //   let newIndex;
+  //   if (direction === "next" && currentQuestion < questions.length - 1) {
+  //     newIndex = currentQuestion + 1;
+  //   } else if (direction === "previous" && currentQuestion > 0) {
+  //     newIndex = currentQuestion - 1;
+  //   } else {
+  //     return;
+  //   }
 
-    const newQuestion = questions[newIndex];
-    if (newQuestion) {
-      // Atualização otimista da UI
-      setCurrentQuestion(newIndex);
-      setAnswer(""); // Limpar resposta local
+  //   const newQuestion = questions[newIndex];
+  //   if (newQuestion) {
+  //     // Atualização otimista da UI
+  //     setCurrentQuestion(newIndex);
+  //     setAnswer(""); // Limpar resposta local
 
-      // Notificar servidor via WebSocket
-      changeQuestion(newQuestion.id);
-    }
-  };
+  //     // Notificar servidor via WebSocket
+  //     changeQuestion(newQuestion.id);
+  //   }
+  // };
 
   if (loading) {
     return (
@@ -478,7 +506,11 @@ const MarathonExecution = () => {
                 onClick={handleSubmitAnswer}
                 size="lg"
                 disabled={!answer.trim() || submitting}
-                className="min-w-48"
+                className={`min-w-48 ${
+                  currentQuestion === questions.length - 1 && !submitting
+                    ? "animate-pulse bg-green-600 hover:bg-green-700 text-white border-green-600"
+                    : ""
+                }`}
               >
                 {submitting ? (
                   <>
@@ -486,9 +518,15 @@ const MarathonExecution = () => {
                     Enviando...
                   </>
                 ) : isCurrentQuestionSubmitted ? (
-                  "Reenviar Resposta"
+                  currentQuestion === questions.length - 1 ? (
+                    "Reenviar e Finalizar Maratona"
+                  ) : (
+                    "Reenviar e Continuar"
+                  )
+                ) : currentQuestion === questions.length - 1 ? (
+                  "Enviar e Finalizar Maratona"
                 ) : (
-                  "Enviar Resposta"
+                  "Enviar e Continuar"
                 )}
               </Button>
               {isCurrentQuestionSubmitted && (
@@ -496,41 +534,6 @@ const MarathonExecution = () => {
                   ✓ Você já respondeu esta questão. Pode reenviar se desejar.
                 </p>
               )}
-
-              {/* Navigation buttons */}
-              <div className="flex justify-between mt-6">
-                <Button
-                  variant="outline"
-                  onClick={() => handleNavigateToQuestion("previous")}
-                  disabled={currentQuestion === 0 || !isConnected}
-                  className="flex items-center gap-2"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  Anterior
-                </Button>
-
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    if (currentQuestion === questions.length - 1) {
-                      handleNavigateToQuestion("finish");
-                    } else {
-                      handleNavigateToQuestion("next");
-                    }
-                  }}
-                  disabled={!isConnected}
-                  className="flex items-center gap-2"
-                >
-                  {currentQuestion === questions.length - 1 ? (
-                    "Finalizar Maratona"
-                  ) : (
-                    <>
-                      Próxima
-                      <ChevronRight className="h-4 w-4" />
-                    </>
-                  )}
-                </Button>
-              </div>
             </div>
           </CardContent>
         </Card>

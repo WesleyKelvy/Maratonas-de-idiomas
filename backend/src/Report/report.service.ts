@@ -372,7 +372,7 @@ export class ReportService implements AbstractReportService {
         );
 
         const output = await this.gemini.models.generateContent({
-          model: 'gemini-2.0-flash-exp',
+          model: 'gemini-2.5-flash',
           contents: advicePrompt,
         });
 
