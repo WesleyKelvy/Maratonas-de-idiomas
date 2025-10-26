@@ -35,7 +35,7 @@ export const useMarathons = (classroomId: string) => {
 export const useMarathon = (marathonId: string) => {
   return useQuery({
     queryKey: marathonKeys.detail(marathonId),
-    queryFn: () => MarathonService.findById(marathonId),
+    queryFn: () => MarathonService.findOne(marathonId),
     enabled: !!marathonId,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,

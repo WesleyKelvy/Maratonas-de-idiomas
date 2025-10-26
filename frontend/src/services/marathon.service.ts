@@ -79,21 +79,21 @@ export class MarathonService {
     );
   }
 
-  // GET /marathon/user - findAllByUserId (now uses currentUser from JWT)
+  // GET /marathon/user - findAllByUserId
   static async findAllByUserId(): Promise<LanguageMarathon[]> {
     return apiClient.get<LanguageMarathon[]>(
       `${MarathonService.BASE_URL}/user`
     );
   }
 
-  // GET /marathon/ids-and-titles - findAllIdsAndTitle (now uses currentUser from JWT)
+  // GET /marathon/ids-and-titles - findAllIdsAndTitle
   static async findAllIdsAndTitle(): Promise<CustomLanguageMarathon[]> {
     return apiClient.get<CustomLanguageMarathon[]>(
       `${MarathonService.BASE_URL}/ids-and-titles`
     );
   }
 
-  // GET /marathon/recent-marathons - findRecentMarathonsAndUserStats (uses currentUser from JWT)
+  // GET /marathon/recent-marathons - findRecentMarathonsAndUserStats
   static async findRecentMarathonsAndUserStats(): Promise<RecentMarathonsAndUserStats> {
     return apiClient.get<RecentMarathonsAndUserStats>(
       `${MarathonService.BASE_URL}/recent-marathons`
@@ -121,10 +121,6 @@ export class MarathonService {
     return apiClient.get<LanguageMarathon>(
       `${MarathonService.BASE_URL}/${marathonId}/with-questions`
     );
-  }
-
-  static async findById(marathonId: string): Promise<LanguageMarathon> {
-    return this.findOne(marathonId);
   }
 
   // POST /marathon/classroom/:id - create

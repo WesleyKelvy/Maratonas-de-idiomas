@@ -6,7 +6,7 @@ interface TeacherRouteProps {
 }
 
 export const TeacherRoute: React.FC<TeacherRouteProps> = ({ children }) => (
-  <RoleBasedRoute allowedRoles={["teacher", "professor", "admin"]}>
+  <RoleBasedRoute allowedRoles={["Professor", "Admin"]}>
     {children}
   </RoleBasedRoute>
 );
@@ -16,7 +16,7 @@ interface StudentRouteProps {
 }
 
 export const StudentRoute: React.FC<StudentRouteProps> = ({ children }) => (
-  <RoleBasedRoute allowedRoles={["student"]}>{children}</RoleBasedRoute>
+  <RoleBasedRoute allowedRoles={["Student"]}>{children}</RoleBasedRoute>
 );
 
 interface CommonRouteProps {
@@ -24,7 +24,7 @@ interface CommonRouteProps {
 }
 
 export const CommonRoute: React.FC<CommonRouteProps> = ({ children }) => (
-  <RoleBasedRoute allowedRoles={["teacher", "professor", "student", "admin"]}>
+  <RoleBasedRoute allowedRoles={["Professor", "Student", "Admin"]}>
     {children}
   </RoleBasedRoute>
 );
