@@ -56,6 +56,18 @@ export interface Submission {
   AiFeedbacks?: AiFeedback[];
 }
 
+export interface SubmissionTable {
+  id: string;
+  user_id: string;
+  question_id: number;
+  marathon_id: string;
+  submitted_at: string;
+  corrected_by_ai: boolean;
+  score: number | null;
+  user?: { name: string };
+  marathon?: { title: string };
+}
+
 export interface DetailedSubmission {
   id: string;
   marathon_id: string;
@@ -142,8 +154,10 @@ export class SubmissionService {
   /**
    * Buscar todas as submissões de uma maratona específica
    */
-  static async findAllByMarathonId(marathonId: string): Promise<Submission[]> {
-    const response = await apiClient.get<Submission[]>(
+  static async findAllByMarathonId(
+    marathonId: string
+  ): Promise<SubmissionTable[]> {
+    const response = await apiClient.get<SubmissionTable[]>(
       `/submission/marathon/${marathonId}`
     );
     return response;

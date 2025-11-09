@@ -38,34 +38,9 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useMarathons } from "@/hooks/use-marathon";
 import { useClassrooms } from "@/hooks/use-classroom";
 import { useSubmissionsByMarathon } from "@/hooks/useSubmissions";
-import { Submission } from "@/services/submission.service";
+import { SubmissionTable } from "@/services/submission.service";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-
-interface StudentSubmission {
-  id: string;
-  studentId: string;
-  studentName: string;
-  studentEmail: string;
-  marathonId: string;
-  marathonName: string;
-  questionId: number;
-  questionTitle: string | null;
-  answer: string;
-  score: number | null;
-  maxScore: number;
-  submissionDate: Date | string;
-  aiEvaluation: string;
-  correctedByAi: boolean;
-  aiFeedbacks: AiFeedback[];
-}
-
-interface AiFeedback {
-  id: number;
-  explanation: string;
-  points_deducted: number;
-  category: string;
-}
 
 // Constants
 const MAX_SCORE = 100;
@@ -97,7 +72,7 @@ const TeacherSubmissions = () => {
     searchParams.get("search") || ""
   );
   const [marathonFilter, setMarathonFilter] = useState(
-    searchParams.get("marathon") || "all"
+    searchParams.get("marathon") || ""
   );
   const [studentFilter, setStudentFilter] = useState(
     searchParams.get("student") || "all"
@@ -115,8 +90,6 @@ const TeacherSubmissions = () => {
   // Fetch classrooms (assuming teacher role)
   const { data: classrooms, isLoading: loadingClassrooms } = useClassrooms();
 
-  // For now, we'll work with a single classroom approach
-  // In the future, we can implement a hook to get all marathons from all classrooms
   const firstClassroomId = classrooms?.[0]?.id;
   const { data: classroomMarathons = [], isLoading: loadingMarathons } =
     useMarathons(firstClassroomId || "");
@@ -127,7 +100,6 @@ const TeacherSubmissions = () => {
 
     return classroomMarathons.map((marathon) => ({
       ...marathon,
-      // Add classroom name for display
       classroomName:
         classrooms?.find((c) => c.id === marathon.classroom_id)?.name ||
         "Classroom desconhecida",
@@ -135,18 +107,17 @@ const TeacherSubmissions = () => {
   }, [classroomMarathons, classrooms]);
 
   // Get submissions for selected marathon
-  const shouldFetchSubmissions = marathonFilter !== FILTER_VALUES.ALL;
+  const shouldFetchSubmissions =
+    marathonFilter !== FILTER_VALUES.ALL && marathonFilter !== "";
   const { data: submissions = [], isLoading: loadingSubmissions } =
     useSubmissionsByMarathon(shouldFetchSubmissions ? marathonFilter : "");
-
-  // User data is now included in submissions from backend
 
   // Update URL when filters change
   useEffect(() => {
     const newParams = new URLSearchParams();
 
     if (searchTerm && searchTerm !== "") newParams.set("search", searchTerm);
-    if (marathonFilter && marathonFilter !== "all")
+    if (marathonFilter && marathonFilter !== "all" && marathonFilter !== "")
       newParams.set("marathon", marathonFilter);
     if (studentFilter && studentFilter !== "all")
       newParams.set("student", studentFilter);
@@ -167,7 +138,7 @@ const TeacherSubmissions = () => {
     setSearchParams,
   ]);
 
-  // Clean code: Extract utility functions
+  // Calculate AI evaluation based on score
   const calculateAiEvaluation = (score: number | null): string => {
     if (score === null || score === undefined) return EVALUATION_TYPES.PENDING;
     const percentage = (score / MAX_SCORE) * 100;
@@ -176,96 +147,69 @@ const TeacherSubmissions = () => {
     return EVALUATION_TYPES.NEGATIVE;
   };
 
-  const removeDuplicateSubmissions = (
-    submissions: Submission[]
-  ): Submission[] => {
-    return submissions.filter(
-      (submission, index, self) =>
-        index === self.findIndex((s) => s.id === submission.id)
+  const allSubmissions = useMemo(() => {
+    // Get unique question_ids and sort them
+    const uniqueQuestionIds = Array.from(
+      new Set(submissions.map((s) => s.question_id))
+    ).sort((a, b) => a - b);
+
+    // Create a map from real question_id to sequential number
+    const questionIdToSequential = new Map(
+      uniqueQuestionIds.map((id, index) => [id, index + 1])
     );
-  };
 
-  const transformSubmissionToStudentSubmission = (
-    submission: Submission,
-    allMarathons: any[]
-  ): StudentSubmission => {
-    const marathon = allMarathons.find((m) => m.id === submission.marathon_id);
-
-    return {
-      id: submission.id,
-      studentId: submission.user_id,
-      studentName: submission.user.name,
-      studentEmail: "", // Not available in current data
-      marathonId: submission.marathon_id,
-      marathonName: marathon?.title || "Maratona desconhecida",
-      questionId: submission.question_id,
-      questionTitle: `Questão ${submission.question_id}`,
-      answer: submission.answer,
-      score: submission.score,
-      maxScore: MAX_SCORE,
-      submissionDate: submission.submitted_at,
+    return submissions.map((submission) => ({
+      ...submission,
+      marathon_id: marathonFilter, // Add marathon_id from filter
       aiEvaluation: calculateAiEvaluation(submission.score),
-      correctedByAi: submission.corrected_by_ai,
-      aiFeedbacks:
-        submission.AiFeedbacks?.map((feedback) => ({
-          id: feedback.id,
-          explanation: feedback.explanation,
-          points_deducted: feedback.points_deducted,
-          category: feedback.category,
-        })) || [],
-    };
-  };
+      sequentialQuestionId:
+        questionIdToSequential.get(submission.question_id) || 1,
+      marathon: {
+        title:
+          allMarathons.find((m) => m.id === marathonFilter)?.title ||
+          "Maratona",
+      },
+    }));
+  }, [submissions, marathonFilter, allMarathons]);
 
-  // Transform data to match interface
-  const allSubmissions: StudentSubmission[] = useMemo(() => {
-    const uniqueSubmissions = removeDuplicateSubmissions(submissions);
-    return uniqueSubmissions.map((submission) =>
-      transformSubmissionToStudentSubmission(submission, allMarathons)
-    );
-  }, [submissions, allMarathons]);
-
-  // Clean code: Extract data transformation functions
-  const createMarathonOptions = (marathons: any[]) => {
-    return marathons.map((marathon) => ({
+  // Create marathon options for filter
+  const marathonOptions = useMemo(() => {
+    return allMarathons.map((marathon) => ({
       id: marathon.id,
       name: marathon.title,
     }));
-  };
+  }, [allMarathons]);
 
-  const createUniqueStudentsList = (submissions: StudentSubmission[]) => {
+  // Create unique students list from submissions
+  const students = useMemo(() => {
     const studentsMap = new Map<string, { id: string; name: string }>();
 
-    submissions.forEach((submission) => {
-      if (!studentsMap.has(submission.studentId)) {
-        studentsMap.set(submission.studentId, {
-          id: submission.studentId,
-          name: submission.studentName,
+    allSubmissions.forEach((submission) => {
+      if (!studentsMap.has(submission.user_id)) {
+        studentsMap.set(submission.user_id, {
+          id: submission.user_id,
+          name: submission.user?.name || "Estudante desconhecido",
         });
       }
     });
 
     return Array.from(studentsMap.values());
-  };
+  }, [allSubmissions]);
 
-  const marathonOptions = createMarathonOptions(allMarathons);
-  const students = useMemo(
-    () => createUniqueStudentsList(allSubmissions),
-    [allSubmissions]
-  );
-
-  // Clean code: Extract filter functions
+  // Filter functions
   const filterBySearch = (
-    submission: StudentSubmission,
+    submission: SubmissionTable & {
+      aiEvaluation: string;
+      marathon: { title: string };
+    },
     searchTerm: string
   ): boolean => {
     if (!searchTerm) return true;
 
     const searchLower = searchTerm.toLowerCase();
     const searchableFields = [
-      submission.studentName,
-      submission.marathonName,
-      submission.questionTitle || "",
-      submission.answer,
+      submission.user?.name || "",
+      submission.marathon?.title || "",
     ];
 
     return searchableFields.some((field) =>
@@ -274,12 +218,12 @@ const TeacherSubmissions = () => {
   };
 
   const filterByScore = (
-    submission: StudentSubmission,
+    submission: SubmissionTable,
     scoreFilter: string
   ): boolean => {
     if (scoreFilter === FILTER_VALUES.ALL || !submission.score) return true;
 
-    const percentage = (submission.score / submission.maxScore) * 100;
+    const percentage = (submission.score / MAX_SCORE) * 100;
 
     switch (scoreFilter) {
       case FILTER_VALUES.HIGH:
@@ -297,7 +241,12 @@ const TeacherSubmissions = () => {
   };
 
   const applyFilters = (
-    submissions: StudentSubmission[],
+    submissions: (SubmissionTable & {
+      aiEvaluation: string;
+      marathon: { title: string };
+      sequentialQuestionId: number;
+      marathon_id: string;
+    })[],
     filters: {
       search: string;
       marathon: string;
@@ -305,15 +254,16 @@ const TeacherSubmissions = () => {
       score: string;
       evaluation: string;
     }
-  ): StudentSubmission[] => {
+  ) => {
     return submissions.filter((submission) => {
       const matchesSearch = filterBySearch(submission, filters.search);
       const matchesMarathon =
         filters.marathon === FILTER_VALUES.ALL ||
-        submission.marathonId === filters.marathon;
+        filters.marathon === "" ||
+        submission.marathon_id === filters.marathon;
       const matchesStudent =
         filters.student === FILTER_VALUES.ALL ||
-        submission.studentId === filters.student;
+        submission.user_id === filters.student;
       const matchesEvaluation =
         filters.evaluation === FILTER_VALUES.ALL ||
         submission.aiEvaluation === filters.evaluation;
@@ -346,7 +296,7 @@ const TeacherSubmissions = () => {
     evaluationFilter,
   ]);
 
-  // Clean code: Extract styling functions
+  // Styling functions
   const getScoreColor = (score: number | null, maxScore: number): string => {
     if (score === null) return "text-gray-600";
 
@@ -368,35 +318,16 @@ const TeacherSubmissions = () => {
   };
 
   const handleViewDetails = (submissionId: string) => {
-    // Preserve current URL parameters for when user returns
     const currentUrl = `/submissions?${searchParams.toString()}`;
     navigate(`/submissions/${submissionId}`, {
       state: { returnUrl: currentUrl },
     });
   };
 
-  const handleExportSubmissions = () => {
-    // Mock export functionality
-    console.log("Exporting submissions...");
-  };
-
-  // const handleGenerateReport = async (marathonId: string) => {
-  //   setIsGeneratingReport(true);
-  //   try {
-  //     // Mock API call to create report
-  //     await new Promise((resolve) => setTimeout(resolve, 2000));
-  //     navigate(`/marathons/${marathonId}/report`);
-  //   } catch (error) {
-  //     console.error("Error generating report:", error);
-  //   } finally {
-  //     setIsGeneratingReport(false);
-  //   }
-  // };
-
-  // Clean code: Extract statistics calculation
-  const calculateStatistics = (submissions: StudentSubmission[]) => {
+  // Calculate statistics
+  const calculateStatistics = (submissions: SubmissionTable[]) => {
     const totalSubmissions = submissions.length;
-    const uniqueStudents = new Set(submissions.map((s) => s.studentId)).size;
+    const uniqueStudents = new Set(submissions.map((s) => s.user_id)).size;
 
     const submissionsWithScore = submissions.filter(
       (sub) => sub.score !== null
@@ -405,7 +336,7 @@ const TeacherSubmissions = () => {
       submissionsWithScore.length === 0
         ? 0
         : submissionsWithScore.reduce(
-            (acc, sub) => acc + sub.score! / sub.maxScore,
+            (acc, sub) => acc + sub.score! / MAX_SCORE,
             0
           ) / submissionsWithScore.length;
 
@@ -416,7 +347,6 @@ const TeacherSubmissions = () => {
     };
   };
 
-  // Statistics based on the currently selected marathon (filtered submissions)
   const statistics = useMemo(
     () => calculateStatistics(filteredSubmissions),
     [filteredSubmissions]
@@ -488,7 +418,6 @@ const TeacherSubmissions = () => {
                     <SelectValue placeholder="Selecione uma maratona" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todas as maratonas</SelectItem>
                     {marathonOptions.map((marathon, index) => (
                       <SelectItem
                         key={`marathon-${marathon.id}-${index}`}
@@ -531,20 +460,6 @@ const TeacherSubmissions = () => {
             Gerencie e analise todas as submissões dos estudantes
           </p>
         </div>
-        {/* <div className="flex gap-2"> */}
-        {/* <Button
-            onClick={() => handleGenerateReport("marathon1")}
-            variant="default"
-            disabled={isGeneratingReport}
-          >
-            <BarChart3 className="h-4 w-4 mr-2" />
-            {isGeneratingReport ? "Gerando..." : "Gerar Relatório"}
-          </Button> */}
-        {/* <Button onClick={handleExportSubmissions} variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            Exportar
-          </Button> */}
-        {/* </div> */}
       </div>
 
       {/* Statistics */}
@@ -558,11 +473,7 @@ const TeacherSubmissions = () => {
           </CardHeader>
           <CardContent className="p-3 pt-1">
             <div className="text-2xl font-bold">{totalSubmissions}</div>
-            <p className="text-xs text-muted-foreground">
-              {marathonFilter !== FILTER_VALUES.ALL
-                ? "Nesta maratona"
-                : "De todos os estudantes"}
-            </p>
+            <p className="text-xs text-muted-foreground">Nesta maratona</p>
           </CardContent>
         </Card>
 
@@ -576,9 +487,7 @@ const TeacherSubmissions = () => {
           <CardContent className="p-3 pt-1">
             <div className="text-2xl font-bold">{uniqueStudents}</div>
             <p className="text-xs text-muted-foreground">
-              {marathonFilter !== FILTER_VALUES.ALL
-                ? "Participantes desta maratona"
-                : "Fizeram pelo menos 1 submissão"}
+              Participantes desta maratona
             </p>
           </CardContent>
         </Card>
@@ -590,12 +499,10 @@ const TeacherSubmissions = () => {
           </CardHeader>
           <CardContent className="p-3 pt-1">
             <div className="text-2xl font-bold">
-              {(averageScore * 10).toFixed(2)}%
+              {(averageScore * 100).toFixed(2)}%
             </div>
             <p className="text-xs text-muted-foreground">
-              {marathonFilter !== FILTER_VALUES.ALL
-                ? "Média desta maratona"
-                : "Todas as submissões"}
+              Média desta maratona
             </p>
           </CardContent>
         </Card>
@@ -633,10 +540,9 @@ const TeacherSubmissions = () => {
               </div>
               <Select value={marathonFilter} onValueChange={setMarathonFilter}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Maratona" />
+                  <SelectValue placeholder="Selecione uma maratona" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todas as maratonas</SelectItem>
                   {marathonOptions.map((marathon, index) => (
                     <SelectItem
                       key={`marathon-filter-${marathon.id}-${index}`}
@@ -707,7 +613,6 @@ const TeacherSubmissions = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Estudante</TableHead>
-                  {/* <TableHead>Maratona</TableHead> */}
                   <TableHead>Questão</TableHead>
                   <TableHead>Pontuação</TableHead>
                   <TableHead>Avaliação da IA</TableHead>
@@ -721,26 +626,14 @@ const TeacherSubmissions = () => {
                     <TableCell>
                       <div>
                         <div className="font-medium">
-                          {submission.studentName}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {submission.studentEmail}
+                          {submission.user?.name || "Estudante desconhecido"}
                         </div>
                       </div>
                     </TableCell>
-                    {/* <TableCell className="font-medium">
-                      {submission.marathonName}
-                    </TableCell> */}
                     <TableCell>
                       <div>
                         <div className="font-medium">
-                          Q{submission.questionId}
-                        </div>
-                        <div
-                          className="text-sm text-muted-foreground truncate max-w-xs"
-                          title={submission.questionTitle}
-                        >
-                          {submission.questionTitle}
+                          Questão {submission.sequentialQuestionId}
                         </div>
                       </div>
                     </TableCell>
@@ -750,20 +643,16 @@ const TeacherSubmissions = () => {
                         <span
                           className={`font-bold ${getScoreColor(
                             submission.score,
-                            submission.maxScore
+                            MAX_SCORE
                           )}`}
                         >
                           {submission.score !== null
-                            ? `${submission.score}/${submission.maxScore}`
+                            ? `${submission.score}/${MAX_SCORE}`
                             : "Pendente"}
                         </span>
                         {submission.score !== null && (
                           <span className="text-xs text-muted-foreground">
-                            {(
-                              (submission.score / submission.maxScore) *
-                              100
-                            ).toFixed(0)}
-                            %
+                            {((submission.score / MAX_SCORE) * 100).toFixed(0)}%
                           </span>
                         )}
                       </div>
@@ -778,7 +667,7 @@ const TeacherSubmissions = () => {
                     <TableCell>
                       <div className="text-sm text-muted-foreground">
                         {format(
-                          new Date(submission.submissionDate),
+                          new Date(submission.submitted_at),
                           "dd/MM/yyyy 'às' HH:mm",
                           { locale: ptBR }
                         )}
@@ -808,7 +697,6 @@ const TeacherSubmissions = () => {
               </h3>
               <p className="text-muted-foreground">
                 {searchTerm ||
-                marathonFilter !== FILTER_VALUES.ALL ||
                 studentFilter !== FILTER_VALUES.ALL ||
                 scoreFilter !== FILTER_VALUES.ALL ||
                 evaluationFilter !== FILTER_VALUES.ALL
@@ -822,5 +710,4 @@ const TeacherSubmissions = () => {
     </div>
   );
 };
-
 export default TeacherSubmissions;

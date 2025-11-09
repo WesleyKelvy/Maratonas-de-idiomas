@@ -70,17 +70,19 @@ export class PrismaSubmissionRepository
     });
   }
 
-  async findAllByMarathonId(marathonId: string): Promise<Submission[]> {
+  async findAllByMarathonId(marathonId: string): Promise<any> {
     return this.prisma.submission.findMany({
-      where: { marathon_id: marathonId },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
+      where: { marathon_id: marathonId, corrected_by_ai: true },
+      select: {
+        id: true,
+        user_id: true,
+        question_id: true,
+        submitted_at: true,
+        corrected_by_ai: true,
+        score: true,
+        user: { select: { name: true } },
       },
+      orderBy: { question_id: 'asc' },
     });
   }
 
