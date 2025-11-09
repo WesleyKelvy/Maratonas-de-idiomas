@@ -16,6 +16,7 @@ import {
   ArrowLeft,
   Award,
   Calendar,
+  CircleAlert,
   Clock,
   FileX,
   Loader2,
@@ -51,7 +52,6 @@ const SubmissionDetails = () => {
     error,
   } = useSubmissionDetails(submissionId || "");
 
-  // Clean code: Extract utility functions
   const calculateAiEvaluation = (score: number | null): string => {
     if (score === null || score === undefined) return EVALUATION_TYPES.PENDING;
     const percentage = (score / MAX_SCORE) * 100;
@@ -125,7 +125,6 @@ const SubmissionDetails = () => {
 
   // Calculate derived data
   const aiEvaluation = calculateAiEvaluation(submission.score);
-  console.log(submission.score);
   const scorePercentage = submission.score
     ? (submission.score / MAX_SCORE) * 100
     : 0;
@@ -197,47 +196,62 @@ const SubmissionDetails = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {submission.AiFeedbacks.map((feedback, index) => (
-                  <Card
-                    key={feedback.id}
-                    className={`${
-                      feedback.points_deducted > 0
-                        ? "border-yellow-200"
-                        : "border-green-200"
-                    }`}
-                  >
-                    <CardHeader className="pb-3 pt-3">
-                      <div className="flex justify-between space-x-6 items-center">
-                        <div className="">
-                          <CardTitle className="text-base">
-                            {feedback.category}
-                          </CardTitle>
-                          <CardDescription className="w-full">
-                            {feedback.explanation}
-                          </CardDescription>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {feedback.points_deducted > 0 ? (
-                            <div className="flex items-center text-yellow-600">
-                              <AlertCircle className="h-4 w-4 mr-1" />
+                {submission.AiFeedbacks.length > 0 ? (
+                  submission.AiFeedbacks.map((feedback, index) => (
+                    <Card
+                      key={feedback.id}
+                      className={`${
+                        feedback.points_deducted < 0
+                          ? "border-yellow-400"
+                          : "border-green-200"
+                      }`}
+                    >
+                      <CardHeader className="pb-3 pt-3">
+                        <div className="flex justify-between space-x-6 items-center">
+                          <div className="">
+                            <CardTitle className="text-base">
+                              {feedback.category}
+                            </CardTitle>
+                            <CardDescription className="w-full">
+                              {feedback.explanation}
+                            </CardDescription>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <div
+                              className={`flex items-center ${
+                                feedback.points_deducted < 0
+                                  ? "text-red-500"
+                                  : "text-green-600"
+                              }`}
+                            >
+                              {feedback.points_deducted > 0 ? (
+                                <AlertCircle className="h-4 w-4 mr-1" />
+                              ) : (
+                                <CircleAlert className="h-4 w-4 mr-1" />
+                              )}
                               <span className="text-sm font-medium text-nowrap">
-                                -{feedback.points_deducted} ponto
-                                {feedback.points_deducted > 1 ? "s" : ""}
+                                {feedback.points_deducted > 0 ? "-" : ""}
+                                {Math.abs(feedback.points_deducted)} ponto
+                                {Math.abs(feedback.points_deducted) !== 1
+                                  ? "s"
+                                  : ""}
                               </span>
                             </div>
-                          ) : (
-                            <div className="flex items-center text-green-600">
-                              <Trophy className="h-4 w-4 mr-1" />
-                              <span className="text-sm font-medium">
-                                Perfeito!
-                              </span>
-                            </div>
-                          )}
+                          </div>
                         </div>
-                      </div>
-                    </CardHeader>
-                  </Card>
-                ))}
+                      </CardHeader>
+                    </Card>
+                  ))
+                ) : (
+                  <div className="flex items-center text-green-600 p-3 border border-green-300 rounded-lg bg-green-50">
+                    <Trophy className="h-4 w-4 mr-2" />
+                    <span className="text-sm font-semibold">
+                      Perfeito! Não foram encontradas falhas ou deduções de
+                      pontos.
+                    </span>
+                  </div>
+                )}
               </div>
 
               <Separator className="my-6" />
@@ -327,12 +341,6 @@ const SubmissionDetails = () => {
                   <Badge className={getEvaluationColor(aiEvaluation)}>
                     {aiEvaluation}
                   </Badge>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Corrigida por IA:</span>
-                  <span className="text-sm">
-                    {submission.corrected_by_ai ? "Sim" : "Não"}
-                  </span>
                 </div>
               </div>
             </CardContent>

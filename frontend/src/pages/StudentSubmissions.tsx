@@ -538,8 +538,8 @@ const StudentSubmissions = () => {
                                 }
                                 className="text-xs"
                               >
-                                {feedback.points_deducted < 0
-                                  ? `${feedback.points_deducted} pts`
+                                {feedback.points_deducted > 0
+                                  ? `${feedback.points_deducted} pontos`
                                   : "Perfeito"}
                               </Badge>
                             </div>

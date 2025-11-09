@@ -182,7 +182,7 @@ const Ranking = () => {
               Nenhum Resultado Encontrado
             </h3>
             <p className="text-gray-600">
-              Ainda não há participantes nesta maratona ou o leaderboard não foi
+              Ainda não há participantes nesta maratona ou o Ranking não foi
               gerado.
             </p>
           </CardContent>
