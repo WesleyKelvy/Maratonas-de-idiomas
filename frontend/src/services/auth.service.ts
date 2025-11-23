@@ -39,6 +39,7 @@ export interface User {
   occupation?: string;
   birthdate?: string;
   verified: boolean;
+  accountVerified: boolean;
 }
 
 export interface RefreshTokenResponse {

@@ -14,6 +14,7 @@ import React, { createContext, useContext } from "react";
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
+  isAccountVerified: boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (userData: RegisterData) => Promise<void>;
@@ -58,6 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const resendCodeMutation = useResendCode();
 
   const isAuthenticated = !!user;
+  const isAccountVerified = !!user?.accountVerified;
 
   const login = async (email: string, password: string) => {
     await loginMutation.mutateAsync({ email, password });
@@ -99,6 +101,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const value = {
     user: user || null,
     isAuthenticated,
+    isAccountVerified,
     loading: isLoading,
     login,
     register,

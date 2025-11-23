@@ -131,10 +131,10 @@ export const useVerifyAccount = () => {
   return useMutation({
     mutationFn: ({ confirmationCode }: VerifyAccountRequest) =>
       AuthService.verifyAccount({ confirmationCode }),
-    // onSuccess: async () => {
-    //   // Após verificação, buscar dados atualizados do usuário
-    //   await queryClient.invalidateQueries({ queryKey: authKeys.user() });
-    // },
+    onSuccess: async () => {
+      // Após verificação, buscar dados atualizados do usuário
+      await queryClient.invalidateQueries({ queryKey: authKeys.user() });
+    },
   });
 };
 

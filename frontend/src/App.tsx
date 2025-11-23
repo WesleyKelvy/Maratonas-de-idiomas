@@ -63,7 +63,31 @@ const queryClient = new QueryClient({
 });
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, loading, user } = useAuth();
+  const { isAuthenticated, loading, isAccountVerified, user } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="h-16 w-16 animate-spin rounded-full border-4 border-solid border-primary border-t-transparent"></div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+
+  // Se o usuário não verificou a conta, redirecionar para verificação
+  // console.log("isAccountVerified", isAccountVerified);
+  if (!isAccountVerified) {
+    return <Navigate to="/verify-account" />;
+  }
+
+  return <>{children}</>;
+};
+
+const VerificationRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
     return (
@@ -124,13 +148,13 @@ const AppRoutes = () => (
     <Route
       path="/verify-account"
       element={
-        <PublicRoute>
+        <VerificationRoute>
           <VerifyAccount />
-        </PublicRoute>
+        </VerificationRoute>
       }
     />
     <Route
-      path="/reset-password"
+      path="/reset-password" 
       element={
         <PublicRoute>
           <ResetPassword />

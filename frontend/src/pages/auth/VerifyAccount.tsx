@@ -24,12 +24,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 
 const VerifyAccount = () => {
   const [resending, setResending] = useState(false);
-  const { verifyAccount, resendVerificationCode } = useAuth();
+  const { verifyAccount, resendVerificationCode, logout } = useAuth();
   const navigate = useNavigate();
 
   const form = useForm<VerifyAccountFormData>({
@@ -72,6 +72,18 @@ const VerifyAccount = () => {
       });
     } finally {
       setResending(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao fazer logout.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -138,12 +150,12 @@ const VerifyAccount = () => {
             </button>
 
             <div>
-              <Link
-                to="/login"
+              <button
+                onClick={handleLogout}
                 className="text-sm text-gray-600 hover:text-gray-800"
               >
-                Voltar ao login
-              </Link>
+                Sair e voltar ao login
+              </button>
             </div>
           </div>
         </CardContent>
