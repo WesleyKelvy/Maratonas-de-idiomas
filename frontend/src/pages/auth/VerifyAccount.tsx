@@ -1,8 +1,4 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -10,35 +6,42 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useAuth } from "../../contexts/AuthContext";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import {
   verifyAccountSchema,
   type VerifyAccountFormData,
 } from "@/schemas/authSchemas";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 
 const VerifyAccount = () => {
   const [resending, setResending] = useState(false);
-  const { verifyAccount } = useAuth();
+  const { verifyAccount, resendVerificationCode } = useAuth();
   const navigate = useNavigate();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-    watch,
-  } = useForm<VerifyAccountFormData>({
+  const form = useForm<VerifyAccountFormData>({
     resolver: zodResolver(verifyAccountSchema),
+    defaultValues: {
+      confirmationCode: "",
+    },
   });
-
-  const watchedCode = watch("code");
 
   const onSubmit = async (data: VerifyAccountFormData) => {
     try {
-      await verifyAccount(data.code);
+      await verifyAccount(data.confirmationCode);
       toast({
         title: "Conta verificada!",
         description: "Sua conta foi ativada com sucesso.",
@@ -55,13 +58,21 @@ const VerifyAccount = () => {
 
   const handleResendCode = async () => {
     setResending(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    toast({
-      title: "Código reenviado",
-      description: "Um novo código foi enviado para seu email.",
-    });
-    setResending(false);
+    try {
+      await resendVerificationCode();
+      toast({
+        title: "Código reenviado",
+        description: "Um novo código foi enviado para seu email.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível reenviar o código. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setResending(false);
+    }
   };
 
   return (
@@ -77,42 +88,45 @@ const VerifyAccount = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="code">Código de 6 dígitos</Label>
-              <Input
-                id="code"
-                placeholder="123456"
-                maxLength={6}
-                {...register("code", {
-                  onChange: (e) => {
-                    e.target.value = e.target.value.replace(/\D/g, "");
-                  },
-                })}
-                className="text-center text-lg tracking-widest"
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="confirmationCode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Código de 9 dígitos</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="Abc578"
+                        onChange={(e) => {
+                          field.onChange(e);
+                        }}
+                        className="text-center text-2xl tracking-widest"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              {errors.code && (
-                <p className="text-sm text-red-600">{errors.code.message}</p>
-              )}
-            </div>
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={
-                isSubmitting || !watchedCode || watchedCode.length !== 6
-              }
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Verificando...
-                </>
-              ) : (
-                "Verificar e Ativar Conta"
-              )}
-            </Button>
-          </form>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={form.formState.isSubmitting}
+              >
+                {form.formState.isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Verificando...
+                  </>
+                ) : (
+                  "Verificar e Ativar Conta"
+                )}
+              </Button>
+            </form>
+          </Form>
 
           <div className="mt-4 text-center space-y-2">
             <button

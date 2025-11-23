@@ -46,7 +46,7 @@ export interface RefreshTokenResponse {
 }
 
 export interface VerifyAccountRequest {
-  code: string;
+  confirmationCode: string;
 }
 
 export interface VerifyAccountResponse {
@@ -62,12 +62,15 @@ export interface RequestPasswordResetResponse {
 }
 
 export interface ResetPasswordRequest {
-  email: string;
-  code: string;
+  token: string;
   newPassword: string;
 }
 
 export interface ResetPasswordResponse {
+  message: string;
+}
+
+export interface ResendCodeResponse {
   message: string;
 }
 
@@ -82,7 +85,7 @@ export class AuthService {
       name: data.name,
       email: data.email,
       password: data.password,
-      birthdate: data.birthDate, // Backend espera 'birthdate' não 'birthDate'
+      birthdate: data.birthDate,
       city: data.city,
       occupation: data.occupation,
       role: data.role === "teacher" ? "Professor" : "Student", // Mapear roles
@@ -120,10 +123,7 @@ export class AuthService {
   static async verifyAccount(
     data: VerifyAccountRequest
   ): Promise<VerifyAccountResponse> {
-    return apiClient.post<VerifyAccountResponse>(
-      "/user/confirm-account",
-      data.code
-    );
+    return apiClient.post<VerifyAccountResponse>("/user/confirm-account", data);
   }
 
   static async requestPasswordReset(
@@ -140,8 +140,12 @@ export class AuthService {
   ): Promise<ResetPasswordResponse> {
     // O backend espera token como query param e newPassword no body
     return apiClient.post<ResetPasswordResponse>(
-      `/user/reset-password?token=${data.code}`,
+      `/user/reset-password?token=${data.token}`,
       { newPassword: data.newPassword }
     );
+  }
+
+  static async resendVerificationCode(): Promise<ResendCodeResponse> {
+    return apiClient.post<ResendCodeResponse>("/user/resend-code", {});
   }
 }

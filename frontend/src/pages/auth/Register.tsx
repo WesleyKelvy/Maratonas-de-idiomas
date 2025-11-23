@@ -1,9 +1,4 @@
-import React from "react";
-import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Card,
   CardContent,
@@ -11,6 +6,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { toast } from "@/hooks/use-toast";
+import { registerSchema, type RegisterFormData } from "@/schemas/authSchemas";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2 } from "lucide-react";
+import { Controller, useForm } from "react-hook-form";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 
 // Interface for the register data expected by the API
@@ -23,11 +27,6 @@ interface RegisterData {
   occupation: string;
   role: "student" | "teacher";
 }
-import { toast } from "@/hooks/use-toast";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { registerSchema, type RegisterFormData } from "@/schemas/authSchemas";
-import { Loader2 } from "lucide-react";
 
 const Register = () => {
   const { register: registerUser } = useAuth();
@@ -47,7 +46,6 @@ const Register = () => {
 
   const onSubmit = async (data: RegisterFormData) => {
     try {
-      // Removing confirmPassword from data as it's not needed by the API
       const { confirmPassword, ...registerData } = data;
 
       // Transform data to match the expected format
@@ -66,7 +64,7 @@ const Register = () => {
         title: "Conta criada com sucesso!",
         description: "Verifique seu email para ativar sua conta.",
       });
-      navigate("/auth/verify-account");
+      navigate("/verify-account");
     } catch (error: any) {
       toast({
         title: "Erro ao criar conta",

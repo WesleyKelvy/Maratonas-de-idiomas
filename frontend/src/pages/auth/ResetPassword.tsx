@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,7 +21,11 @@ import {
 import { Loader2 } from "lucide-react";
 
 const ResetPassword = () => {
-  const [step, setStep] = useState<"request" | "reset">("request");
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get("token");
+  const [step, setStep] = useState<"request" | "reset">(
+    token ? "reset" : "request"
+  );
   const [email, setEmail] = useState("");
   const { requestPasswordReset, resetPassword } = useAuth();
   const navigate = useNavigate();
@@ -42,9 +46,9 @@ const ResetPassword = () => {
       await requestPasswordReset(email);
       toast({
         title: "Código enviado!",
-        description: "Verifique seu email para o código de recuperação.",
+        description: "Verifique seu email para acessar o link de recuperação.",
       });
-      setStep("reset");
+      navigate("/login");
     } catch (error) {
       toast({
         title: "Erro",
@@ -55,8 +59,17 @@ const ResetPassword = () => {
   };
 
   const onSubmit = async (data: ResetPasswordFormData) => {
+    if (!token) {
+      toast({
+        title: "Erro",
+        description: "Token não encontrado. Solicite um novo reset de senha.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      await resetPassword(email, data.code, data.newPassword);
+      await resetPassword(token, data.newPassword);
       toast({
         title: "Senha redefinida!",
         description: "Sua senha foi alterada com sucesso.",
@@ -65,7 +78,7 @@ const ResetPassword = () => {
     } catch (error) {
       toast({
         title: "Erro",
-        description: "Código inválido ou expirado.",
+        description: "Token inválido ou expirado.",
         variant: "destructive",
       });
     }
@@ -80,8 +93,8 @@ const ResetPassword = () => {
           </CardTitle>
           <CardDescription>
             {step === "request"
-              ? "Digite seu email para receber o código de recuperação"
-              : "Digite o código recebido e sua nova senha"}
+              ? "Digite seu email para receber o link de recuperação"
+              : "Digite sua nova senha"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -105,18 +118,6 @@ const ResetPassword = () => {
             </form>
           ) : (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="code">Código recebido</Label>
-                <Input
-                  id="code"
-                  placeholder="Digite o código"
-                  {...register("code")}
-                />
-                {errors.code && (
-                  <p className="text-sm text-red-600">{errors.code.message}</p>
-                )}
-              </div>
-
               <div className="space-y-2">
                 <Label htmlFor="newPassword">Nova senha</Label>
                 <Input

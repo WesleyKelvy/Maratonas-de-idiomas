@@ -68,14 +68,9 @@ export const requestPasswordResetSchema = z.object({
     .email("Email deve ter um formato válido"),
 });
 
-// Schema para redefinir senha
+// Schema para redefinir senha (com token da URL)
 export const resetPasswordSchema = z
   .object({
-    code: z
-      .string()
-      .min(1, "Código é obrigatório")
-      .length(6, "Código deve ter exatamente 6 caracteres")
-      .regex(/^\d+$/, "Código deve conter apenas números"),
     newPassword: z
       .string()
       .min(1, "Nova senha é obrigatória")
@@ -92,11 +87,9 @@ export const resetPasswordSchema = z
 
 // Schema para verificação de conta
 export const verifyAccountSchema = z.object({
-  code: z
+  confirmationCode: z
     .string()
-    .min(1, "Código é obrigatório")
-    .length(6, "Código deve ter exatamente 6 caracteres")
-    .regex(/^\d+$/, "Código deve conter apenas números"),
+    .length(9, "Código deve ter exatamente 9 caracteres"),
 });
 
 // Tipos TypeScript derivados dos schemas

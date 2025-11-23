@@ -129,11 +129,12 @@ export const useVerifyAccount = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: VerifyAccountRequest) => AuthService.verifyAccount(data),
-    onSuccess: async () => {
-      // Após verificação, buscar dados atualizados do usuário
-      await queryClient.invalidateQueries({ queryKey: authKeys.user() });
-    },
+    mutationFn: ({ confirmationCode }: VerifyAccountRequest) =>
+      AuthService.verifyAccount({ confirmationCode }),
+    // onSuccess: async () => {
+    //   // Após verificação, buscar dados atualizados do usuário
+    //   await queryClient.invalidateQueries({ queryKey: authKeys.user() });
+    // },
   });
 };
 
@@ -162,5 +163,12 @@ export const useRefreshToken = () => {
       // Após refresh, invalidar dados do usuário para buscar novamente
       await queryClient.invalidateQueries({ queryKey: authKeys.user() });
     },
+  });
+};
+
+// Hook para reenviar código de verificação
+export const useResendCode = () => {
+  return useMutation({
+    mutationFn: () => AuthService.resendVerificationCode(),
   });
 };

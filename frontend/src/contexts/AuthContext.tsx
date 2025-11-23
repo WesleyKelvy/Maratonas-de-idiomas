@@ -1,14 +1,15 @@
-import React, { createContext, useContext } from "react";
 import {
   useCurrentUser,
   useLogin,
-  useRegister,
   useLogout,
-  useVerifyAccount,
-  useResetPassword,
+  useRegister,
   useRequestPasswordReset,
+  useResetPassword,
+  useResendCode,
+  useVerifyAccount,
 } from "@/hooks/use-auth";
 import { User } from "@/services/auth.service";
+import React, { createContext, useContext } from "react";
 
 interface AuthContextType {
   user: User | null;
@@ -18,12 +19,9 @@ interface AuthContextType {
   register: (userData: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
   verifyAccount: (code: string) => Promise<void>;
-  resetPassword: (
-    email: string,
-    code: string,
-    newPassword: string
-  ) => Promise<void>;
+  resetPassword: (token: string, newPassword: string) => Promise<void>;
   requestPasswordReset: (email: string) => Promise<void>;
+  resendVerificationCode: () => Promise<void>;
 }
 
 interface RegisterData {
@@ -57,10 +55,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const verifyAccountMutation = useVerifyAccount();
   const resetPasswordMutation = useResetPassword();
   const requestPasswordResetMutation = useRequestPasswordReset();
+  const resendCodeMutation = useResendCode();
 
-  // Log para debugging
-
-  // Considerar autenticado se o usuário existe (remover verificação de verified por enquanto)
   const isAuthenticated = !!user;
 
   const login = async (email: string, password: string) => {
@@ -84,20 +80,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     await logoutMutation.mutateAsync();
   };
 
-  const verifyAccount = async (code: string) => {
-    await verifyAccountMutation.mutateAsync({ code });
+  const verifyAccount = async (confirmationCode: string) => {
+    await verifyAccountMutation.mutateAsync({ confirmationCode });
   };
 
-  const resetPassword = async (
-    email: string,
-    code: string,
-    newPassword: string
-  ) => {
-    await resetPasswordMutation.mutateAsync({ email, code, newPassword });
+  const resetPassword = async (token: string, newPassword: string) => {
+    await resetPasswordMutation.mutateAsync({ token, newPassword });
   };
 
   const requestPasswordReset = async (email: string) => {
     await requestPasswordResetMutation.mutateAsync({ email });
+  };
+
+  const resendVerificationCode = async () => {
+    await resendCodeMutation.mutateAsync();
   };
 
   const value = {
@@ -110,6 +106,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     verifyAccount,
     resetPassword,
     requestPasswordReset,
+    resendVerificationCode,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
