@@ -8,6 +8,7 @@ export type SanitedUser = {
   email: string;
   occupation: string;
   role: string;
+  accountVerified: boolean;
 };
 
 export const sanitazeUser = (user: User): SanitedUser => {
@@ -19,5 +20,6 @@ export const sanitazeUser = (user: User): SanitedUser => {
     occupation: user.occupation,
     birthdate: user.birthdate,
     role: user.role,
+    accountVerified: user.accountVerified,
   };
 };

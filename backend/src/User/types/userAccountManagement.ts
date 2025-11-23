@@ -4,5 +4,5 @@ export type userAccountManagement = {
   confirmationCode?: string;
   resetTokenExpiration?: Date;
   resetRequestedAt?: Date;
-  newPassword?: string;
+  passwordHash?: string;
 };

@@ -8,4 +8,5 @@ export interface UserPayload {
   iat?: number;
   exp?: number;
   role: Role;
+  accountVerified: boolean;
 }

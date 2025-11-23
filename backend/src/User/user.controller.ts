@@ -5,10 +5,13 @@ import {
   Get,
   HttpCode,
   Inject,
+  NotFoundException,
   Patch,
   Post,
   Query,
+  Res,
 } from '@nestjs/common';
+import { Response } from 'express';
 import {
   AbstractUserService,
   USER_SERVICE_TOKEN,
@@ -30,20 +33,41 @@ export class UserController {
   @IsPublic()
   @HttpCode(201)
   @Post()
-  async create(@Body() createUserDto: CreateUserDto) {
-    const data = await this.userService.create(createUserDto);
+  async create(
+    @Body() createUserDto: CreateUserDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const accessToken = await this.userService.create(createUserDto);
 
+    res.cookie('access_token', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV !== 'development', // HTTPS for prod.
+      sameSite: 'strict',
+      maxAge: 1 * 24 * 60 * 60 * 1000,
+      path: '/',
+    });
     return {
-      data: data,
-      message: MESSAGES.USER_CREATED,
+      message: 'Login successful',
     };
   }
 
-  @IsPublic()
+  @HttpCode(201)
+  @Post('resend-code')
+  async resendCode(@CurrentUser('email') email: string) {
+    await this.userService.resendVerifingCode(email);
+
+    return {
+      message: 'Verification code resent successfully',
+    };
+  }
+
   @HttpCode(200)
   @Post('confirm-account')
-  async confirmAccount(@Body() { confirmationCode }: UpdateUserDto) {
-    await this.userService.confirmAccount(confirmationCode);
+  async confirmAccount(
+    @CurrentUser('email') email: string,
+    @Body() { confirmationCode }: UpdateUserDto,
+  ) {
+    await this.userService.confirmAccount(email, confirmationCode);
 
     return {
       message: MESSAGES.ACCOUNT_CONFIRMED_SUCCESSFULLY,
@@ -86,6 +110,10 @@ export class UserController {
   @IsPublic()
   @Post('send-email-password-reset')
   async requestPasswordReset(@Body() { email }: UpdateUserDto) {
+    const user = await this.userService.findByEmail(email);
+
+    if (!user) throw new NotFoundException(`No found user for email: ${email}`);
+
     const url = await this.userService.sendResetPasswordByEmail(email);
     return { url, message: 'Password reset email sent.' };
   }

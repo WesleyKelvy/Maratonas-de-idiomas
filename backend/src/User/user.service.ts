@@ -10,6 +10,8 @@ import {
 import { User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
+import { AuthService } from 'src/auth/auth.service';
+import { UserFromJwt } from 'src/auth/models/UserFromJwt';
 import {
   AbstractUserRepository,
   USER_REPOSITORY_TOKEN,
@@ -24,12 +26,12 @@ import {
 } from 'src/Stats/abstract-services/abstract-student-stats.service';
 import { AbstractUserService } from 'src/User/abstract-services/abstract-user.service';
 import { CreateUserDto } from 'src/User/dto/create-user.dto';
+import { UserBasicInfoDto } from 'src/User/dto/get-users.dto';
 import { generateAlphanumericCode } from 'src/User/helper/generateAlphanumericCode';
 import { sanitazeUser, SanitedUser } from 'utils/sanitazeUser';
 import { EmailService } from '../Mailer/emailService.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ERROR_MESSAGES } from './error/user-service.error';
-import { UserBasicInfoDto } from 'src/User/dto/get-users.dto';
 
 @Injectable()
 export class UserService implements AbstractUserService {
@@ -41,46 +43,82 @@ export class UserService implements AbstractUserService {
     @Inject(STUDENT_STATS_SERVICE_TOKEN)
     private readonly studentStatsService: AbstractStudentStatsService,
     private readonly emailService: EmailService,
+    private readonly authService: AuthService,
   ) {}
 
-  async create(createUserDto: CreateUserDto): Promise<SanitedUser> {
+  async create(createUserDto: CreateUserDto): Promise<string> {
+    // get user data
     const user = await this.userRepository.findByEmail(createUserDto.email);
 
     if (user) {
       throw new ConflictException('Email already in use.');
     }
 
+    // separate passard from dto
+    const { password, ...restOfUserData } = createUserDto;
+
+    // build user data
     const data = await this.userRepository.create({
-      ...createUserDto,
+      ...restOfUserData,
       confirmationCode: generateAlphanumericCode(9),
-      passwordHash: await bcrypt.hash(createUserDto.password, 10),
+      passwordHash: await bcrypt.hash(password, 10),
     });
 
+    // create stats
     if (createUserDto.role === 'Professor') {
       await this.professorStatsService.create(data.id);
     } else {
       await this.studentStatsService.create(data.id);
     }
 
+    // send email
     await this.emailService.sendAccountCreatedEmail({
       email: data.email,
       name: data.name,
+      code: data.confirmationCode,
     });
 
-    return sanitazeUser(data);
+    // Building the Jwt payload and send
+    const loginData: UserFromJwt = {
+      email: data.name,
+      id: data.id,
+      name: data.name,
+      role: data.role,
+      accountVerified: data.accountVerified,
+    };
+
+    const { accessToken } = this.authService.login(loginData);
+
+    return accessToken;
   }
 
-  async confirmAccount(code: string): Promise<void> {
-    const { id, confirmationCode } = await this.userRepository.findByCode(code);
+  async confirmAccount(userEmail: string, code: string): Promise<string> {
+    // get user data
+    const { id, name, confirmationCode, email, role } =
+      await this.userRepository.findByEmail(userEmail);
 
     if (!confirmationCode || code !== confirmationCode) {
       throw new BadRequestException(ERROR_MESSAGES.INVALID_CODE);
     }
 
+    // update user account
     await this.userRepository.manageUserAccount(id, {
       accountVerified: true,
       confirmationCode: null,
     });
+
+    // Building the Jwt payload and send
+    const loginData: UserFromJwt = {
+      email,
+      id,
+      name,
+      role,
+      accountVerified: true,
+    };
+
+    const { accessToken } = this.authService.login(loginData);
+
+    return accessToken;
   }
 
   async findByEmail(email: string): Promise<SanitedUser> {
@@ -129,6 +167,8 @@ export class UserService implements AbstractUserService {
     return sanitazeUser(updatedUser);
   }
 
+  // remove method does not delete the user,
+  // just change the accountDeactiva to true
   async remove(id: string): Promise<void> {
     const existingUser = await this.findById(id);
     if (!existingUser) {
@@ -144,7 +184,7 @@ export class UserService implements AbstractUserService {
     await this.userRepository.remove(id);
   }
 
-  async sendResetPasswordByEmail(email: string): Promise<string> {
+  async sendResetPasswordByEmail(email: string): Promise<void> {
     const user = await this.userRepository.findByEmail(email);
 
     if (!user) throw new NotFoundException(ERROR_MESSAGES.USER_NOT_FOUND);
@@ -174,14 +214,13 @@ export class UserService implements AbstractUserService {
       resetRequestedAt: new Date(),
     });
 
-    const resetUrl = `${process.env.FRONTEND_URL}/user/reset-password?token=${resetToken}`;
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
 
     // Send the email
     await this.emailService.sendResetPasswordEmail(
       { email: user.email, name: user.name },
       resetUrl,
     );
-    return resetUrl;
   }
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
@@ -193,7 +232,7 @@ export class UserService implements AbstractUserService {
       throw new BadRequestException('Token expired');
 
     await this.userRepository.manageUserAccount(user.id, {
-      newPassword: await bcrypt.hash(newPassword, 10),
+      passwordHash: await bcrypt.hash(newPassword, 10),
       resetToken: null,
       resetTokenExpiration: null,
       resetRequestedAt: null,
@@ -209,5 +248,23 @@ export class UserService implements AbstractUserService {
     }
 
     return await this.userRepository.findManyByIds(userIds);
+  }
+
+  async resendVerifingCode(email: string): Promise<void> {
+    const user = await this.userRepository.findByEmail(email);
+
+    if (!user) throw new NotFoundException(ERROR_MESSAGES.USER_NOT_FOUND);
+
+    const code = generateAlphanumericCode(9);
+
+    await this.userRepository.manageUserAccount(user.id, {
+      confirmationCode: code,
+    });
+
+    await this.emailService.resendVerifingCodeTemplate({
+      email: user.email,
+      name: user.name,
+      code,
+    });
   }
 }

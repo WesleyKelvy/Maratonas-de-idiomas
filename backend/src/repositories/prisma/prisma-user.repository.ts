@@ -68,15 +68,6 @@ export class PrismaAbstractUserRepository implements AbstractUserRepository {
     await this.prisma.user.update({
       where: { id },
       data: data,
-      omit: {
-        passwordHash: true,
-        accountDeactivated: true,
-        accountVerified: true,
-        confirmationCode: true,
-        resetRequestedAt: true,
-        resetToken: true,
-        resetTokenExpiration: true,
-      },
     });
   }
 

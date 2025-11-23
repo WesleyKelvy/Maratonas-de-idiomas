@@ -30,9 +30,9 @@ export class AuthService {
       name: user.name,
       sub: user.id,
       role: user.role,
+      accountVerified: user.accountVerified,
     };
 
-    // Create a short-lived access token (e.g., 15 minutes)
     const accessToken = this.jwtService.sign(payload, {
       expiresIn: '7d',
       secret: process.env.JWT_SECRET,

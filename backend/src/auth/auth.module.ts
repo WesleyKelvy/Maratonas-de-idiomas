@@ -1,4 +1,9 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import {
+  forwardRef,
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+} from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { WsAuthService } from 'src/auth/ws-auth.service';
@@ -11,7 +16,7 @@ import { LocalStrategy } from './strategies/local.strategy';
 
 @Module({
   imports: [
-    UserModule,
+    forwardRef(() => UserModule),
     PassportModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET,
@@ -20,7 +25,7 @@ import { LocalStrategy } from './strategies/local.strategy';
   ],
   controllers: [AuthController],
   providers: [AuthService, LocalStrategy, JwtStrategy, WsAuthService],
-  exports: [WsAuthService],
+  exports: [WsAuthService, AuthService],
 })
 export class AuthModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

@@ -5,7 +5,7 @@ import {
 } from '@prisma/client';
 
 export class User {
-  id: string; // Changed to string to match uuid()
+  id: string;
   name: string;
   email: string;
   passwordHash: string;
@@ -14,6 +14,7 @@ export class User {
   occupation: string;
   role: Role;
   accountDeactivated: boolean;
+  accountVerified: boolean;
 
   resetToken?: string;
   resetTokenExpiration?: Date;

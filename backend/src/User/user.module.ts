@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
+import { AuthModule } from 'src/auth/auth.module';
 import { USER_REPOSITORY_TOKEN } from 'src/repositories/abstract/user.repository';
 import { PrismaAbstractUserRepository } from 'src/repositories/prisma/prisma-user.repository';
 import { StatsModule } from 'src/Stats/stats.module';
@@ -8,7 +9,7 @@ import { UserController } from './user.controller';
 import { UserService } from './user.service';
 
 @Module({
-  imports: [MailerModule, StatsModule],
+  imports: [MailerModule, StatsModule, forwardRef(() => AuthModule)],
   controllers: [UserController],
   providers: [
     { provide: USER_SERVICE_TOKEN, useClass: UserService },

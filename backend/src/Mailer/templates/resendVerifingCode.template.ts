@@ -1,6 +1,7 @@
-export const accountCreationTemplate = (
+export const resendVerifingCodeTemplate = (
   userName: string,
   code: string,
+  appName: string,
 ): string => `
 <html>
 <head>
@@ -19,28 +20,26 @@ export const accountCreationTemplate = (
       padding: 20px;
       border-radius: 8px;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      text-align: center; /* ADICIONADO: Centraliza todo o texto dentro do container */
     }
     .header {
+      text-align: center;
       margin-bottom: 20px;
-      /* text-align: center; -> Removido pois o container já centraliza */
     }
     .footer {
       margin-top: 20px;
       font-size: 12px;
+      text-align: center;
       color: #999999;
-      /* text-align: center; -> Removido pois o container já centraliza */
     }
     #code {
-      margin: 20px 0;
-      font-size: 24px;      /* Aumenta o tamanho do código */
-      font-weight: bold;    /* Deixa o código em negrito */
-      letter-spacing: 5px;  /* Espaçamento entre os números para facilitar leitura */
-      color: #007bff;       /* Cor de destaque */
+      margin: auto
     }
     .button {
       display: inline-block;
       margin-top: 20px;
+      display: block;
+      width: fit-content;
+      margin: 0 auto;
       padding: 10px 20px;
       font-size: 16px;
       color: #ffffff;
@@ -56,19 +55,12 @@ export const accountCreationTemplate = (
 <body>
   <div class="container">
     <div class="header">
-      <h2>Bem-vindo à nossa plataforma!</h2>
+      <h2>${appName}</h2>
     </div>
-    <p>Olá <strong>${userName}</strong>,</p>
-    <p>Estamos muito felizes em recebê-lo(a) em nossa plataforma! Sua conta foi criada com sucesso, e agora você pode começar a explorar todos os recursos e benefícios que oferecemos.</p>
-    
-    <p>Para começar, digite o código abaixo na página de verificação:</p>
-    
+    <p>Olá ${userName},</p>
+    <p>Seu código é:</p>
     <p id="code">${code}</p>
-    
-    <a href="http://localhost:8080/verify-account" class="button">Verificar minha conta</a>
-    
-    <p style="margin-top: 30px;">Se você tiver alguma dúvida, não hesite em entrar em contato com nossa equipe de suporte.</p>
-    
+    <p>Se você tiver alguma dúvida ou precisar de ajuda, não hesite em entrar em contato com nossa equipe de suporte. Estamos aqui para ajudar!</p>
     <div class="footer">
       <p>Obrigado por se juntar a nós!</p>
       <p>Se precisar de ajuda, entre em contato com nossa <a href="https://your-service-url.com/support">equipe de suporte</a>.</p>

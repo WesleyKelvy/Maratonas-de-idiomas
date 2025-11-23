@@ -4,8 +4,8 @@ import { UpdateUserDto } from 'src/User/dto/update-user.dto';
 import { SanitedUser } from 'utils/sanitazeUser';
 
 export abstract class AbstractUserService {
-  abstract create(createUserDto: CreateUserDto): Promise<SanitedUser>;
-  abstract confirmAccount(code: string): Promise<void>;
+  abstract create(createUserDto: CreateUserDto): Promise<string>;
+  abstract confirmAccount(email: string, code: string): Promise<string>;
   abstract findByEmail(email: string): Promise<SanitedUser>;
   abstract findById(id: string): Promise<SanitedUser>;
   abstract update(
@@ -13,9 +13,10 @@ export abstract class AbstractUserService {
     updateUserDto: UpdateUserDto,
   ): Promise<SanitedUser>;
   abstract remove(id: string): Promise<void>;
-  abstract sendResetPasswordByEmail(email: string): Promise<string>;
+  abstract sendResetPasswordByEmail(email: string): Promise<void>;
   abstract resetPassword(token: string, newPassword: string): Promise<void>;
   abstract getUsersByIds(userIds: string[]): Promise<UserBasicInfoDto[]>;
+  abstract resendVerifingCode(email: string): Promise<void>;
 }
 
 export const USER_SERVICE_TOKEN = 'USER_SERVICE_TOKEN';
