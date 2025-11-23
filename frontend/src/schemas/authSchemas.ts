@@ -75,9 +75,10 @@ export const resetPasswordSchema = z
       .string()
       .min(1, "Nova senha é obrigatória")
       .min(8, "Senha deve ter pelo menos 8 caracteres")
-      .regex(/[A-Z]/, "Senha deve conter pelo menos uma letra maiúscula")
-      .regex(/[a-z]/, "Senha deve conter pelo menos uma letra minúscula")
-      .regex(/[0-9]/, "Senha deve conter pelo menos um número"),
+      .regex(
+        /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[\W_]).{8,}$/,
+        "Senha deve conter pelo menos uma letra maiúscula, uma minúscula, um número e um caractere especial."
+      ),
     confirmPassword: z.string().min(1, "Confirmação de senha é obrigatória"),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
