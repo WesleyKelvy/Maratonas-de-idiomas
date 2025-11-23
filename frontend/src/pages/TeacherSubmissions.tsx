@@ -23,24 +23,24 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useClassrooms } from "@/hooks/use-classroom";
+import { useMarathons } from "@/hooks/use-marathon";
+import { useSubmissionsByMarathon } from "@/hooks/useSubmissions";
+import { SubmissionTable } from "@/services/submission.service";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import {
   ChevronDown,
   ChevronUp,
   Eye,
   FileText,
   Filter,
+  Loader2,
   Search,
   Users,
-  Loader2,
 } from "lucide-react";
-import { useState, useMemo, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useMarathons } from "@/hooks/use-marathon";
-import { useClassrooms } from "@/hooks/use-classroom";
-import { useSubmissionsByMarathon } from "@/hooks/useSubmissions";
-import { SubmissionTable } from "@/services/submission.service";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 
 // Constants
 const MAX_SCORE = 100;
@@ -71,6 +71,9 @@ const TeacherSubmissions = () => {
   const [searchTerm, setSearchTerm] = useState(
     searchParams.get("search") || ""
   );
+  const [classroomFilter, setClassroomFilter] = useState(
+    searchParams.get("classroom") || ""
+  );
   const [marathonFilter, setMarathonFilter] = useState(
     searchParams.get("marathon") || ""
   );
@@ -90,11 +93,12 @@ const TeacherSubmissions = () => {
   // Fetch classrooms (assuming teacher role)
   const { data: classrooms, isLoading: loadingClassrooms } = useClassrooms();
 
-  const firstClassroomId = classrooms?.[0]?.id;
+  // Use selected classroom or first one as fallback
+  const selectedClassroomId = classroomFilter || classrooms?.[0]?.id || "";
   const { data: classroomMarathons = [], isLoading: loadingMarathons } =
-    useMarathons(firstClassroomId || "");
+    useMarathons(selectedClassroomId);
 
-  // Combine all marathons (for now just from first classroom)
+  // Combine all marathons from selected classroom
   const allMarathons = useMemo(() => {
     if (!classroomMarathons) return [];
 
@@ -117,6 +121,8 @@ const TeacherSubmissions = () => {
     const newParams = new URLSearchParams();
 
     if (searchTerm && searchTerm !== "") newParams.set("search", searchTerm);
+    if (classroomFilter && classroomFilter !== "")
+      newParams.set("classroom", classroomFilter);
     if (marathonFilter && marathonFilter !== "all" && marathonFilter !== "")
       newParams.set("marathon", marathonFilter);
     if (studentFilter && studentFilter !== "all")
@@ -130,6 +136,7 @@ const TeacherSubmissions = () => {
     setSearchParams(newParams, { replace: true });
   }, [
     searchTerm,
+    classroomFilter,
     marathonFilter,
     studentFilter,
     scoreFilter,
@@ -411,6 +418,27 @@ const TeacherSubmissions = () => {
                   />
                 </div>
                 <Select
+                  value={classroomFilter}
+                  onValueChange={(value) => {
+                    setClassroomFilter(value);
+                    setMarathonFilter(""); // Reset marathon filter when classroom changes
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione uma turma" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {classrooms?.map((classroom, index) => (
+                      <SelectItem
+                        key={`classroom-${classroom.id}-${index}`}
+                        value={classroom.id}
+                      >
+                        {classroom.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select
                   value={marathonFilter}
                   onValueChange={setMarathonFilter}
                 >
@@ -538,6 +566,27 @@ const TeacherSubmissions = () => {
                   className="pl-10"
                 />
               </div>
+              <Select
+                value={classroomFilter}
+                onValueChange={(value) => {
+                  setClassroomFilter(value);
+                  setMarathonFilter(""); // Reset marathon filter when classroom changes
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma turma" />
+                </SelectTrigger>
+                <SelectContent>
+                  {classrooms?.map((classroom, index) => (
+                    <SelectItem
+                      key={`classroom-filter-${classroom.id}-${index}`}
+                      value={classroom.id}
+                    >
+                      {classroom.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Select value={marathonFilter} onValueChange={setMarathonFilter}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione uma maratona" />

@@ -21,7 +21,7 @@ import type { LanguageMarathon } from "@/services/marathon.service";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar, FileText, Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const ReportsPage = () => {
@@ -50,15 +50,6 @@ const ReportsPage = () => {
     isLoading: loadingReport,
     error: reportError,
   } = useReport(selectedMarathonId);
-
-  // // Atualizar o tempo a cada minuto para mostrar countdown
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     setCurrentTime(new Date());
-  //   }, 60000); // Atualiza a cada minuto
-
-  //   return () => clearInterval(interval);
-  // }, []);
 
   const handleClassroomChange = (value: string) => {
     setSelectedClassroomId(value);
@@ -98,30 +89,6 @@ const ReportsPage = () => {
     const endDate = new Date(marathon.end_date);
     return currentTime > endDate;
   };
-
-  // // Helper function to get time remaining for marathon
-  // const getTimeRemaining = (marathon: LanguageMarathon) => {
-  //   if (!marathon?.end_date) return null;
-
-  //   const endDate = new Date(marathon.end_date);
-  //   const diffInMs = endDate.getTime() - currentTime.getTime();
-
-  //   if (diffInMs <= 0) return null; // Marathon already finished
-
-  //   const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
-  //   const diffInHours = Math.floor(diffInMinutes / 60);
-  //   const diffInDays = Math.floor(diffInHours / 24);
-
-  //   if (diffInDays > 0) {
-  //     return `${diffInDays} dia${diffInDays > 1 ? "s" : ""}`;
-  //   } else if (diffInHours > 0) {
-  //     return `${diffInHours} hora${diffInHours > 1 ? "s" : ""}`;
-  //   } else if (diffInMinutes > 0) {
-  //     return `${diffInMinutes} minuto${diffInMinutes > 1 ? "s" : ""}`;
-  //   } else {
-  //     return "menos de 1 minuto";
-  //   }
-  // };
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -226,7 +193,7 @@ const ReportsPage = () => {
                     value={selectedMarathonId}
                     onValueChange={handleMarathonChange}
                   >
-                    <SelectTrigger className="h-18" id="marathon-select">
+                    <SelectTrigger id="marathon-select">
                       <SelectValue placeholder="Selecione uma maratona" />
                     </SelectTrigger>
                     <SelectContent>
