@@ -72,6 +72,15 @@ export function AppSidebar() {
     if (path === "/dashboard") {
       return currentPath === path;
     }
+
+    // Caso específico: marathons/:id ativa my-enrollments
+    if (
+      path === "/my-enrollments" &&
+      currentPath.match(/^\/marathons\/[^/]+$/)
+    ) {
+      return true;
+    }
+
     return currentPath.startsWith(path);
   };
   // const getNavCls = ({ isActive }: { isActive: boolean }) =>
