@@ -58,7 +58,7 @@ const Login = () => {
       // Aguardar um pouco antes de navegar para garantir que o estado foi atualizado
       setTimeout(() => {
         navigate("/dashboard");
-      }, 100);
+      }, 150);
     } catch (error) {
       // console.error("Login error:", error);
       let errorMessage = "Email ou senha inválidos.";
