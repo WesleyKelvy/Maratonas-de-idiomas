@@ -805,6 +805,69 @@ const MarathonDetails = () => {
               </CardContent>
             </Card>
           )}
+
+          {/* Sistema de Rubricas */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BookText className="h-5 w-5" />
+                Sistema de rubricas usado
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <p className="text-gray-700">
+                  Nossa plataforma utiliza Inteligência Artificial para correção automática das respostas, 
+                  seguindo um sistema de pontuação baseado em critérios estabelecidos. 
+                  O sistema avalia cada resposta com base em um esquema abrangente de <strong>100 pontos</strong> distribuídos nas seguintes categorias:
+                </p>
+                
+                <div className="space-y-4">
+                  <div className="bg-blue-50 p-3 rounded-lg">
+                    <h4 className="font-semibold text-blue-800 mb-2">
+                      Parte 1: Gramática e Uso (50 pontos)
+                    </h4>
+                    <ul className="space-y-1 text-blue-700">
+                      <li><strong>Tempo e Forma Verbal (15 pontos):</strong> Sequência de tempos verbais, formas irregulares e conjugação adequada</li>
+                      <li><strong>Concordância Sujeito-Verbo (10 pontos):</strong> Concordância entre sujeito e verbo</li>
+                      <li><strong>Pronomes (10 pontos):</strong> Uso correto de casos, antecedentes claros e concordância</li>
+                      <li><strong>Artigos, Preposições e Modificadores (15 pontos):</strong> Uso adequado de artigos, preposições e posicionamento de modificadores</li>
+                    </ul>
+                  </div>
+
+                  <div className="bg-green-50 p-3 rounded-lg">
+                    <h4 className="font-semibold text-green-800 mb-2">
+                      Parte 2: Mecânica (30 pontos)
+                    </h4>
+                    <ul className="space-y-1 text-green-700">
+                      <li><strong>Pontuação (15 pontos):</strong> Uso correto de pontos finais, vírgulas, apostrofes, ponto e vírgula</li>
+                      <li><strong>Capitalização (5 pontos):</strong> Maiúsculas no início de frases e nomes próprios</li>
+                      <li><strong>Ortografia (10 pontos):</strong> Correção ortográfica das palavras</li>
+                    </ul>
+                  </div>
+
+                  <div className="bg-purple-50 p-3 rounded-lg">
+                    <h4 className="font-semibold text-purple-800 mb-2">
+                      Parte 3: Estrutura e Estilo (20 pontos)
+                    </h4>
+                    <ul className="space-y-1 text-purple-700">
+                      <li><strong>Fluência e Clareza (15 pontos):</strong> Construção de frases claras, evitando fragmentos e períodos muito longos</li>
+                      <li><strong>Escolha de Palavras (5 pontos):</strong> Precisão vocabular e registro apropriado</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
+                  <h4 className="font-semibold text-yellow-800 mb-2">⚠️ Importante:</h4>
+                  <ul className="space-y-1 text-yellow-700 text-sm">
+                    <li>• Respostas em branco ou irrelevantes recebem pontuação 0</li>
+                    <li>• Tentativas de manipulação do sistema são identificadas automaticamente</li>
+                    <li>• O sistema fornece feedback detalhado para cada erro identificado</li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Sidebar */}
