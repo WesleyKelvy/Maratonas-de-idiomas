@@ -1,99 +1,262 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+## 📋 Pré-requisitos
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+- Node.js 24.7.0+
+- Docker & Docker Compose
+- PostgreSQL 17.5+ (ou via Docker)
+- Redis 8.2.0+ (ou via Docker)
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 📁 Estrutura do Projeto
 
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
-
-```bash
-$ npm install
+```
+backend/
+├── prisma/               # Configuração do Prisma
+│   ├── schema.prisma     # Schema do banco de dados
+│   ├── migrations/       # Migrações do banco
+│   └── seed.ts           # Script para popular o banco
+├── src/
+│   ├── auth/             # Módulo de autenticação
+│   ├── User/             # Módulo de usuários
+│   ├── Classroom/        # Módulo de turmas
+│   ├── LanguageMarathon/ # Módulo de maratonas
+│   ├── Question/         # Módulo de questões
+│   ├── Submission/       # Módulo de submissões
+│   ├── AiFeedback/       # Módulo de feedback IA
+│   ├── Mailer/           # Módulo de email
+│   ├── Stats/            # Módulo de estatísticas
+│   ├── repositories/     # Repositórios de dados
+│   └── utils/            # Utilitários
+├── test/                 # Testes e2e
+├── docker-compose.yml    # Configuração Docker
+└── README.md
 ```
 
-## Compile and run the project
+## ⚙️ Instalação
+
+1. Navegue até a pasta do backend:
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+cd backend
 ```
 
-## Run tests
+2. Instale as dependências:
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npm install
 ```
 
-## Deployment
+## 🔧 Configuração
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+1. Crie um arquivo `.env` na raiz da pasta backend:
 
 ```bash
-$ npm install -g mau
-$ mau deploy
+cp .env.example .env
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+2. Configure as variáveis de ambiente necessárias ou pode usar as do repositório:
 
-## Resources
+````env
+APP_NAME="Maratona de idiomas"
 
-Check out a few resources that may come in handy when working with NestJS:
+NODE_ENV="development"
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+FRONTEND_URL="http://localhost:8080"
 
-## Support
+# Database
+DATABASE_URL="postgresql://user:password@localhost:5432/mydatabase?schema=public"
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+#Gemini - Sandbox key
+GEMINI_API_KEY=""
 
-## Stay in touch
+#Auth module - Secret examples
+JWT_SECRET=""
+JWT_REFRESH_SECRET=""
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+# Email modulue (Configure com os dados seu fornecedor de emails, para sandbox, recomendo o Mailtrap)
+MAIL_HOST="sandbox.smtp.mailtrap.io"
+MAIL_PORT="2525"
+MAIL_USER=""
+MAIL_PASSWORD=""
+DEFAULT_EMAIL_FROM="contato@maratonadeidiomas.com.br"
+````
+## 🐳 Executando o Docker (Redis, Postgres)
 
-## License
+1. Execute todos os serviços:
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+```bash
+docker-compose up -d
+```
+
+2. Execute as migrações do banco:
+
+```bash
+npx prisma migrate dev
+```
+
+3. (Opcional) Popule o banco com dados iniciais:
+
+```bash
+npx prisma db seed
+```
+
+4. (Opcional) Verificar o banco com dados:
+
+```bash
+npx prisma studio
+```
+
+## 🏃‍♂️ Executando Localmente
+
+### 1. Inicie os serviços de infraestrutura:
+
+```bash
+# Apenas PostgreSQL e Redis
+docker-compose up -d
+```
+
+### 2. Configure o banco de dados:
+
+```bash
+# Gerar cliente Prisma
+npx prisma generate
+
+# Executar migrações
+npx prisma migrate dev
+
+# (Opcional) Seed do banco
+npx prisma db seed
+```
+
+### 3. Inicie a aplicação:
+
+#### Modo Desenvolvimento (Mais rápido para ver o projeto)
+
+```bash
+npm run start:dev
+```
+
+#### Modo Produção
+
+```bash
+npm run build
+npm run start:prod
+```
+
+#### Modo Debug
+
+```bash
+npm run start:debug
+```
+
+## 🎯 Funcionalidades da API
+
+### Autenticação
+
+- Registro e login de usuários
+- Verificação de conta via email
+- Reset de senha
+- Autenticação JWT
+- Middleware de autorização por role
+
+### Gestão de Usuários
+
+- CRUD de usuários (estudantes/professores)
+- Perfis personalizados
+- Sistema de roles e permissões
+
+### Maratonas
+
+- CRUD de maratonas
+- Sistema de inscrições
+- Controle de tempo e cronômetro
+- Geração automática de questões via IA
+
+### Avaliação e Feedback
+
+- Correção automática via IA (Gemini)
+- Sistema de rubricas detalhado
+- Feedback personalizado
+- Pontuação e ranking
+
+### Relatórios
+
+- Estatísticas de performance
+- Analytics de maratonas
+
+## 🌐 Endpoints Principais
+
+### Autenticação
+
+- `POST /login` - Login
+- `POST /user` - Registro
+- `POST /user/confirm-account` - Confirmar conta
+- `POST /user/reset-password` - Reset senha
+- `POST /refresh-user-token` - Refresh token
+
+### Usuários
+
+- `GET /user/me` - Perfil atual
+- `PATCH /user` - Atualizar perfil
+- `DELETE /user` - Deletar conta
+
+### Maratonas
+
+- `GET /classroom/:id/marathons` - Listar maratonas
+- `POST /classroom/:id/marathons` - Criar maratona
+- `GET /classroom/:classId/marathons/:marathonId` - Detalhes
+- `PATCH /classroom/:classId/marathons/:marathonId` - Atualizar
+- `DELETE /classroom/:classId/marathons/:marathonId` - Deletar
+
+### Questões
+
+- `GET /marathon/:id/questions` - Listar questões
+- `POST /marathon/:id/questions` - Criar questão
+- `PATCH /questions/:id` - Atualizar questão
+- `DELETE /questions/:id` - Deletar questão
+
+## 🐛 Troubleshooting
+
+### Erro de Conexão com Banco
+```bash
+# Verificar se o PostgreSQL está rodando
+docker-compose ps postgres
+
+# Verificar logs
+docker-compose logs postgres
+```
+
+### Problemas com Migrações
+
+```bash
+# Reset completo do banco
+npx prisma migrate reset
+
+# Regenerar cliente
+npx prisma generate
+```
+
+### Erro de Dependências
+
+```bash
+rm -rf node_modules
+npm install
+```
+
+### Problemas com Docker
+
+```bash
+# Limpar containers e volume de dados
+docker-compose down -v
+
+# Rebuild
+docker-compose up --build -d
+```
+
+## 🔐 Segurança
+
+- Validação de entrada com class-validator
+- Sanitização de dados
+- Rate limiting
+- Helmet para headers de segurança
+- CORS configurado
+- Autenticação JWT
+- Criptografia de senhas com bcrypt
